@@ -1,0 +1,640 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Near & Now - Online Grocery Store</title>
+    <meta name="description" content="Order fresh groceries online with Near & Now. Fast delivery, best prices, and quality products!">
+    <meta property="og:title" content="Near & Now - Online Grocery Store">
+    <meta property="og:description" content="Order fresh groceries online with Near & Now. Fast delivery, best prices, and quality products!">
+    <meta property="og:type" content="website">
+    <meta property="og:url" content="https://nearnow.com/">
+    <meta property="og:image" content="/logo.png">
+    <link rel="icon" type="image/png" href="/favicon.png">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.7.2/css/all.min.css">
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        primary: '#059669',
+                        secondary: '#047857',
+                        accent: '#10b981'
+                    },
+                    animation: {
+                        'spin-slow': 'spin 3s linear infinite',
+                        'bounce-slow': 'bounce 2s infinite',
+                        'pulse-slow': 'pulse 3s infinite',
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        .loading-screen {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(135deg, #059669, #10b981);
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            z-index: 9999;
+            transition: opacity 0.5s ease-out;
+        }
+
+        .loading-screen.fade-out {
+            opacity: 0;
+            pointer-events: none;
+        }
+
+        .loader {
+            width: 80px;
+            height: 80px;
+            border: 8px solid rgba(255, 255, 255, 0.3);
+            border-top: 8px solid white;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+        }
+
+        .loading-dots {
+            display: flex;
+            gap: 8px;
+            margin-top: 20px;
+        }
+
+        .loading-dot {
+            width: 12px;
+            height: 12px;
+            background: white;
+            border-radius: 50%;
+            animation: bounce 1.4s ease-in-out infinite both;
+        }
+
+        .loading-dot:nth-child(1) { animation-delay: -0.32s; }
+        .loading-dot:nth-child(2) { animation-delay: -0.16s; }
+        .loading-dot:nth-child(3) { animation-delay: 0s; }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        @keyframes bounce {
+            0%, 80%, 100% { transform: scale(0); }
+            40% { transform: scale(1); }
+        }
+
+        .cart-sidebar {
+            transform: translateX(100%);
+            transition: transform 0.3s ease-in-out;
+        }
+
+        .cart-sidebar.open {
+            transform: translateX(0);
+        }
+
+        .modal-overlay {
+            background: rgba(0, 0, 0, 0.5);
+            backdrop-filter: blur(4px);
+        }
+
+        .product-card:hover {
+            transform: translateY(-4px);
+        }
+
+        .category-item:hover {
+            transform: translateY(-2px);
+        }
+
+        .fade-in {
+            animation: fadeIn 0.5s ease-in;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .slide-in-right {
+            animation: slideInRight 0.3s ease-out;
+        }
+
+        @keyframes slideInRight {
+            from { transform: translateX(100%); }
+            to { transform: translateX(0); }
+        }
+
+        .otp-input:focus {
+            border-color: #059669;
+            box-shadow: 0 0 0 3px rgba(5, 150, 105, 0.1);
+        }
+
+        .login-step {
+            animation: fadeIn 0.3s ease-in-out;
+        }
+
+        .otp-input {
+            transition: all 0.2s ease;
+        }
+
+        .otp-input:hover {
+            border-color: #059669;
+        }
+
+        #resendOtpBtn:disabled {
+            cursor: not-allowed;
+            opacity: 0.6;
+        }
+    </style>
+    <script src="products-data.js"></script>
+</head>
+<body class="bg-gray-50">
+    <!-- Mobile Nav Hamburger -->
+    <button id="mobileNavBtn" class="fixed top-4 left-4 z-50 bg-white p-2 rounded-full shadow-md md:hidden" aria-label="Open navigation menu">
+        <i class="fas fa-bars text-2xl text-primary"></i>
+    </button>
+    <!-- Loading Screen -->
+    <div id="loadingScreen" class="loading-screen">
+        <div class="text-center">
+            <div class="flex items-center justify-center mb-8">
+                <div class="bg-white p-4 rounded-2xl shadow-2xl">
+                    <i class="fas fa-clock text-4xl text-primary"></i>
+                </div>
+            </div>
+            <h1 class="text-4xl font-bold text-white mb-2">Near & Now</h1>
+            <p class="text-xl text-white opacity-90 mb-8">Loading fresh groceries...</p>
+            <div class="loader mx-auto mb-6"></div>
+            <div class="loading-dots flex justify-center">
+                <div class="loading-dot"></div>
+                <div class="loading-dot"></div>
+                <div class="loading-dot"></div>
+            </div>
+            <p class="text-white opacity-75 mt-6">Please wait while we prepare your shopping experience</p>
+        </div>
+    </div>
+
+    <!-- Cart Sidebar -->
+    <div id="cartSidebar" class="fixed top-0 right-0 h-full w-96 bg-white shadow-2xl z-50 cart-sidebar">
+        <div class="p-6 border-b border-gray-200">
+            <div class="flex items-center justify-between">
+                <h2 class="text-2xl font-bold text-gray-800">Shopping Cart</h2>
+                <button id="closeCart" class="text-gray-500 hover:text-gray-700 text-2xl">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+        </div>
+        <div id="cartItems" class="flex-1 overflow-y-auto p-6">
+            <!-- Cart items will be populated here -->
+        </div>
+        <div class="border-t border-gray-200 p-6">
+            <div class="flex items-center justify-between mb-4">
+                <span class="text-xl font-bold">Total:</span>
+                <span id="cartTotal" class="text-2xl font-bold text-primary">₹0</span>
+            </div>
+            <button id="checkoutBtn" class="w-full bg-primary text-white py-3 rounded-lg font-bold hover:bg-secondary transition duration-300">
+                Proceed to Checkout
+            </button>
+        </div>
+    </div>
+
+    <!-- Modal Overlay -->
+    <div id="modalOverlay" class="fixed inset-0 modal-overlay z-40 hidden"></div>
+
+    <!-- Login Modal -->
+    <div id="loginModal" class="fixed inset-0 z-50 hidden items-center justify-center p-4">
+        <div class="bg-white rounded-2xl shadow-2xl w-full max-w-md relative">
+            <button id="closeLogin" class="absolute top-4 right-4 text-gray-500 hover:text-gray-700 text-xl">
+                <i class="fas fa-times"></i>
+            </button>
+            <div class="p-8">
+                <div class="text-center mb-8">
+                    <div class="bg-primary text-white p-3 rounded-full w-16 h-16 mx-auto mb-4 flex items-center justify-center">
+                        <i class="fas fa-clock text-2xl"></i>
+                    </div>
+                    <h2 class="text-2xl font-bold text-gray-800">Welcome to Near & Now</h2>
+                    <p class="text-gray-600">Enter your details to continue</p>
+                </div>
+
+                <!-- Step 1: Name and Mobile -->
+                <div id="step1" class="login-step">
+                    <form id="mobileForm">
+                        <div class="mb-4">
+                            <label class="block text-gray-700 text-sm font-bold mb-2">Full Name</label>
+                            <input type="text" id="userName" class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:border-primary" placeholder="Enter your full name" required>
+                        </div>
+                        <div class="mb-6">
+                            <label class="block text-gray-700 text-sm font-bold mb-2">Mobile Number</label>
+                            <div class="flex">
+                                <span class="inline-flex items-center px-3 text-sm text-gray-900 bg-gray-200 border border-r-0 border-gray-300 rounded-l-lg">
+                                    +91
+                                </span>
+                                <input type="tel" id="userMobile" class="w-full px-4 py-3 border border-gray-300 rounded-r-lg focus:outline-none focus:border-primary" placeholder="Enter mobile number" pattern="[0-9]{10}" maxlength="10" required>
+                            </div>
+                            <p class="text-xs text-gray-500 mt-1">We'll send you an OTP for verification</p>
+                        </div>
+                        <button type="submit" id="sendOtpBtn" class="w-full bg-primary text-white py-3 rounded-lg font-bold hover:bg-secondary transition duration-300">
+                            Send OTP
+                        </button>
+                    </form>
+                </div>
+
+                <!-- Step 2: OTP Verification -->
+                <div id="step2" class="login-step hidden">
+                    <div class="text-center mb-6">
+                        <i class="fas fa-mobile-alt text-4xl text-primary mb-4"></i>
+                        <h3 class="text-lg font-semibold text-gray-800 mb-2">Verify Your Mobile</h3>
+                        <p class="text-gray-600 text-sm">We've sent a 6-digit OTP to</p>
+                        <p class="text-primary font-semibold" id="displayMobile">+91 XXXXXXXXXX</p>
+                    </div>
+
+                    <form id="otpForm">
+                        <div class="mb-6">
+                            <label class="block text-gray-700 text-sm font-bold mb-2">Enter OTP</label>
+                            <div class="flex justify-center space-x-2 mb-4">
+                                <input type="text" class="otp-input w-12 h-12 text-center border border-gray-300 rounded-lg focus:outline-none focus:border-primary text-lg font-bold" maxlength="1" pattern="[0-9]">
+                                <input type="text" class="otp-input w-12 h-12 text-center border border-gray-300 rounded-lg focus:outline-none focus:border-primary text-lg font-bold" maxlength="1" pattern="[0-9]">
+                                <input type="text" class="otp-input w-12 h-12 text-center border border-gray-300 rounded-lg focus:outline-none focus:border-primary text-lg font-bold" maxlength="1" pattern="[0-9]">
+                                <input type="text" class="otp-input w-12 h-12 text-center border border-gray-300 rounded-lg focus:outline-none focus:border-primary text-lg font-bold" maxlength="1" pattern="[0-9]">
+                                <input type="text" class="otp-input w-12 h-12 text-center border border-gray-300 rounded-lg focus:outline-none focus:border-primary text-lg font-bold" maxlength="1" pattern="[0-9]">
+                                <input type="text" class="otp-input w-12 h-12 text-center border border-gray-300 rounded-lg focus:outline-none focus:border-primary text-lg font-bold" maxlength="1" pattern="[0-9]">
+                            </div>
+                            <div class="text-center">
+                                <p class="text-sm text-gray-600 mb-2">Didn't receive OTP?</p>
+                                <button type="button" id="resendOtpBtn" class="text-primary hover:text-secondary font-semibold text-sm disabled:text-gray-400 disabled:cursor-not-allowed">
+                                    Resend OTP (<span id="resendTimer">30</span>s)
+                                </button>
+                            </div>
+                        </div>
+                        <button type="submit" id="verifyOtpBtn" class="w-full bg-primary text-white py-3 rounded-lg font-bold hover:bg-secondary transition duration-300">
+                            Verify & Continue
+                        </button>
+                    </form>
+
+                    <div class="text-center mt-4">
+                        <button type="button" id="changeNumberBtn" class="text-gray-600 hover:text-gray-800 text-sm">
+                            <i class="fas fa-arrow-left mr-1"></i> Change Mobile Number
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Success Step -->
+                <div id="step3" class="login-step hidden text-center">
+                    <div class="mb-6">
+                        <div class="bg-green-100 text-green-600 p-4 rounded-full w-20 h-20 mx-auto mb-4 flex items-center justify-center">
+                            <i class="fas fa-check text-3xl"></i>
+                        </div>
+                        <h3 class="text-xl font-bold text-gray-800 mb-2">Welcome!</h3>
+                        <p class="text-gray-600">Your account has been verified successfully</p>
+                    </div>
+                    <button id="continueShoppingBtn" class="w-full bg-primary text-white py-3 rounded-lg font-bold hover:bg-secondary transition duration-300">
+                        Continue Shopping
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Top Header Bar -->
+    <!-- <div class="bg-primary text-white py-2 text-sm">
+        <div class="container mx-auto px-4 flex justify-between items-center">
+            <div class="flex items-center space-x-6">
+                <span><i class="fas fa-phone mr-2"></i>+91 9876543210</span>
+                <span><i class="fas fa-envelope mr-2"></i>support@nearandnow.com</span>
+            </div>
+            <div class="flex items-center space-x-4">
+                <a href="#" class="hover:text-green-200">Track Your Order</a>
+                <span>|</span>
+                <a href="#" class="hover:text-green-200">Help & Support</a>
+            </div>
+        </div>
+    </div> -->
+
+    <!-- Main Header -->
+    <header class="bg-white shadow-lg sticky top-0 z-40">
+        <div class="container mx-auto px-4 py-4">
+            <div class="flex items-center justify-between">
+                <!-- Logo -->
+                <div class="flex items-center cursor-pointer" onclick="location.reload()">
+                    <div class="bg-primary text-white p-3 rounded-xl mr-3">
+                        <i class="fas fa-clock text-2xl"></i>
+                    </div>
+                    <div>
+                        <h1 class="text-3xl font-bold text-gray-800">Near & Now</h1>
+                        <p class="text-sm text-gray-500">Online Grocery Store</p>
+                    </div>
+                </div>
+
+                <!-- Search Bar -->
+                <div class="flex-1 max-w-2xl mx-8">
+                    <div class="relative">
+                        <input type="text" id="searchInput" placeholder="Search for products, brands and more..."
+                               class="w-full px-6 py-4 border-2 border-gray-200 rounded-full focus:outline-none focus:border-primary text-lg">
+                        <button id="searchBtn" class="absolute right-2 top-1/2 transform -translate-y-1/2 bg-primary text-white px-6 py-3 rounded-full hover:bg-secondary transition duration-300">
+                            <i class="fas fa-search text-lg"></i>
+                        </button>
+                        <div id="searchSuggestions" class="absolute top-full left-0 right-0 bg-white border border-gray-200 rounded-lg mt-2 shadow-lg hidden z-50">
+                            <!-- Search suggestions will be populated here -->
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Header Actions -->
+                <div class="flex items-center space-x-6">
+                    <div id="accountBtn" class="text-center cursor-pointer hover:text-primary transition duration-300">
+                        <i class="fas fa-user text-2xl"></i>
+                        <p class="text-sm mt-1">Account</p>
+                    </div>
+                    <div id="wishlistBtn" class="text-center cursor-pointer hover:text-primary transition duration-300 relative">
+                        <i class="fas fa-heart text-2xl"></i>
+                        <p class="text-sm mt-1">Wishlist</p>
+                        <span id="wishlistCount" class="absolute -top-2 -right-2 bg-red-500 text-white text-xs rounded-full h-5 w-5 flex items-center justify-center">0</span>
+                    </div>
+                    <div id="cartBtn" class="text-center cursor-pointer hover:text-primary transition duration-300 relative">
+                        <i class="fas fa-shopping-cart text-2xl"></i>
+                        <p class="text-sm mt-1">Cart</p>
+                        <span id="cartCount" class="absolute -top-2 -right-2 bg-primary text-white text-xs rounded-full h-5 w-5 flex items-center justify-center">0</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Navigation Menu -->
+        <nav id="mainNav" class="w-full bg-white shadow-sm sticky top-0 z-30" role="navigation" aria-label="Main navigation">
+            <div class="container mx-auto px-4">
+                <ul class="flex items-center space-x-8 py-4">
+                    <li><a href="#" class="nav-link text-primary font-semibold text-lg border-b-2 border-primary pb-1" data-section="home">Home</a></li>
+                    <li><a href="#" class="nav-link text-gray-700 hover:text-primary text-lg transition duration-300" data-section="shop">Shop</a></li>
+                    <li class="relative group">
+                        <a href="#" class="nav-link text-gray-700 hover:text-primary text-lg transition duration-300 flex items-center" data-section="categories">
+                            Categories <i class="fas fa-chevron-down ml-2 text-sm"></i>
+                        </a>
+                        <div class="absolute top-full left-0 bg-white shadow-lg rounded-lg p-4 mt-2 w-48 opacity-0 invisible group-hover:opacity-100 group-hover:visible transition duration-300">
+                            <a href="#" class="block py-2 hover:text-primary category-filter" data-category="fruits">Fruits & Vegetables</a>
+                            <a href="#" class="block py-2 hover:text-primary category-filter" data-category="dairy">Dairy Products</a>
+                            <a href="#" class="block py-2 hover:text-primary category-filter" data-category="meat">Meat & Seafood</a>
+                            <a href="#" class="block py-2 hover:text-primary category-filter" data-category="bakery">Bakery Items</a>
+                        </div>
+                    </li>
+                    <li><a href="#" class="nav-link text-gray-700 hover:text-primary text-lg transition duration-300" data-section="about">About Us</a></li>
+                    <li><a href="#" class="nav-link text-gray-700 hover:text-primary text-lg transition duration-300" data-section="contact">Contact Us</a></li>
+                </ul>
+            </div>
+        </nav>
+    </header>
+
+    <!-- Hero Slider Section -->
+    <section class="relative">
+        <div id="heroSlider" class="overflow-hidden">
+            <div class="flex transition-transform duration-500 ease-in-out" id="sliderContainer">
+                <!-- Slide 1 -->
+                <div class="w-full flex-shrink-0 bg-gradient-to-r from-green-400 via-primary to-secondary py-20">
+                    <div class="container mx-auto px-4">
+                        <div class="grid md:grid-cols-2 gap-12 items-center">
+                            <div class="text-white">
+                                <h2 class="text-5xl font-bold mb-6 leading-tight">Fresh Groceries<br>Near & Now</h2>
+                                <p class="text-xl mb-8 opacity-90">Get farm-fresh produce and daily essentials delivered to your doorstep in just 30 minutes</p>
+                                <div class="flex space-x-4">
+                                    <button class="shop-now-btn bg-white text-primary px-8 py-4 rounded-full font-bold text-lg hover:bg-gray-100 transition duration-300">
+                                        Shop Now
+                                    </button>
+                                    <button class="border-2 border-white text-white px-8 py-4 rounded-full font-bold text-lg hover:bg-white hover:text-primary transition duration-300">
+                                        Learn More
+                                    </button>
+                                </div>
+                            </div>
+                            <div class="text-center">
+                                <img src="/placeholder.svg?height=500&width=600" alt="Fresh Groceries" class="rounded-2xl shadow-2xl" loading="lazy">
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Slide 2 -->
+                <div class="w-full flex-shrink-0 bg-gradient-to-r from-orange-400 via-red-500 to-pink-500 py-20">
+                    <div class="container mx-auto px-4">
+                        <div class="grid md:grid-cols-2 gap-12 items-center">
+                            <div class="text-white">
+                                <h2 class="text-5xl font-bold mb-6 leading-tight">Weekend Special<br>Up to 50% Off</h2>
+                                <p class="text-xl mb-8 opacity-90">Amazing deals on fresh fruits, vegetables and daily essentials. Limited time offer!</p>
+                                <button class="grab-deals-btn bg-white text-red-500 px-8 py-4 rounded-full font-bold text-lg hover:bg-gray-100 transition duration-300">
+                                    Grab Deals
+                                </button>
+                            </div>
+                            <div class="text-center">
+                                <img src="/placeholder.svg?height=500&width=600" alt="Special Offers" class="rounded-2xl shadow-2xl" loading="lazy">
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Slider Controls -->
+        <button id="prevSlide" class="absolute left-4 top-1/2 transform -translate-y-1/2 bg-white bg-opacity-80 hover:bg-opacity-100 p-3 rounded-full shadow-lg transition duration-300">
+            <i class="fas fa-chevron-left text-gray-800"></i>
+        </button>
+        <button id="nextSlide" class="absolute right-4 top-1/2 transform -translate-y-1/2 bg-white bg-opacity-80 hover:bg-opacity-100 p-3 rounded-full shadow-lg transition duration-300">
+            <i class="fas fa-chevron-right text-gray-800"></i>
+        </button>
+
+        <!-- Slider Dots -->
+        <div class="absolute bottom-6 left-1/2 transform -translate-x-1/2 flex space-x-2">
+            <button class="slider-dot w-3 h-3 rounded-full bg-white bg-opacity-50 hover:bg-opacity-100 transition duration-300 active"></button>
+            <button class="slider-dot w-3 h-3 rounded-full bg-white bg-opacity-50 hover:bg-opacity-100 transition duration-300"></button>
+        </div>
+    </section>
+
+    <!-- Categories Section -->
+    <section id="categoriesSection" class="py-20 bg-white">
+        <div class="container mx-auto px-4">
+            <div class="text-center mb-16">
+                <h2 class="text-4xl font-bold text-gray-800 mb-4">Shop by Category</h2>
+                <p class="text-xl text-gray-600">Choose from our wide range of fresh categories</p>
+            </div>
+
+            <div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-8" id="categoriesGrid">
+                <!-- Categories will be populated by JavaScript -->
+            </div>
+        </div>
+    </section>
+
+    <!-- Featured Products Section -->
+    <section id="productsSection" class="py-20 bg-gray-50">
+        <div class="container mx-auto px-4">
+            <div class="flex justify-between items-center mb-12">
+                <div>
+                    <h2 class="text-4xl font-bold text-gray-800 mb-2">Featured Products</h2>
+                    <p class="text-xl text-gray-600">Handpicked products just for you</p>
+                </div>
+                <div class="flex items-center space-x-4">
+                    <select id="sortProducts" class="px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:border-primary">
+                        <option value="default">Sort by</option>
+                        <option value="price-low">Price: Low to High</option>
+                        <option value="price-high">Price: High to Low</option>
+                        <option value="name">Name: A to Z</option>
+                        <option value="rating">Rating</option>
+                    </select>
+                    <a href="all-products.html" class="text-primary hover:text-secondary font-semibold text-lg flex items-center">
+                        View All Products <i class="fas fa-arrow-right ml-2"></i>
+                    </a>
+                </div>
+            </div>
+
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8" id="productsGrid">
+                <!-- Products will be populated by JavaScript -->
+            </div>
+
+            <!-- Load More Button -->
+            <div class="text-center mt-12">
+                <button id="loadMoreBtn" class="bg-primary text-white px-8 py-3 rounded-lg font-semibold hover:bg-secondary transition duration-300">
+                    Load More Products
+                </button>
+            </div>
+        </div>
+    </section>
+
+    <!-- Special Offers Banner -->
+    <section class="py-16">
+        <div class="container mx-auto px-4">
+            <div class="grid md:grid-cols-2 gap-8">
+                <div class="bg-gradient-to-r from-orange-400 to-red-500 rounded-3xl p-12 text-white relative overflow-hidden cursor-pointer hover:scale-105 transition duration-300">
+                    <div class="relative z-10">
+                        <h3 class="text-3xl font-bold mb-4">Weekend Special</h3>
+                        <p class="text-xl mb-6 opacity-90">Get up to 40% off on fresh fruits and vegetables</p>
+                        <button class="weekend-special-btn bg-white text-red-500 px-8 py-3 rounded-full font-bold hover:bg-gray-100 transition duration-300">
+                            Shop Now
+                        </button>
+                    </div>
+                    <div class="absolute -right-8 -bottom-8 opacity-20">
+                        <i class="fas fa-apple-alt text-9xl"></i>
+                    </div>
+                </div>
+
+                <div class="bg-gradient-to-r from-purple-500 to-pink-500 rounded-3xl p-12 text-white relative overflow-hidden cursor-pointer hover:scale-105 transition duration-300">
+                    <div class="relative z-10">
+                        <h3 class="text-3xl font-bold mb-4">Free Delivery</h3>
+                        <p class="text-xl mb-6 opacity-90">Free delivery on orders above ₹999</p>
+                        <button class="free-delivery-btn bg-white text-purple-500 px-8 py-3 rounded-full font-bold hover:bg-gray-100 transition duration-300">
+                            Order Now
+                        </button>
+                    </div>
+                    <div class="absolute -right-8 -bottom-8 opacity-20">
+                        <i class="fas fa-truck text-9xl"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Newsletter Section -->
+    <section class="py-16 bg-primary">
+        <div class="container mx-auto px-4 text-center">
+            <div class="max-w-2xl mx-auto">
+                <h2 class="text-4xl font-bold text-white mb-4">Stay Updated</h2>
+                <p class="text-xl text-white opacity-90 mb-8">Subscribe to our newsletter for the latest deals and offers</p>
+                <form id="newsletterForm" class="flex flex-col md:flex-row gap-4">
+                    <input type="email" id="newsletterEmail" placeholder="Enter your email address"
+                           class="flex-1 px-6 py-4 rounded-full text-lg focus:outline-none" required>
+                    <button type="submit" class="bg-white text-primary px-8 py-4 rounded-full font-bold hover:bg-gray-100 transition duration-300">
+                        Subscribe
+                    </button>
+                </form>
+            </div>
+        </div>
+    </section>
+
+    <!-- Footer -->
+    <footer class="bg-gray-900 text-white py-16">
+        <div class="container mx-auto px-4">
+            <div class="grid md:grid-cols-4 gap-12">
+                <div>
+                    <div class="flex items-center mb-6">
+                        <div class="bg-primary text-white p-3 rounded-xl mr-3">
+                            <i class="fas fa-clock text-2xl"></i>
+                        </div>
+                        <div>
+                            <h3 class="text-2xl font-bold">Near & Now</h3>
+                            <p class="text-sm text-gray-400">Online Grocery Store</p>
+                        </div>
+                    </div>
+                    <p class="text-gray-400 mb-6 leading-relaxed">Your trusted partner for fresh groceries and household essentials. We deliver quality products right to your doorstep.</p>
+                    <div class="flex space-x-4">
+                        <a href="#" class="bg-gray-800 p-3 rounded-full hover:bg-primary transition duration-300">
+                            <i class="fab fa-facebook text-xl"></i>
+                        </a>
+                        <a href="#" class="bg-gray-800 p-3 rounded-full hover:bg-primary transition duration-300">
+                            <i class="fab fa-twitter text-xl"></i>
+                        </a>
+                        <a href="#" class="bg-gray-800 p-3 rounded-full hover:bg-primary transition duration-300">
+                            <i class="fab fa-instagram text-xl"></i>
+                        </a>
+                        <a href="#" class="bg-gray-800 p-3 rounded-full hover:bg-primary transition duration-300">
+                            <i class="fab fa-youtube text-xl"></i>
+                        </a>
+                    </div>
+                </div>
+
+                <div>
+                    <h4 class="text-xl font-bold mb-6">Quick Links</h4>
+                    <ul class="space-y-3">
+                        <li><a href="#" class="text-gray-400 hover:text-white transition duration-300">About Us</a></li>
+                        <li><a href="#" class="text-gray-400 hover:text-white transition duration-300">Contact Us</a></li>
+                        <li><a href="#" class="text-gray-400 hover:text-white transition duration-300">Privacy Policy</a></li>
+                        <li><a href="#" class="text-gray-400 hover:text-white transition duration-300">Terms of Service</a></li>
+                        <li><a href="#" class="text-gray-400 hover:text-white transition duration-300">FAQ</a></li>
+                    </ul>
+                </div>
+
+                <div>
+                    <h4 class="text-xl font-bold mb-6">Categories</h4>
+                    <ul class="space-y-3">
+                        <li><a href="#" class="text-gray-400 hover:text-white transition duration-300">Fruits & Vegetables</a></li>
+                        <li><a href="#" class="text-gray-400 hover:text-white transition duration-300">Dairy Products</a></li>
+                        <li><a href="#" class="text-gray-400 hover:text-white transition duration-300">Meat & Seafood</a></li>
+                        <li><a href="#" class="text-gray-400 hover:text-white transition duration-300">Bakery Items</a></li>
+                        <li><a href="#" class="text-gray-400 hover:text-white transition duration-300">Beverages</a></li>
+                    </ul>
+                </div>
+
+                <div>
+                    <h4 class="text-xl font-bold mb-6">Contact Info</h4>
+                    <div class="space-y-4 text-gray-400">
+                        <div class="flex items-start space-x-3">
+                            <i class="fas fa-map-marker-alt text-primary mt-1"></i>
+                            <p>123 Grocery Street, Food City, FC 12345</p>
+                        </div>
+                        <div class="flex items-center space-x-3">
+                            <i class="fas fa-phone text-primary"></i>
+                            <p>+91 9876543210</p>
+                        </div>
+                        <div class="flex items-center space-x-3">
+                            <i class="fas fa-envelope text-primary"></i>
+                            <p>support@nearandnow.com</p>
+                        </div>
+                        <div class="flex items-center space-x-3">
+                            <i class="fas fa-clock text-primary"></i>
+                            <p>24/7 Customer Support</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="border-t border-gray-800 mt-12 pt-8 text-center text-gray-400">
+                <p>&copy; 2024 Near & Now. All rights reserved. | Designed with ❤️ for fresh grocery shopping</p>
+            </div>
+        </div>
+    </footer>
+
+    <!-- Back to Top Button -->
+    <button id="backToTop" class="fixed bottom-8 right-8 bg-primary text-white p-4 rounded-full shadow-lg hover:bg-secondary transition duration-300 opacity-0 invisible">
+        <i class="fas fa-arrow-up"></i>
+    </button>
+
+    <script src="script.js"></script>
+</body>
+</html>
