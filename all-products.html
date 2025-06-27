@@ -1,10 +1,12 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>All Products - Near & Now</title>
-    <meta name="description" content="Browse all grocery products at Near & Now. Best prices, quality products, and fast delivery!">
+    <meta name="description"
+        content="Browse all grocery products at Near & Now. Best prices, quality products, and fast delivery!">
     <link rel="icon" type="image/png" href="/favicon.png">
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.7.2/css/all.min.css">
@@ -24,6 +26,7 @@
     <script src="products-data.js"></script>
     <script defer src="all-products.js"></script>
 </head>
+
 <body class="bg-gray-50">
     <!-- Header (reuse from index.html) -->
     <header class="bg-white shadow-lg sticky top-0 z-40">
@@ -42,15 +45,19 @@
                     <i class="fas fa-user text-2xl"></i>
                     <p class="text-sm mt-1">Account</p>
                 </div>
-                <div id="wishlistBtn" class="text-center cursor-pointer hover:text-primary transition duration-300 relative">
+                <div id="wishlistBtn"
+                    class="text-center cursor-pointer hover:text-primary transition duration-300 relative">
                     <i class="fas fa-heart text-2xl"></i>
                     <p class="text-sm mt-1">Wishlist</p>
-                    <span id="wishlistCount" class="absolute -top-2 -right-2 bg-red-500 text-white text-xs rounded-full h-5 w-5 flex items-center justify-center">0</span>
+                    <span id="wishlistCount"
+                        class="absolute -top-2 -right-2 bg-red-500 text-white text-xs rounded-full h-5 w-5 flex items-center justify-center">0</span>
                 </div>
-                <div id="cartBtn" class="text-center cursor-pointer hover:text-primary transition duration-300 relative">
+                <div id="cartBtn"
+                    class="text-center cursor-pointer hover:text-primary transition duration-300 relative">
                     <i class="fas fa-shopping-cart text-2xl"></i>
                     <p class="text-sm mt-1">Cart</p>
-                    <span id="cartCount" class="absolute -top-2 -right-2 bg-primary text-white text-xs rounded-full h-5 w-5 flex items-center justify-center">0</span>
+                    <span id="cartCount"
+                        class="absolute -top-2 -right-2 bg-primary text-white text-xs rounded-full h-5 w-5 flex items-center justify-center">0</span>
                 </div>
             </div>
         </div>
@@ -59,13 +66,16 @@
     <section class="bg-white shadow-sm py-4 sticky top-20 z-30">
         <div class="container mx-auto px-4 flex flex-col md:flex-row md:items-center md:justify-between gap-4">
             <div class="flex flex-wrap gap-4 items-center">
-                <select id="categoryFilter" class="px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:border-primary">
+                <select id="categoryFilter"
+                    class="px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:border-primary">
                     <option value="all">All Categories</option>
                 </select>
-                <input type="text" id="searchInput" placeholder="Search products..." class="px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:border-primary" />
+                <input type="text" id="searchInput" placeholder="Search products..."
+                    class="px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:border-primary" />
             </div>
             <div class="flex flex-wrap gap-4 items-center">
-                <select id="sortProducts" class="px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:border-primary">
+                <select id="sortProducts"
+                    class="px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:border-primary">
                     <option value="default">Sort by</option>
                     <option value="price-low">Price: Low to High</option>
                     <option value="price-high">Price: High to Low</option>
@@ -75,15 +85,48 @@
             </div>
         </div>
     </section>
-    <!-- Product Grid -->
+    <!-- Product Grid with Sidebar Filter -->
     <main class="container mx-auto px-4 py-10">
-        <div id="productsGrid" class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-8">
-            <!-- Products will be rendered here -->
-        </div>
-        <div class="text-center mt-12">
-            <button id="loadMoreBtn" class="bg-primary text-white px-8 py-3 rounded-lg font-semibold hover:bg-secondary transition duration-300">
-                Load More Products
-            </button>
+        <div class="flex flex-col lg:flex-row gap-8">
+            <!-- Sidebar Filter -->
+            <aside class="w-full lg:w-1/4 bg-white rounded-2xl shadow-lg p-6 mb-8 lg:mb-0">
+                <h2 class="text-xl font-bold mb-6 flex items-center"><i class="fas fa-filter mr-2"></i>Filter</h2>
+                <!-- Category Filter -->
+                <div class="mb-8">
+                    <h3 class="font-semibold text-gray-800 mb-3">Category</h3>
+                    <ul id="sidebarCategoryList" class="space-y-2">
+                        <!-- Categories will be rendered here -->
+                    </ul>
+                </div>
+                <!-- Brand Filter -->
+                <div class="mb-8">
+                    <h3 class="font-semibold text-gray-800 mb-3">Brands</h3>
+                    <ul id="sidebarBrandList" class="space-y-2">
+                        <!-- Brands will be rendered here -->
+                    </ul>
+                </div>
+                <!-- Price Range Filter -->
+                <div class="mb-4">
+                    <h3 class="font-semibold text-gray-800 mb-3">Price Range</h3>
+                    <div class="flex items-center space-x-2">
+                        <input type="number" id="minPrice" placeholder="Min" class="w-20 px-2 py-1 border border-gray-300 rounded focus:outline-none focus:border-primary" />
+                        <span class="text-gray-500">-</span>
+                        <input type="number" id="maxPrice" placeholder="Max" class="w-20 px-2 py-1 border border-gray-300 rounded focus:outline-none focus:border-primary" />
+                        <button id="applyPriceFilter" class="bg-primary text-white px-3 py-1 rounded hover:bg-secondary transition">Go</button>
+                    </div>
+                </div>
+            </aside>
+            <!-- Product Grid -->
+            <div class="flex-1">
+                <div id="productsGrid" class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-3 gap-8">
+                    <!-- Products will be rendered here -->
+                </div>
+                <div class="text-center mt-12">
+                    <button id="loadMoreBtn" class="bg-primary text-white px-8 py-3 rounded-lg font-semibold hover:bg-secondary transition duration-300">
+                        Load More Products
+                    </button>
+                </div>
+            </div>
         </div>
     </main>
     <!-- Footer (reuse from index.html) -->
@@ -100,7 +143,8 @@
                             <p class="text-sm text-gray-400">Online Grocery Store</p>
                         </div>
                     </div>
-                    <p class="text-gray-400 mb-6 leading-relaxed">Your trusted partner for fresh groceries and household essentials. We deliver quality products right to your doorstep.</p>
+                    <p class="text-gray-400 mb-6 leading-relaxed">Your trusted partner for fresh groceries and household
+                        essentials. We deliver quality products right to your doorstep.</p>
                     <div class="flex space-x-4">
                         <a href="#" class="bg-gray-800 p-3 rounded-full hover:bg-primary transition duration-300">
                             <i class="fab fa-facebook text-xl"></i>
@@ -120,9 +164,12 @@
                     <h4 class="text-xl font-bold mb-6">Quick Links</h4>
                     <ul class="space-y-3">
                         <li><a href="#" class="text-gray-400 hover:text-white transition duration-300">About Us</a></li>
-                        <li><a href="#" class="text-gray-400 hover:text-white transition duration-300">Contact Us</a></li>
-                        <li><a href="#" class="text-gray-400 hover:text-white transition duration-300">Privacy Policy</a></li>
-                        <li><a href="#" class="text-gray-400 hover:text-white transition duration-300">Terms of Service</a></li>
+                        <li><a href="#" class="text-gray-400 hover:text-white transition duration-300">Contact Us</a>
+                        </li>
+                        <li><a href="#" class="text-gray-400 hover:text-white transition duration-300">Privacy
+                                Policy</a></li>
+                        <li><a href="#" class="text-gray-400 hover:text-white transition duration-300">Terms of
+                                Service</a></li>
                         <li><a href="#" class="text-gray-400 hover:text-white transition duration-300">FAQ</a></li>
                     </ul>
                 </div>
@@ -160,4 +207,5 @@
         </div>
     </footer>
 </body>
+
 </html>

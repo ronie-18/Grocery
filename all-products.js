@@ -99,10 +99,10 @@ function filterAndSortProducts() {
     // Sort
     switch (currentSort) {
         case 'price-low':
-            filtered.sort((a, b) => parseFloat(a.price) - parseFloat(b.price));
+            filtered.sort((a, b) => parseFloat((typeof a.price === 'string' ? a.price.replace(/^₹/, '') : a.price)) - parseFloat((typeof b.price === 'string' ? b.price.replace(/^₹/, '') : b.price)));
             break;
         case 'price-high':
-            filtered.sort((a, b) => parseFloat(b.price) - parseFloat(a.price));
+            filtered.sort((a, b) => parseFloat((typeof b.price === 'string' ? b.price.replace(/^₹/, '') : b.price)) - parseFloat((typeof a.price === 'string' ? a.price.replace(/^₹/, '') : a.price)));
             break;
         case 'name':
             filtered.sort((a, b) => a.name.localeCompare(b.name));

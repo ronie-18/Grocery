@@ -25,7 +25,7 @@ const categories = [
         id: "fruits",
         name: "Fruits & Vegetables",
         description: "Fresh & Organic",
-        image: "https://pngimg.com/d/vegetables_PNG100.png",
+        image: "https://i.pinimg.com/736x/ba/b9/67/bab967df39385b6360ef769fe35893bd.jpg",
         color: "from-green-100 to-green-200",
     },
     {
@@ -711,10 +711,10 @@ function addProductEventListeners() {
 function sortProducts() {
     switch (currentSort) {
         case "price-low":
-            displayedProducts.sort((a, b) => a.price - b.price)
+            displayedProducts.sort((a, b) => parseFloat((typeof a.price === 'string' ? a.price.replace(/^₹/, '') : a.price)) - parseFloat((typeof b.price === 'string' ? b.price.replace(/^₹/, '') : b.price)))
             break
         case "price-high":
-            displayedProducts.sort((a, b) => b.price - a.price)
+            displayedProducts.sort((a, b) => parseFloat((typeof b.price === 'string' ? b.price.replace(/^₹/, '') : b.price)) - parseFloat((typeof a.price === 'string' ? a.price.replace(/^₹/, '') : a.price)))
             break
         case "name":
             displayedProducts.sort((a, b) => a.name.localeCompare(b.name))
