@@ -12,12 +12,13 @@ let currentSort = "default"
 const productsPerPage = 8
 let currentPage = 1
 
-// Login Modal Variables
+// Firebase Authentication Variables
 let currentStep = 1
 let userDetails = {}
 let otpTimer = null
 let resendTimer = 30
-let generatedOtp = ""
+let confirmationResult = null
+let recaptchaVerifier = null
 
 // Categories Data
 const categories = [
@@ -112,6 +113,9 @@ function initializeWebsite() {
 
 // Login System Functions
 function initializeLoginSystem() {
+    // Initialize reCAPTCHA verifier
+    initializeRecaptcha()
+    
     // Form event listeners
     document.getElementById("mobileForm").addEventListener("submit", handleMobileSubmit)
     document.getElementById("otpForm").addEventListener("submit", handleOtpSubmit)
@@ -123,6 +127,54 @@ function initializeLoginSystem() {
 
     // OTP input handling
     initializeOtpInputs()
+}
+
+// Initialize reCAPTCHA verifier
+function initializeRecaptcha() {
+    try {
+        // Check if Firebase auth is available
+        if (!window.firebaseAuth) {
+            console.error('Firebase auth not available')
+            showNotification("Authentication service not ready. Please refresh the page.", "error")
+            return
+        }
+
+        // Check if RecaptchaVerifier is available
+        if (!window.RecaptchaVerifier) {
+            console.error('RecaptchaVerifier not available')
+            showNotification("Verification service not ready. Please refresh the page.", "error")
+            return
+        }
+
+        console.log('Initializing reCAPTCHA...')
+        
+        recaptchaVerifier = new window.RecaptchaVerifier(window.firebaseAuth, 'recaptcha-container', {
+            'size': 'normal',
+            'callback': (response) => {
+                console.log('reCAPTCHA solved:', response)
+            },
+            'expired-callback': () => {
+                console.log('reCAPTCHA expired')
+                showNotification("reCAPTCHA expired. Please try again.", "error")
+            },
+            'error-callback': (error) => {
+                console.error('reCAPTCHA error:', error)
+                showNotification("reCAPTCHA error. Please refresh the page.", "error")
+            }
+        })
+        
+        console.log('Rendering reCAPTCHA...')
+        recaptchaVerifier.render().then((widgetId) => {
+            console.log('reCAPTCHA rendered successfully with widget ID:', widgetId)
+        }).catch((error) => {
+            console.error('Error rendering reCAPTCHA:', error)
+            showNotification("Error loading verification. Please refresh the page.", "error")
+        })
+        
+    } catch (error) {
+        console.error('Error initializing reCAPTCHA:', error)
+        showNotification("Error initializing verification. Please refresh the page.", "error")
+    }
 }
 
 // Handle mobile number and name submission
@@ -143,6 +195,20 @@ function handleMobileSubmit(e) {
         return
     }
 
+    // Check if Firebase is properly initialized
+    if (!window.firebaseAuth || !window.signInWithPhoneNumber) {
+        console.error('Firebase not properly initialized')
+        showNotification("Authentication service not available. Please refresh the page.", "error")
+        return
+    }
+
+    // Check if reCAPTCHA is initialized
+    if (!recaptchaVerifier) {
+        console.error('reCAPTCHA not initialized')
+        showNotification("Verification not ready. Please refresh the page.", "error")
+        return
+    }
+
     // Store user details
     userDetails = {
         name: name,
@@ -150,32 +216,72 @@ function handleMobileSubmit(e) {
         fullMobile: `+91${mobile}`,
     }
 
-    // Generate OTP (in real app, this would be sent via SMS)
-    generatedOtp = generateOtp()
-    console.log("Generated OTP:", generatedOtp) // For testing purposes
-
     // Show loading state
     const sendBtn = document.getElementById("sendOtpBtn")
     sendBtn.innerHTML = '<i class="fas fa-spinner fa-spin mr-2"></i>Sending OTP...'
     sendBtn.disabled = true
 
-    // Simulate API call delay
-    setTimeout(() => {
-        // Update display mobile number
-        document.getElementById("displayMobile").textContent = userDetails.fullMobile
+    // Send OTP using Firebase
+    const phoneNumber = userDetails.fullMobile
+    const appVerifier = recaptchaVerifier
 
-        // Move to step 2
-        showStep(2)
+    console.log('Attempting to send OTP to:', phoneNumber)
+    console.log('reCAPTCHA verifier:', appVerifier)
 
-        // Start resend timer
-        startResendTimer()
+    window.signInWithPhoneNumber(window.firebaseAuth, phoneNumber, appVerifier)
+        .then((confirmation) => {
+            confirmationResult = confirmation
+            console.log('OTP sent successfully')
+            
+            // Update display mobile number
+            document.getElementById("displayMobile").textContent = userDetails.fullMobile
 
-        // Reset button
-        sendBtn.innerHTML = "Send OTP"
-        sendBtn.disabled = false
+            // Move to step 2
+            showStep(2)
 
-        showNotification(`OTP sent to ${userDetails.fullMobile}`, "success")
-    }, 2000)
+            // Start resend timer
+            startResendTimer()
+
+            // Reset button
+            sendBtn.innerHTML = "Send OTP"
+            sendBtn.disabled = false
+
+            showNotification(`OTP sent to ${userDetails.fullMobile}`, "success")
+        })
+        .catch((error) => {
+            console.error('Error sending OTP:', error)
+            console.error('Error code:', error.code)
+            console.error('Error message:', error.message)
+            
+            // Reset button
+            sendBtn.innerHTML = "Send OTP"
+            sendBtn.disabled = false
+
+            // Handle specific error cases
+            if (error.code === 'auth/invalid-phone-number') {
+                showNotification("Invalid phone number format", "error")
+            } else if (error.code === 'auth/too-many-requests') {
+                showNotification("Too many attempts. Please try again later.", "error")
+            } else if (error.code === 'auth/quota-exceeded') {
+                showNotification("SMS quota exceeded. Please try again later.", "error")
+            } else if (error.code === 'auth/invalid-recaptcha-token') {
+                showNotification("reCAPTCHA verification failed. Please try again.", "error")
+            } else if (error.code === 'auth/missing-recaptcha-token') {
+                showNotification("Please complete the reCAPTCHA verification.", "error")
+            } else if (error.code === 'auth/operation-not-allowed') {
+                showNotification("Phone authentication is not enabled for this app.", "error")
+            } else if (error.code === 'auth/network-request-failed') {
+                showNotification("Network error. Please check your internet connection.", "error")
+            } else {
+                showNotification(`Failed to send OTP: ${error.message}`, "error")
+            }
+
+            // Reset reCAPTCHA
+            if (recaptchaVerifier) {
+                recaptchaVerifier.clear()
+                recaptchaVerifier.render()
+            }
+        })
 }
 
 // Handle OTP verification
@@ -194,20 +300,24 @@ function handleOtpSubmit(e) {
     verifyBtn.innerHTML = '<i class="fas fa-spinner fa-spin mr-2"></i>Verifying...'
     verifyBtn.disabled = true
 
-    // Simulate API verification delay
-    setTimeout(() => {
-        if (enteredOtp === generatedOtp) {
+    // Verify OTP using Firebase
+    confirmationResult.confirm(enteredOtp)
+        .then((result) => {
             // OTP is correct
+            const user = result.user
+            console.log('OTP verified successfully:', user)
+            
             showStep(3)
 
             // Store user in localStorage
             const userData = {
-                id: Date.now(),
+                id: user.uid,
                 name: userDetails.name,
                 mobile: userDetails.mobile,
                 fullMobile: userDetails.fullMobile,
                 loginTime: new Date().toISOString(),
                 isVerified: true,
+                firebaseUid: user.uid
             }
 
             currentUser = userData
@@ -220,21 +330,25 @@ function handleOtpSubmit(e) {
                 hideLoginModal()
                 updateUserDisplay()
             }, 2000)
-        } else {
-            // OTP is incorrect
-            showNotification("Invalid OTP. Please try again.", "error")
+        })
+        .catch((error) => {
+            console.error('Error verifying OTP:', error)
+            
+            // Reset button
+            verifyBtn.innerHTML = "Verify & Continue"
+            verifyBtn.disabled = false
+
+            // Handle specific error cases
+            if (error.code === 'auth/invalid-verification-code') {
+                showNotification("Invalid OTP. Please try again.", "error")
+            } else if (error.code === 'auth/code-expired') {
+                showNotification("OTP has expired. Please request a new one.", "error")
+            } else {
+                showNotification("Failed to verify OTP. Please try again.", "error")
+            }
+            
             clearOtpInputs()
-        }
-
-        // Reset button
-        verifyBtn.innerHTML = "Verify & Continue"
-        verifyBtn.disabled = false
-    }, 1500)
-}
-
-// Generate 6-digit OTP
-function generateOtp() {
-    return Math.floor(100000 + Math.random() * 900000).toString()
+        })
 }
 
 // Get entered OTP from inputs
@@ -332,9 +446,10 @@ function startResendTimer() {
 
 // Resend OTP
 function resendOtp() {
-    // Generate new OTP
-    generatedOtp = generateOtp()
-    console.log("New OTP:", generatedOtp) // For testing
+    if (!confirmationResult) {
+        showNotification("No active session. Please start over.", "error")
+        return
+    }
 
     // Clear current OTP inputs
     clearOtpInputs()
@@ -357,9 +472,15 @@ function changeNumber() {
         clearInterval(otpTimer)
     }
 
-    // Reset user details
+    // Reset user details and Firebase session
     userDetails = {}
-    generatedOtp = ""
+    confirmationResult = null
+
+    // Reset reCAPTCHA
+    if (recaptchaVerifier) {
+        recaptchaVerifier.clear()
+        recaptchaVerifier.render()
+    }
 
     // Go back to step 1
     showStep(1)
@@ -996,6 +1117,15 @@ function showLoginModal() {
     loginModal.classList.remove("hidden")
     loginModal.classList.add("flex")
     modalOverlay.classList.remove("hidden")
+
+    // Ensure reCAPTCHA is initialized
+    setTimeout(() => {
+        if (!recaptchaVerifier) {
+            initializeRecaptcha()
+        } else {
+            recaptchaVerifier.render()
+        }
+    }, 100)
 }
 
 function hideLoginModal() {
@@ -1015,6 +1145,16 @@ function hideLoginModal() {
     document.getElementById("mobileForm").reset()
     clearOtpInputs()
     currentStep = 1
+
+    // Clean up Firebase resources
+    if (recaptchaVerifier) {
+        recaptchaVerifier.clear()
+        recaptchaVerifier.render()
+    }
+    
+    // Reset Firebase session
+    confirmationResult = null
+    userDetails = {}
 }
 
 function updateUserDisplay() {

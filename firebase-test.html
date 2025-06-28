@@ -1,0 +1,216 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Firebase Test - Near & Now</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.7.2/css/all.min.css">
+    
+    <!-- Firebase SDK -->
+    <script type="module">
+        // Import the functions you need from the SDKs you need
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/11.9.1/firebase-app.js";
+        import { getAnalytics } from "https://www.gstatic.com/firebasejs/11.9.1/firebase-analytics.js";
+        import { getAuth, RecaptchaVerifier, signInWithPhoneNumber } from "https://www.gstatic.com/firebasejs/11.9.1/firebase-auth.js";
+
+        // Your web app's Firebase configuration
+        const firebaseConfig = {
+            apiKey: "AIzaSyACAL8qq0mNxlVvsd1fIF0v6Z67jrV4kvI",
+            authDomain: "near-and-now.firebaseapp.com",
+            projectId: "near-and-now",
+            storageBucket: "near-and-now.firebasestorage.app",
+            messagingSenderId: "529594163070",
+            appId: "1:529594163070:web:2d5d9ccb8d74298e4e5d2f",
+            measurementId: "G-4FTNVR9RXC"
+        };
+
+        // Initialize Firebase
+        const app = initializeApp(firebaseConfig);
+        const analytics = getAnalytics(app);
+        const auth = getAuth(app);
+
+        // Make Firebase auth available globally
+        window.firebaseAuth = auth;
+        window.RecaptchaVerifier = RecaptchaVerifier;
+        window.signInWithPhoneNumber = signInWithPhoneNumber;
+
+        console.log('Firebase initialized successfully');
+        console.log('Firebase Auth:', auth);
+        console.log('RecaptchaVerifier:', RecaptchaVerifier);
+        console.log('signInWithPhoneNumber:', signInWithPhoneNumber);
+    </script>
+    
+    <style>
+        .recaptcha-container {
+            display: flex;
+            justify-content: center;
+            margin: 10px 0;
+        }
+    </style>
+</head>
+<body class="bg-gray-50 p-8">
+    <div class="max-w-md mx-auto bg-white rounded-lg shadow-lg p-6">
+        <h1 class="text-2xl font-bold text-center mb-6">Firebase Test</h1>
+        
+        <div class="space-y-4">
+            <div>
+                <label class="block text-sm font-medium text-gray-700 mb-2">Phone Number</label>
+                <div class="flex">
+                    <span class="inline-flex items-center px-3 text-sm text-gray-900 bg-gray-200 border border-r-0 border-gray-300 rounded-l-lg">
+                        +91
+                    </span>
+                    <input type="tel" id="phoneNumber" class="flex-1 px-3 py-2 border border-gray-300 rounded-r-lg focus:outline-none focus:border-blue-500" placeholder="Enter mobile number" maxlength="10">
+                </div>
+            </div>
+            
+            <div id="recaptcha-container" class="recaptcha-container"></div>
+            
+            <button id="sendOtpBtn" class="w-full bg-blue-500 text-white py-2 px-4 rounded-lg hover:bg-blue-600 transition duration-300">
+                Send OTP
+            </button>
+            
+            <div id="status" class="text-sm text-gray-600"></div>
+        </div>
+    </div>
+
+    <script>
+        let recaptchaVerifier = null;
+        let confirmationResult = null;
+
+        // Initialize reCAPTCHA
+        function initializeRecaptcha() {
+            try {
+                if (!window.firebaseAuth) {
+                    updateStatus('Firebase auth not available', 'error');
+                    return;
+                }
+
+                if (!window.RecaptchaVerifier) {
+                    updateStatus('RecaptchaVerifier not available', 'error');
+                    return;
+                }
+
+                console.log('Initializing reCAPTCHA...');
+                
+                recaptchaVerifier = new window.RecaptchaVerifier(window.firebaseAuth, 'recaptcha-container', {
+                    'size': 'normal',
+                    'callback': (response) => {
+                        console.log('reCAPTCHA solved:', response);
+                        updateStatus('reCAPTCHA completed', 'success');
+                    },
+                    'expired-callback': () => {
+                        console.log('reCAPTCHA expired');
+                        updateStatus('reCAPTCHA expired', 'error');
+                    },
+                    'error-callback': (error) => {
+                        console.error('reCAPTCHA error:', error);
+                        updateStatus('reCAPTCHA error', 'error');
+                    }
+                });
+                
+                console.log('Rendering reCAPTCHA...');
+                recaptchaVerifier.render().then((widgetId) => {
+                    console.log('reCAPTCHA rendered successfully with widget ID:', widgetId);
+                    updateStatus('reCAPTCHA loaded successfully', 'success');
+                }).catch((error) => {
+                    console.error('Error rendering reCAPTCHA:', error);
+                    updateStatus('Error loading reCAPTCHA', 'error');
+                });
+                
+            } catch (error) {
+                console.error('Error initializing reCAPTCHA:', error);
+                updateStatus('Error initializing reCAPTCHA', 'error');
+            }
+        }
+
+        // Send OTP
+        function sendOTP() {
+            const phoneNumber = document.getElementById('phoneNumber').value.trim();
+            
+            if (!phoneNumber || phoneNumber.length !== 10) {
+                updateStatus('Please enter a valid 10-digit mobile number', 'error');
+                return;
+            }
+
+            if (!window.firebaseAuth || !window.signInWithPhoneNumber) {
+                updateStatus('Firebase not properly initialized', 'error');
+                return;
+            }
+
+            if (!recaptchaVerifier) {
+                updateStatus('reCAPTCHA not initialized', 'error');
+                return;
+            }
+
+            const fullPhoneNumber = `+91${phoneNumber}`;
+            const sendBtn = document.getElementById('sendOtpBtn');
+            
+            sendBtn.disabled = true;
+            sendBtn.textContent = 'Sending OTP...';
+            updateStatus('Sending OTP...', 'info');
+
+            console.log('Attempting to send OTP to:', fullPhoneNumber);
+
+            window.signInWithPhoneNumber(window.firebaseAuth, fullPhoneNumber, recaptchaVerifier)
+                .then((confirmation) => {
+                    confirmationResult = confirmation;
+                    console.log('OTP sent successfully');
+                    updateStatus('OTP sent successfully!', 'success');
+                    sendBtn.textContent = 'OTP Sent!';
+                })
+                .catch((error) => {
+                    console.error('Error sending OTP:', error);
+                    console.error('Error code:', error.code);
+                    console.error('Error message:', error.message);
+                    
+                    let errorMessage = 'Failed to send OTP';
+                    
+                    if (error.code === 'auth/invalid-phone-number') {
+                        errorMessage = 'Invalid phone number format';
+                    } else if (error.code === 'auth/too-many-requests') {
+                        errorMessage = 'Too many attempts. Please try again later.';
+                    } else if (error.code === 'auth/quota-exceeded') {
+                        errorMessage = 'SMS quota exceeded. Please try again later.';
+                    } else if (error.code === 'auth/invalid-recaptcha-token') {
+                        errorMessage = 'reCAPTCHA verification failed. Please try again.';
+                    } else if (error.code === 'auth/missing-recaptcha-token') {
+                        errorMessage = 'Please complete the reCAPTCHA verification.';
+                    } else if (error.code === 'auth/operation-not-allowed') {
+                        errorMessage = 'Phone authentication is not enabled for this app.';
+                    } else if (error.code === 'auth/network-request-failed') {
+                        errorMessage = 'Network error. Please check your internet connection.';
+                    } else {
+                        errorMessage = `Failed to send OTP: ${error.message}`;
+                    }
+                    
+                    updateStatus(errorMessage, 'error');
+                    sendBtn.disabled = false;
+                    sendBtn.textContent = 'Send OTP';
+                    
+                    // Reset reCAPTCHA
+                    if (recaptchaVerifier) {
+                        recaptchaVerifier.clear();
+                        recaptchaVerifier.render();
+                    }
+                });
+        }
+
+        // Update status
+        function updateStatus(message, type) {
+            const statusDiv = document.getElementById('status');
+            statusDiv.textContent = message;
+            statusDiv.className = `text-sm ${type === 'error' ? 'text-red-600' : type === 'success' ? 'text-green-600' : 'text-blue-600'}`;
+        }
+
+        // Event listeners
+        document.getElementById('sendOtpBtn').addEventListener('click', sendOTP);
+
+        // Initialize when page loads
+        document.addEventListener('DOMContentLoaded', function() {
+            console.log('Page loaded, initializing reCAPTCHA...');
+            setTimeout(initializeRecaptcha, 1000); // Small delay to ensure Firebase is loaded
+        });
+    </script>
+</body>
+</html> 

@@ -10,6 +10,36 @@
     <link rel="icon" type="image/png" href="/favicon.png">
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.7.2/css/all.min.css">
+    
+    <!-- Firebase SDK -->
+    <script type="module">
+        // Import the functions you need from the SDKs you need
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/11.9.1/firebase-app.js";
+        import { getAnalytics } from "https://www.gstatic.com/firebasejs/11.9.1/firebase-analytics.js";
+        import { getAuth, RecaptchaVerifier, signInWithPhoneNumber } from "https://www.gstatic.com/firebasejs/11.9.1/firebase-auth.js";
+
+        // Your web app's Firebase configuration
+        const firebaseConfig = {
+            apiKey: "AIzaSyACAL8qq0mNxlVvsd1fIF0v6Z67jrV4kvI",
+            authDomain: "near-and-now.firebaseapp.com",
+            projectId: "near-and-now",
+            storageBucket: "near-and-now.firebasestorage.app",
+            messagingSenderId: "529594163070",
+            appId: "1:529594163070:web:2d5d9ccb8d74298e4e5d2f",
+            measurementId: "G-4FTNVR9RXC"
+        };
+
+        // Initialize Firebase
+        const app = initializeApp(firebaseConfig);
+        const analytics = getAnalytics(app);
+        const auth = getAuth(app);
+
+        // Make Firebase auth available globally
+        window.firebaseAuth = auth;
+        window.RecaptchaVerifier = RecaptchaVerifier;
+        window.signInWithPhoneNumber = signInWithPhoneNumber;
+    </script>
+    
     <script>
         tailwind.config = {
             theme: {
@@ -23,6 +53,55 @@
             }
         }
     </script>
+    <style>
+        .cart-sidebar {
+            transform: translateX(100%);
+            transition: transform 0.3s ease-in-out;
+        }
+
+        .cart-sidebar.open {
+            transform: translateX(0);
+        }
+
+        .modal-overlay {
+            background: rgba(0, 0, 0, 0.5);
+            backdrop-filter: blur(4px);
+        }
+
+        .otp-input:focus {
+            border-color: #059669;
+            box-shadow: 0 0 0 3px rgba(5, 150, 105, 0.1);
+        }
+
+        .login-step {
+            animation: fadeIn 0.3s ease-in-out;
+        }
+
+        .otp-input {
+            transition: all 0.2s ease;
+        }
+
+        .otp-input:hover {
+            border-color: #059669;
+        }
+
+        #resendOtpBtn:disabled {
+            cursor: not-allowed;
+            opacity: 0.6;
+        }
+
+        /* reCAPTCHA styling */
+        #recaptcha-container {
+            display: flex;
+            justify-content: center;
+            margin: 10px 0;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+    </style>
     <script src="products-data.js"></script>
     <script defer src="all-products.js"></script>
 </head>
@@ -62,6 +141,130 @@
             </div>
         </div>
     </header>
+    
+    <!-- Cart Sidebar -->
+    <div id="cartSidebar" class="fixed top-0 right-0 h-full w-96 bg-white shadow-2xl z-50 cart-sidebar">
+        <div class="p-6 border-b border-gray-200">
+            <div class="flex items-center justify-between">
+                <h2 class="text-2xl font-bold text-gray-800">Shopping Cart</h2>
+                <button id="closeCart" class="text-gray-500 hover:text-gray-700 text-2xl">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+        </div>
+        <div id="cartItems" class="flex-1 overflow-y-auto p-6">
+            <!-- Cart items will be populated here -->
+        </div>
+        <div class="border-t border-gray-200 p-6">
+            <div class="flex items-center justify-between mb-4">
+                <span class="text-xl font-bold">Total:</span>
+                <span id="cartTotal" class="text-2xl font-bold text-primary">₹0</span>
+            </div>
+            <button id="checkoutBtn" class="w-full bg-primary text-white py-3 rounded-lg font-bold hover:bg-secondary transition duration-300">
+                Proceed to Checkout
+            </button>
+        </div>
+    </div>
+
+    <!-- Modal Overlay -->
+    <div id="modalOverlay" class="fixed inset-0 modal-overlay z-40 hidden"></div>
+
+    <!-- Login Modal -->
+    <div id="loginModal" class="fixed inset-0 z-50 hidden items-center justify-center p-4">
+        <div class="bg-white rounded-2xl shadow-2xl w-full max-w-md relative">
+            <button id="closeLogin" class="absolute top-4 right-4 text-gray-500 hover:text-gray-700 text-xl">
+                <i class="fas fa-times"></i>
+            </button>
+            <div class="p-8">
+                <div class="text-center mb-8">
+                    <div class="bg-primary text-white p-3 rounded-full w-16 h-16 mx-auto mb-4 flex items-center justify-center">
+                        <i class="fas fa-clock text-2xl"></i>
+                    </div>
+                    <h2 class="text-2xl font-bold text-gray-800">Welcome to Near & Now</h2>
+                    <p class="text-gray-600">Enter your details to continue</p>
+                </div>
+
+                <!-- Step 1: Name and Mobile -->
+                <div id="step1" class="login-step">
+                    <form id="mobileForm">
+                        <div class="mb-4">
+                            <label class="block text-gray-700 text-sm font-bold mb-2">Full Name</label>
+                            <input type="text" id="userName" class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:border-primary" placeholder="Enter your full name" required>
+                        </div>
+                        <div class="mb-6">
+                            <label class="block text-gray-700 text-sm font-bold mb-2">Mobile Number</label>
+                            <div class="flex">
+                                <span class="inline-flex items-center px-3 text-sm text-gray-900 bg-gray-200 border border-r-0 border-gray-300 rounded-l-lg">
+                                    +91
+                                </span>
+                                <input type="tel" id="userMobile" class="w-full px-4 py-3 border border-gray-300 rounded-r-lg focus:outline-none focus:border-primary" placeholder="Enter mobile number" pattern="[0-9]{10}" maxlength="10" required>
+                            </div>
+                            <p class="text-xs text-gray-500 mt-1">We'll send you an OTP for verification</p>
+                        </div>
+                        <!-- reCAPTCHA container for Firebase -->
+                        <div id="recaptcha-container" class="mb-4"></div>
+                        <button type="submit" id="sendOtpBtn" class="w-full bg-primary text-white py-3 rounded-lg font-bold hover:bg-secondary transition duration-300">
+                            Send OTP
+                        </button>
+                    </form>
+                </div>
+
+                <!-- Step 2: OTP Verification -->
+                <div id="step2" class="login-step hidden">
+                    <div class="text-center mb-6">
+                        <i class="fas fa-mobile-alt text-4xl text-primary mb-4"></i>
+                        <h3 class="text-lg font-semibold text-gray-800 mb-2">Verify Your Mobile</h3>
+                        <p class="text-gray-600 text-sm">We've sent a 6-digit OTP to</p>
+                        <p class="text-primary font-semibold" id="displayMobile">+91 XXXXXXXXXX</p>
+                    </div>
+
+                    <form id="otpForm">
+                        <div class="mb-6">
+                            <label class="block text-gray-700 text-sm font-bold mb-2">Enter OTP</label>
+                            <div class="flex justify-center space-x-2 mb-4">
+                                <input type="text" class="otp-input w-12 h-12 text-center border border-gray-300 rounded-lg focus:outline-none focus:border-primary text-lg font-bold" maxlength="1" pattern="[0-9]">
+                                <input type="text" class="otp-input w-12 h-12 text-center border border-gray-300 rounded-lg focus:outline-none focus:border-primary text-lg font-bold" maxlength="1" pattern="[0-9]">
+                                <input type="text" class="otp-input w-12 h-12 text-center border border-gray-300 rounded-lg focus:outline-none focus:border-primary text-lg font-bold" maxlength="1" pattern="[0-9]">
+                                <input type="text" class="otp-input w-12 h-12 text-center border border-gray-300 rounded-lg focus:outline-none focus:border-primary text-lg font-bold" maxlength="1" pattern="[0-9]">
+                                <input type="text" class="otp-input w-12 h-12 text-center border border-gray-300 rounded-lg focus:outline-none focus:border-primary text-lg font-bold" maxlength="1" pattern="[0-9]">
+                                <input type="text" class="otp-input w-12 h-12 text-center border border-gray-300 rounded-lg focus:outline-none focus:border-primary text-lg font-bold" maxlength="1" pattern="[0-9]">
+                            </div>
+                            <div class="text-center">
+                                <p class="text-sm text-gray-600 mb-2">Didn't receive OTP?</p>
+                                <button type="button" id="resendOtpBtn" class="text-primary hover:text-secondary font-semibold text-sm disabled:text-gray-400 disabled:cursor-not-allowed">
+                                    Resend OTP (<span id="resendTimer">30</span>s)
+                                </button>
+                            </div>
+                        </div>
+                        <button type="submit" id="verifyOtpBtn" class="w-full bg-primary text-white py-3 rounded-lg font-bold hover:bg-secondary transition duration-300">
+                            Verify & Continue
+                        </button>
+                    </form>
+
+                    <div class="text-center mt-4">
+                        <button type="button" id="changeNumberBtn" class="text-gray-600 hover:text-gray-800 text-sm">
+                            <i class="fas fa-arrow-left mr-1"></i> Change Mobile Number
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Success Step -->
+                <div id="step3" class="login-step hidden text-center">
+                    <div class="mb-6">
+                        <div class="bg-green-100 text-green-600 p-4 rounded-full w-20 h-20 mx-auto mb-4 flex items-center justify-center">
+                            <i class="fas fa-check text-3xl"></i>
+                        </div>
+                        <h3 class="text-xl font-bold text-gray-800 mb-2">Welcome!</h3>
+                        <p class="text-gray-600">Your account has been verified successfully</p>
+                    </div>
+                    <button id="continueShoppingBtn" class="w-full bg-primary text-white py-3 rounded-lg font-bold hover:bg-secondary transition duration-300">
+                        Continue Shopping
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+    
     <!-- Filter/Sort Bar -->
     <section class="bg-white shadow-sm py-4 sticky top-20 z-30">
         <div class="container mx-auto px-4 flex flex-col md:flex-row md:items-center md:justify-between gap-4">

@@ -13,6 +13,36 @@
     <link rel="icon" type="image/png" href="/favicon.png">
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.7.2/css/all.min.css">
+    
+    <!-- Firebase SDK -->
+    <script type="module">
+        // Import the functions you need from the SDKs you need
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/11.9.1/firebase-app.js";
+        import { getAnalytics } from "https://www.gstatic.com/firebasejs/11.9.1/firebase-analytics.js";
+        import { getAuth, RecaptchaVerifier, signInWithPhoneNumber } from "https://www.gstatic.com/firebasejs/11.9.1/firebase-auth.js";
+
+        // Your web app's Firebase configuration
+        const firebaseConfig = {
+            apiKey: "AIzaSyACAL8qq0mNxlVvsd1fIF0v6Z67jrV4kvI",
+            authDomain: "near-and-now.firebaseapp.com",
+            projectId: "near-and-now",
+            storageBucket: "near-and-now.firebasestorage.app",
+            messagingSenderId: "529594163070",
+            appId: "1:529594163070:web:2d5d9ccb8d74298e4e5d2f",
+            measurementId: "G-4FTNVR9RXC"
+        };
+
+        // Initialize Firebase
+        const app = initializeApp(firebaseConfig);
+        const analytics = getAnalytics(app);
+        const auth = getAuth(app);
+
+        // Make Firebase auth available globally
+        window.firebaseAuth = auth;
+        window.RecaptchaVerifier = RecaptchaVerifier;
+        window.signInWithPhoneNumber = signInWithPhoneNumber;
+    </script>
+    
     <script>
         tailwind.config = {
             theme: {
@@ -150,6 +180,13 @@
             cursor: not-allowed;
             opacity: 0.6;
         }
+
+        /* reCAPTCHA styling */
+        #recaptcha-container {
+            display: flex;
+            justify-content: center;
+            margin: 10px 0;
+        }
     </style>
     <script src="products-data.js"></script>
 </head>
@@ -237,6 +274,8 @@
                             </div>
                             <p class="text-xs text-gray-500 mt-1">We'll send you an OTP for verification</p>
                         </div>
+                        <!-- reCAPTCHA container for Firebase -->
+                        <div id="recaptcha-container" class="mb-4"></div>
                         <button type="submit" id="sendOtpBtn" class="w-full bg-primary text-white py-3 rounded-lg font-bold hover:bg-secondary transition duration-300">
                             Send OTP
                         </button>
