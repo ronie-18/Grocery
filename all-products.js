@@ -8,6 +8,17 @@ let currentSort = 'default';
 let currentPage = 1;
 const productsPerPage = 12;
 
+// New Global Variables for Enhanced Features
+let currentFilters = {
+    priceRange: { min: 0, max: 1000 },
+    categories: [],
+    ratings: [],
+    availability: []
+};
+let searchSuggestions = [];
+let quickViewProduct = null;
+let mobileNavOpen = false;
+
 // Firebase Authentication Variables
 let currentStep = 1;
 let userDetails = {};
@@ -17,9 +28,7 @@ let confirmationResult = null;
 let recaptchaVerifier = null;
 let currentUser = JSON.parse(localStorage.getItem("nearNowCurrentUser")) || null;
 let cartItems = JSON.parse(localStorage.getItem("nearNowCartItems")) || [];
-let wishlistItems = JSON.parse(localStorage.getItem("nearNowWishlistItems")) || [];
 let cartCount = cartItems.reduce((total, item) => total + item.quantity, 0);
-let wishlistCount = wishlistItems.length;
 
 // --- DOM Elements ---
 const productsGrid = document.getElementById('productsGrid');
@@ -54,30 +63,55 @@ function createProductCard(product) {
     const price = typeof product.price === 'string' ? product.price.replace(/^₹/, '') : product.price;
     const originalPrice = product.originalPrice ? (typeof product.originalPrice === 'string' ? product.originalPrice.replace(/^₹/, '') : product.originalPrice) : null;
     return `
-        <div class="product-card bg-white rounded-2xl shadow-lg hover:shadow-xl transition duration-300 overflow-hidden group">
+        <div class="product-card bg-white rounded-2xl shadow-lg hover:shadow-xl transition duration-300 overflow-hidden group" data-product-id="${product.id}">
             <div class="relative overflow-hidden">
                 <img src="${product.image}" alt="${product.name}" class="w-full h-64 object-cover group-hover:scale-110 transition duration-500">
                 ${product.discount > 0 ? `<div class="absolute top-4 left-4"><span class="bg-red-500 text-white px-3 py-1 rounded-full text-sm font-semibold">-${product.discount}%</span></div>` : ''}
+                <div class="absolute top-4 right-4 flex flex-col space-y-2">
+                    <button class="quick-view-btn bg-white bg-opacity-90 hover:bg-opacity-100 p-2 rounded-full shadow-md transition duration-300 transform scale-0 group-hover:scale-100" title="Quick View">
+                        <i class="fas fa-eye text-gray-600 hover:text-primary"></i>
+                    </button>
+                </div>
+                <div class="absolute bottom-4 left-4 right-4">
+                    <div class="bg-white bg-opacity-95 rounded-lg p-3 transform translate-y-full group-hover:translate-y-0 transition duration-300">
+                        <div class="flex items-center justify-between">
+                            <div class="flex items-center space-x-2">
+                                <span class="text-primary font-bold text-lg">₹${price}</span>
+                                ${originalPrice ? `<span class="text-gray-400 line-through text-sm">₹${originalPrice}</span>` : ''}
+                            </div>
+                            <button class="add-to-cart-btn bg-primary text-white px-4 py-2 rounded-full hover:bg-secondary transition duration-300 flex items-center space-x-2">
+                                <i class="fas fa-plus"></i>
+                                <span>Add</span>
+                            </button>
+                        </div>
+                    </div>
+                </div>
             </div>
             <div class="p-6">
-                <div class="flex items-center mb-2">
+                <div class="flex items-center justify-between mb-2">
                     <div class="flex text-yellow-400 text-sm">
                         ${generateStarRating(product.rating)}
                     </div>
-                    <span class="text-gray-500 text-sm ml-2">(${product.rating})</span>
+                    <span class="text-gray-500 text-sm">(${product.rating})</span>
                 </div>
-                <h3 class="font-bold text-gray-800 text-lg mb-2">${product.name}</h3>
-                <p class="text-gray-600 text-sm mb-4">${product.description}</p>
+                <h3 class="font-bold text-gray-800 text-lg mb-2 cursor-pointer hover:text-primary transition duration-300 product-name">${product.name}</h3>
+                <p class="text-gray-600 text-sm mb-4 line-clamp-2">${product.description}</p>
                 <div class="flex items-center justify-between">
                     <div class="flex items-center space-x-2">
                         <span class="text-primary font-bold text-xl">₹${price}</span>
                         ${originalPrice ? `<span class="text-gray-400 line-through text-sm">₹${originalPrice}</span>` : ''}
                     </div>
-                    <button class="add-to-cart bg-primary text-white px-4 py-2 rounded-full hover:bg-secondary transition duration-300 flex items-center space-x-2">
-                        <i class="fas fa-plus"></i>
-                        <span>Add</span>
-                    </button>
+                    <div class="flex items-center space-x-2">
+                        <button class="quick-view-btn-mobile md:hidden bg-gray-100 hover:bg-gray-200 p-2 rounded-full transition duration-300" title="Quick View">
+                            <i class="fas fa-eye text-gray-600"></i>
+                        </button>
+                        <button class="add-to-cart-btn-mobile bg-primary text-white px-4 py-2 rounded-full hover:bg-secondary transition duration-300 flex items-center space-x-2">
+                            <i class="fas fa-plus"></i>
+                            <span>Add</span>
+                        </button>
+                    </div>
                 </div>
+                ${product.inStock ? '<div class="mt-2"><span class="text-green-600 text-sm font-semibold"><i class="fas fa-check-circle mr-1"></i>In Stock</span></div>' : '<div class="mt-2"><span class="text-red-600 text-sm font-semibold"><i class="fas fa-times-circle mr-1"></i>Out of Stock</span></div>'}
             </div>
         </div>
     `;
@@ -151,596 +185,376 @@ renderCategoryOptions();
 renderFooterCategories();
 filterAndSortProducts();
 
-// --- Firebase Authentication Functions ---
+// Initialize enhanced features
+initializeQuickView();
+initializeAdvancedFilters();
+initializeEnhancedSearch();
+initializeProductReviews();
+addProductEventListeners();
 
-// Initialize reCAPTCHA verifier
-function initializeRecaptcha() {
-    try {
-        // Check if Firebase auth is available
-        if (!window.firebaseAuth) {
-            console.error('Firebase auth not available')
-            showNotification("Authentication service not ready. Please refresh the page.", "error")
-            return
+// ===== ENHANCED FEATURES =====
+
+// Quick View Functionality
+function initializeQuickView() {
+    // Event listeners for quick view buttons
+    document.addEventListener('click', (e) => {
+        if (e.target.closest('.quick-view-btn') || e.target.closest('.quick-view-btn-mobile') || e.target.closest('.product-name')) {
+            const productCard = e.target.closest('.product-card');
+            const productId = productCard.dataset.productId;
+            showQuickView(productId);
         }
+    });
 
-        // Check if RecaptchaVerifier is available
-        if (!window.RecaptchaVerifier) {
-            console.error('RecaptchaVerifier not available')
-            showNotification("Verification service not ready. Please refresh the page.", "error")
-            return
+    // Close quick view modal
+    document.getElementById('closeQuickView').addEventListener('click', closeQuickView);
+    document.getElementById('quickViewModal').addEventListener('click', (e) => {
+        if (e.target.id === 'quickViewModal') {
+            closeQuickView();
         }
+    });
 
-        console.log('Initializing reCAPTCHA...')
-        
-        recaptchaVerifier = new window.RecaptchaVerifier(window.firebaseAuth, 'recaptcha-container', {
-            'size': 'normal',
-            'callback': (response) => {
-                console.log('reCAPTCHA solved:', response)
-            },
-            'expired-callback': () => {
-                console.log('reCAPTCHA expired')
-                showNotification("reCAPTCHA expired. Please try again.", "error")
-            },
-            'error-callback': (error) => {
-                console.error('reCAPTCHA error:', error)
-                showNotification("reCAPTCHA error. Please refresh the page.", "error")
-            }
-        })
-        
-        console.log('Rendering reCAPTCHA...')
-        recaptchaVerifier.render().then((widgetId) => {
-            console.log('reCAPTCHA rendered successfully with widget ID:', widgetId)
-        }).catch((error) => {
-            console.error('Error rendering reCAPTCHA:', error)
-            showNotification("Error loading verification. Please refresh the page.", "error")
-        })
-        
-    } catch (error) {
-        console.error('Error initializing reCAPTCHA:', error)
-        showNotification("Error initializing verification. Please refresh the page.", "error")
-    }
-}
-
-// Handle mobile number and name submission
-function handleMobileSubmit(e) {
-    e.preventDefault()
-
-    const name = document.getElementById("userName").value.trim()
-    const mobile = document.getElementById("userMobile").value.trim()
-
-    // Validation
-    if (!name || name.length < 2) {
-        showNotification("Please enter a valid name", "error")
-        return
-    }
-
-    if (!mobile || mobile.length !== 10 || !/^\d{10}$/.test(mobile)) {
-        showNotification("Please enter a valid 10-digit mobile number", "error")
-        return
-    }
-
-    // Check if Firebase is properly initialized
-    if (!window.firebaseAuth || !window.signInWithPhoneNumber) {
-        console.error('Firebase not properly initialized')
-        showNotification("Authentication service not available. Please refresh the page.", "error")
-        return
-    }
-
-    // Check if reCAPTCHA is initialized
-    if (!recaptchaVerifier) {
-        console.error('reCAPTCHA not initialized')
-        showNotification("Verification not ready. Please refresh the page.", "error")
-        return
-    }
-
-    // Store user details
-    userDetails = {
-        name: name,
-        mobile: mobile,
-        fullMobile: `+91${mobile}`,
-    }
-
-    // Show loading state
-    const sendBtn = document.getElementById("sendOtpBtn")
-    sendBtn.innerHTML = '<i class="fas fa-spinner fa-spin mr-2"></i>Sending OTP...'
-    sendBtn.disabled = true
-
-    // Send OTP using Firebase
-    const phoneNumber = userDetails.fullMobile
-    const appVerifier = recaptchaVerifier
-
-    console.log('Attempting to send OTP to:', phoneNumber)
-    console.log('reCAPTCHA verifier:', appVerifier)
-
-    window.signInWithPhoneNumber(window.firebaseAuth, phoneNumber, appVerifier)
-        .then((confirmation) => {
-            confirmationResult = confirmation
-            console.log('OTP sent successfully')
-            
-            // Update display mobile number
-            document.getElementById("displayMobile").textContent = userDetails.fullMobile
-
-            // Move to step 2
-            showStep(2)
-
-            // Start resend timer
-            startResendTimer()
-
-            // Reset button
-            sendBtn.innerHTML = "Send OTP"
-            sendBtn.disabled = false
-
-            showNotification(`OTP sent to ${userDetails.fullMobile}`, "success")
-        })
-        .catch((error) => {
-            console.error('Error sending OTP:', error)
-            console.error('Error code:', error.code)
-            console.error('Error message:', error.message)
-            
-            // Reset button
-            sendBtn.innerHTML = "Send OTP"
-            sendBtn.disabled = false
-
-            // Handle specific error cases
-            if (error.code === 'auth/invalid-phone-number') {
-                showNotification("Invalid phone number format", "error")
-            } else if (error.code === 'auth/too-many-requests') {
-                showNotification("Too many attempts. Please try again later.", "error")
-            } else if (error.code === 'auth/quota-exceeded') {
-                showNotification("SMS quota exceeded. Please try again later.", "error")
-            } else if (error.code === 'auth/invalid-recaptcha-token') {
-                showNotification("reCAPTCHA verification failed. Please try again.", "error")
-            } else if (error.code === 'auth/missing-recaptcha-token') {
-                showNotification("Please complete the reCAPTCHA verification.", "error")
-            } else if (error.code === 'auth/operation-not-allowed') {
-                showNotification("Phone authentication is not enabled for this app.", "error")
-            } else if (error.code === 'auth/network-request-failed') {
-                showNotification("Network error. Please check your internet connection.", "error")
-            } else {
-                showNotification(`Failed to send OTP: ${error.message}`, "error")
-            }
-
-            // Reset reCAPTCHA
-            if (recaptchaVerifier) {
-                recaptchaVerifier.clear()
-                recaptchaVerifier.render()
-            }
-        })
-}
-
-// Handle OTP verification
-function handleOtpSubmit(e) {
-    e.preventDefault()
-
-    const enteredOtp = getEnteredOtp()
-
-    if (enteredOtp.length !== 6) {
-        showNotification("Please enter complete 6-digit OTP", "error")
-        return
-    }
-
-    // Show loading state
-    const verifyBtn = document.getElementById("verifyOtpBtn")
-    verifyBtn.innerHTML = '<i class="fas fa-spinner fa-spin mr-2"></i>Verifying...'
-    verifyBtn.disabled = true
-
-    // Verify OTP using Firebase
-    confirmationResult.confirm(enteredOtp)
-        .then((result) => {
-            // OTP is correct
-            const user = result.user
-            console.log('OTP verified successfully:', user)
-            
-            showStep(3)
-
-            // Store user in localStorage
-            const userData = {
-                id: user.uid,
-                name: userDetails.name,
-                mobile: userDetails.mobile,
-                fullMobile: userDetails.fullMobile,
-                loginTime: new Date().toISOString(),
-                isVerified: true,
-                firebaseUid: user.uid
-            }
-
-            currentUser = userData
-            localStorage.setItem("nearNowCurrentUser", JSON.stringify(userData))
-
-            showNotification("Mobile number verified successfully!", "success")
-
-            // Auto close after 2 seconds
-            setTimeout(() => {
-                hideLoginModal()
-                updateUserDisplay()
-            }, 2000)
-        })
-        .catch((error) => {
-            console.error('Error verifying OTP:', error)
-            
-            // Reset button
-            verifyBtn.innerHTML = "Verify & Continue"
-            verifyBtn.disabled = false
-
-            // Handle specific error cases
-            if (error.code === 'auth/invalid-verification-code') {
-                showNotification("Invalid OTP. Please try again.", "error")
-            } else if (error.code === 'auth/code-expired') {
-                showNotification("OTP has expired. Please request a new one.", "error")
-            } else {
-                showNotification("Failed to verify OTP. Please try again.", "error")
-            }
-            
-            clearOtpInputs()
-        })
-}
-
-// Get entered OTP from inputs
-function getEnteredOtp() {
-    const otpInputs = document.querySelectorAll(".otp-input")
-    let otp = ""
-    otpInputs.forEach((input) => {
-        otp += input.value
-    })
-    return otp
-}
-
-// Clear OTP inputs
-function clearOtpInputs() {
-    const otpInputs = document.querySelectorAll(".otp-input")
-    otpInputs.forEach((input) => {
-        input.value = ""
-    })
-    otpInputs[0].focus()
-}
-
-// Initialize OTP input behavior
-function initializeOtpInputs() {
-    const otpInputs = document.querySelectorAll(".otp-input")
-
-    otpInputs.forEach((input, index) => {
-        input.addEventListener("input", function (e) {
-            // Only allow numbers
-            this.value = this.value.replace(/[^0-9]/g, "")
-
-            // Move to next input if current is filled
-            if (this.value.length === 1 && index < otpInputs.length - 1) {
-                otpInputs[index + 1].focus()
-            }
-        })
-
-        input.addEventListener("keydown", function (e) {
-            // Move to previous input on backspace
-            if (e.key === "Backspace" && this.value === "" && index > 0) {
-                otpInputs[index - 1].focus()
-            }
-        })
-
-        input.addEventListener("paste", (e) => {
-            e.preventDefault()
-            const pastedData = e.clipboardData.getData("text").replace(/[^0-9]/g, "")
-
-            if (pastedData.length === 6) {
-                otpInputs.forEach((inp, i) => {
-                    inp.value = pastedData[i] || ""
-                })
-            }
-        })
-    })
-}
-
-// Show specific step
-function showStep(step) {
-    // Hide all steps
-    document.querySelectorAll(".login-step").forEach((stepEl) => {
-        stepEl.classList.add("hidden")
-    })
-
-    // Show current step
-    document.getElementById(`step${step}`).classList.remove("hidden")
-    currentStep = step
-
-    // Focus on first input of current step
-    if (step === 1) {
-        document.getElementById("userName").focus()
-    } else if (step === 2) {
-        document.querySelector(".otp-input").focus()
-    }
-}
-
-// Start resend timer
-function startResendTimer() {
-    resendTimer = 30
-    const resendBtn = document.getElementById("resendOtpBtn")
-    const timerSpan = document.getElementById("resendTimer")
-
-    resendBtn.disabled = true
-
-    otpTimer = setInterval(() => {
-        resendTimer--
-        timerSpan.textContent = resendTimer
-
-        if (resendTimer <= 0) {
-            clearInterval(otpTimer)
-            resendBtn.disabled = false
-            resendBtn.innerHTML = "Resend OTP"
+    // Quick view quantity controls
+    document.getElementById('decreaseQuantity').addEventListener('click', () => {
+        const quantitySpan = document.getElementById('quickViewQuantity');
+        let quantity = parseInt(quantitySpan.textContent);
+        if (quantity > 1) {
+            quantitySpan.textContent = quantity - 1;
         }
-    }, 1000)
-}
+    });
 
-// Resend OTP
-function resendOtp() {
-    if (!confirmationResult) {
-        showNotification("No active session. Please start over.", "error")
-        return
-    }
+    document.getElementById('increaseQuantity').addEventListener('click', () => {
+        const quantitySpan = document.getElementById('quickViewQuantity');
+        let quantity = parseInt(quantitySpan.textContent);
+        quantitySpan.textContent = quantity + 1;
+    });
 
-    // Clear current OTP inputs
-    clearOtpInputs()
-
-    // Start timer again
-    startResendTimer()
-
-    showNotification(`New OTP sent to ${userDetails.fullMobile}`, "success")
-}
-
-// Change mobile number
-function changeNumber() {
-    // Clear form
-    document.getElementById("userName").value = ""
-    document.getElementById("userMobile").value = ""
-    clearOtpInputs()
-
-    // Clear timer
-    if (otpTimer) {
-        clearInterval(otpTimer)
-    }
-
-    // Reset user details and Firebase session
-    userDetails = {}
-    confirmationResult = null
-
-    // Reset reCAPTCHA
-    if (recaptchaVerifier) {
-        recaptchaVerifier.clear()
-        recaptchaVerifier.render()
-    }
-
-    // Go back to step 1
-    showStep(1)
-}
-
-// Continue after successful login
-function continueAfterLogin() {
-    hideLoginModal()
-    showNotification(`Welcome ${currentUser.name}! Happy shopping with Near & Now! 🛒`, "success")
-}
-
-// Show login modal
-function showLoginModal() {
-    const loginModal = document.getElementById("loginModal")
-    const modalOverlay = document.getElementById("modalOverlay")
-
-    // Reset to step 1
-    showStep(1)
-
-    loginModal.classList.remove("hidden")
-    loginModal.classList.add("flex")
-    modalOverlay.classList.remove("hidden")
-
-    // Ensure reCAPTCHA is initialized
-    setTimeout(() => {
-        if (!recaptchaVerifier) {
-            initializeRecaptcha()
-        } else {
-            recaptchaVerifier.render()
+    // Quick view add to cart
+    document.getElementById('quickViewAddToCart').addEventListener('click', () => {
+        if (quickViewProduct) {
+            const quantity = parseInt(document.getElementById('quickViewQuantity').textContent);
+            addToCart(quickViewProduct.id, quantity);
+            closeQuickView();
+            showNotification(`${quickViewProduct.name} added to cart!`, 'success');
         }
-    }, 100)
+    });
+
+    // Quick view wishlist
+    document.getElementById('quickViewWishlist').addEventListener('click', () => {
+        if (quickViewProduct) {
+            toggleWishlist(quickViewProduct.id);
+            updateQuickViewWishlistButton();
+        }
+    });
 }
 
-// Hide login modal
-function hideLoginModal() {
-    const loginModal = document.getElementById("loginModal")
-    const modalOverlay = document.getElementById("modalOverlay")
+function showQuickView(productId) {
+    const product = allProducts.find(p => p.id === productId);
+    if (!product) return;
 
-    loginModal.classList.add("hidden")
-    loginModal.classList.remove("flex")
-    modalOverlay.classList.add("hidden")
-
-    // Clear any timers
-    if (otpTimer) {
-        clearInterval(otpTimer)
-    }
-
-    // Reset form
-    document.getElementById("mobileForm").reset()
-    clearOtpInputs()
-    currentStep = 1
-
-    // Clean up Firebase resources
-    if (recaptchaVerifier) {
-        recaptchaVerifier.clear()
-        recaptchaVerifier.render()
+    quickViewProduct = product;
+    const modal = document.getElementById('quickViewModal');
+    
+    // Populate quick view content
+    document.getElementById('quickViewImage').src = product.image;
+    document.getElementById('quickViewImage').alt = product.name;
+    document.getElementById('quickViewName').textContent = product.name;
+    document.getElementById('quickViewDescription').textContent = product.description;
+    
+    // Price and discount
+    const price = typeof product.price === 'string' ? product.price.replace(/^₹/, '') : product.price;
+    const originalPrice = product.originalPrice ? (typeof product.originalPrice === 'string' ? product.originalPrice.replace(/^₹/, '') : product.originalPrice) : null;
+    
+    document.getElementById('quickViewPrice').textContent = `₹${price}`;
+    if (originalPrice) {
+        document.getElementById('quickViewOriginalPrice').textContent = `₹${originalPrice}`;
+        document.getElementById('quickViewOriginalPrice').classList.remove('hidden');
+        document.getElementById('quickViewDiscountText').textContent = `Save ₹${originalPrice - price}`;
+        document.getElementById('quickViewDiscountText').classList.remove('hidden');
+    } else {
+        document.getElementById('quickViewOriginalPrice').classList.add('hidden');
+        document.getElementById('quickViewDiscountText').classList.add('hidden');
     }
     
-    // Reset Firebase session
-    confirmationResult = null
-    userDetails = {}
+    // Discount badge
+    if (product.discount > 0) {
+        document.getElementById('quickViewDiscount').textContent = `-${product.discount}%`;
+        document.getElementById('quickViewDiscount').classList.remove('hidden');
+    } else {
+        document.getElementById('quickViewDiscount').classList.add('hidden');
+    }
+    
+    // Rating and reviews
+    document.getElementById('quickViewRating').innerHTML = generateStarRating(product.rating);
+    document.getElementById('quickViewRatingText').textContent = product.rating;
+    document.getElementById('quickViewReviews').textContent = `${product.reviews} reviews`;
+    
+    // Stock status
+    document.getElementById('quickViewStock').textContent = product.inStock ? 'In Stock' : 'Out of Stock';
+    document.getElementById('quickViewStock').className = product.inStock ? 'text-sm text-green-600 font-semibold' : 'text-sm text-red-600 font-semibold';
+    
+    // Reset quantity
+    document.getElementById('quickViewQuantity').textContent = '1';
+    
+    // Update wishlist button
+    updateQuickViewWishlistButton();
+    
+    // Load reviews
+    loadQuickViewReviews(product);
+    
+    // Show modal
+    modal.classList.remove('hidden');
+    modal.classList.add('flex');
+    document.getElementById('modalOverlay').classList.remove('hidden');
 }
 
-// Update user display
-function updateUserDisplay() {
-    const accountBtn = document.getElementById("accountBtn")
-    if (currentUser) {
-        accountBtn.innerHTML = `
-            <div class="relative">
-                <div class="text-center cursor-pointer user-menu-trigger">
-                    <i class="fas fa-user-circle text-2xl"></i>
-                    <p class="text-sm mt-1">${currentUser.name}</p>
-                </div>
-                <div class="user-dropdown absolute top-full right-0 mt-2 w-48 bg-white rounded-lg shadow-lg border border-gray-200 opacity-0 invisible transform scale-95 transition-all duration-200 z-50">
-                    <div class="py-2">
-                        <div class="px-4 py-2 border-b border-gray-100">
-                            <p class="font-semibold text-gray-800">${currentUser.name}</p>
-                            <p class="text-sm text-gray-500">${currentUser.fullMobile}</p>
-                        </div>
-                        <a href="#" class="user-menu-item block px-4 py-2 text-gray-700 hover:bg-gray-100 transition duration-200" data-action="profile">
-                            <i class="fas fa-user mr-3 text-primary"></i>View Profile
-                        </a>
-                        <a href="#" class="user-menu-item block px-4 py-2 text-gray-700 hover:bg-gray-100 transition duration-200" data-action="orders">
-                            <i class="fas fa-shopping-bag mr-3 text-primary"></i>Order History
-                        </a>
-                        <a href="#" class="user-menu-item block px-4 py-2 text-gray-700 hover:bg-gray-100 transition duration-200" data-action="settings">
-                            <i class="fas fa-cog mr-3 text-primary"></i>Settings
-                        </a>
-                        <div class="border-t border-gray-100 mt-1 pt-1">
-                            <a href="#" class="user-menu-item block px-4 py-2 text-red-600 hover:bg-red-50 transition duration-200" data-action="logout">
-                                <i class="fas fa-sign-out-alt mr-3"></i>Logout
-                            </a>
-                        </div>
+function closeQuickView() {
+    const modal = document.getElementById('quickViewModal');
+    modal.classList.add('hidden');
+    modal.classList.remove('flex');
+    document.getElementById('modalOverlay').classList.add('hidden');
+    quickViewProduct = null;
+}
+
+function updateQuickViewWishlistButton() {
+    if (!quickViewProduct) return;
+    
+    const isInWishlist = wishlistItems.some(item => item.id === quickViewProduct.id);
+    const wishlistBtn = document.getElementById('quickViewWishlist');
+    const icon = wishlistBtn.querySelector('i');
+    
+    if (isInWishlist) {
+        wishlistBtn.classList.add('text-red-500');
+        icon.className = 'fas fa-heart';
+    } else {
+        wishlistBtn.classList.remove('text-red-500');
+        icon.className = 'far fa-heart';
+    }
+}
+
+function loadQuickViewReviews(product) {
+    const reviewsContainer = document.getElementById('quickViewReviewsList');
+    
+    if (product.reviewsList && product.reviewsList.length > 0) {
+        const reviewsHTML = product.reviewsList.slice(0, 3).map(review => `
+            <div class="border-b border-gray-200 pb-3 last:border-b-0">
+                <div class="flex items-center justify-between mb-2">
+                    <div class="flex items-center space-x-2">
+                        <span class="font-semibold text-gray-800">${review.userName}</span>
+                        ${review.verified ? '<span class="text-blue-500 text-xs"><i class="fas fa-check-circle"></i> Verified</span>' : ''}
+                    </div>
+                    <div class="flex text-yellow-400 text-sm">
+                        ${generateStarRating(review.rating)}
                     </div>
                 </div>
+                <p class="text-gray-600 text-sm">${review.comment}</p>
+                <span class="text-gray-400 text-xs">${new Date(review.date).toLocaleDateString()}</span>
             </div>
-        `
-
-        // Add event listeners for the dropdown
-        initializeUserDropdown()
-    }
-}
-
-// Initialize user dropdown
-function initializeUserDropdown() {
-    const userMenuTrigger = document.querySelector(".user-menu-trigger")
-    const userDropdown = document.querySelector(".user-dropdown")
-    const userMenuItems = document.querySelectorAll(".user-menu-item")
-
-    if (!userMenuTrigger || !userDropdown) return
-
-    // Toggle dropdown on click
-    userMenuTrigger.addEventListener("click", (e) => {
-        e.stopPropagation()
-        toggleUserDropdown()
-    })
-
-    // Handle menu item clicks
-    userMenuItems.forEach((item) => {
-        item.addEventListener("click", function (e) {
-            e.preventDefault()
-            e.stopPropagation()
-
-            const action = this.dataset.action
-            handleUserMenuAction(action)
-            hideUserDropdown()
-        })
-    })
-
-    // Close dropdown when clicking outside
-    document.addEventListener("click", (e) => {
-        if (!userMenuTrigger.contains(e.target) && !userDropdown.contains(e.target)) {
-            hideUserDropdown()
-        }
-    })
-}
-
-// Toggle user dropdown
-function toggleUserDropdown() {
-    const userDropdown = document.querySelector(".user-dropdown")
-    if (!userDropdown) return
-
-    const isVisible = !userDropdown.classList.contains("opacity-0")
-
-    if (isVisible) {
-        hideUserDropdown()
+        `).join('');
+        
+        reviewsContainer.innerHTML = reviewsHTML;
     } else {
-        showUserDropdown()
+        reviewsContainer.innerHTML = '<p class="text-gray-500 text-center py-4">No reviews yet. Be the first to review this product!</p>';
     }
 }
 
-// Show user dropdown
-function showUserDropdown() {
-    const userDropdown = document.querySelector(".user-dropdown")
-    if (!userDropdown) return
-
-    userDropdown.classList.remove("opacity-0", "invisible", "scale-95")
-    userDropdown.classList.add("opacity-100", "visible", "scale-100")
+// Advanced Filtering Functionality
+function initializeAdvancedFilters() {
+    // This function can be expanded to add advanced filtering to the all-products page
+    console.log('Advanced filters initialized for all products page');
 }
 
-// Hide user dropdown
-function hideUserDropdown() {
-    const userDropdown = document.querySelector(".user-dropdown")
-    if (!userDropdown) return
-
-    userDropdown.classList.remove("opacity-100", "visible", "scale-100")
-    userDropdown.classList.add("opacity-0", "invisible", "scale-95")
-}
-
-// Handle user menu action
-function handleUserMenuAction(action) {
-    switch (action) {
-        case "profile":
-            showNotification("View Profile feature coming soon!", "info")
-            break
-        case "orders":
-            showNotification("Order History feature coming soon!", "info")
-            break
-        case "settings":
-            showNotification("Settings feature coming soon!", "info")
-            break
-        case "logout":
-            logout()
-            break
-    }
-}
-
-// Logout function
-function logout() {
-    localStorage.removeItem("nearNowCurrentUser")
-    currentUser = null
-
-    // Reset account button
-    document.getElementById("accountBtn").innerHTML = `
-        <i class="fas fa-user text-2xl"></i>
-        <span class="ml-2">Account</span>
-    `
-
-    showNotification("Logged out successfully!", "success")
-}
-
-// Show notification
-function showNotification(message, type = "info") {
-    const notification = document.createElement("div")
-    notification.className = `fixed top-4 right-4 z-50 px-6 py-4 rounded-lg shadow-lg text-white transform translate-x-full transition-all duration-300 max-w-sm`
-
-    switch (type) {
-        case "success":
-            notification.classList.add("bg-green-500")
-            notification.innerHTML = `<i class="fas fa-check-circle mr-2"></i>${message}`
-            break
-        case "error":
-            notification.classList.add("bg-red-500")
-            notification.innerHTML = `<i class="fas fa-exclamation-circle mr-2"></i>${message}`
-            break
-        case "info":
-        default:
-            notification.classList.add("bg-blue-500")
-            notification.innerHTML = `<i class="fas fa-info-circle mr-2"></i>${message}`
-            break
-    }
-
-    document.body.appendChild(notification)
-
-    setTimeout(() => {
-        notification.classList.remove("translate-x-full")
-    }, 100)
-
-    setTimeout(() => {
-        notification.classList.add("translate-x-full")
-        setTimeout(() => {
-            if (notification.parentNode) {
-                notification.parentNode.removeChild(notification)
+// Enhanced Search Functionality
+function initializeEnhancedSearch() {
+    const searchInput = document.getElementById('searchInput');
+    
+    // Debounced search function
+    let searchTimeout;
+    const debouncedSearch = (query) => {
+        clearTimeout(searchTimeout);
+        searchTimeout = setTimeout(() => {
+            performEnhancedSearch(query);
+        }, 300);
+    };
+    
+    // Enhanced search
+    if (searchInput) {
+        searchInput.addEventListener('input', (e) => {
+            const query = e.target.value.trim();
+            if (query.length > 0) {
+                debouncedSearch(query);
+            } else {
+                filterAndSortProducts();
             }
-        }, 300)
-    }, 4000)
+        });
+    }
+}
+
+function performEnhancedSearch(query) {
+    if (!query) {
+        filterAndSortProducts();
+        return;
+    }
+    
+    const searchTerm = query.toLowerCase();
+    const filtered = allProducts.filter(product => {
+        return product.name.toLowerCase().includes(searchTerm) ||
+               product.description.toLowerCase().includes(searchTerm) ||
+               (product.category && product.category.toLowerCase().includes(searchTerm));
+    });
+    
+    displayedProducts = filtered;
+    currentPage = 1;
+    renderProducts();
+}
+
+// Product Reviews System
+function initializeProductReviews() {
+    console.log('Product reviews system initialized for all products page');
+}
+
+// Enhanced Product Event Listeners
+function addProductEventListeners() {
+    // Add to cart buttons
+    document.addEventListener('click', (e) => {
+        if (e.target.closest('.add-to-cart')) {
+            const productCard = e.target.closest('.product-card');
+            const productId = productCard.dataset.productId;
+            addToCart(productId, 1);
+            showNotification('Product added to cart!', 'success');
+        }
+    });
+    
+    // Wishlist buttons
+    document.addEventListener('click', (e) => {
+        if (e.target.closest('.wishlist-btn')) {
+            const productCard = e.target.closest('.product-card');
+            const productId = productCard.dataset.productId;
+            toggleWishlist(productId);
+            
+            // Update button appearance
+            const wishlistBtn = e.target.closest('.wishlist-btn');
+            const icon = wishlistBtn.querySelector('i');
+            const isInWishlist = wishlistItems.some(item => item.id === productId);
+            
+            if (isInWishlist) {
+                wishlistBtn.classList.add('text-red-500');
+                icon.className = 'fas fa-heart';
+                showNotification('Added to wishlist!', 'success');
+            } else {
+                wishlistBtn.classList.remove('text-red-500');
+                icon.className = 'far fa-heart';
+                showNotification('Removed from wishlist', 'info');
+            }
+        }
+    });
+}
+
+// Enhanced add to cart function
+function addToCart(productId, quantity = 1) {
+    const product = allProducts.find(p => p.id === productId);
+    if (!product) return;
+    
+    const existingItem = cartItems.find(item => item.id === productId);
+    
+    if (existingItem) {
+        existingItem.quantity += quantity;
+    } else {
+        cartItems.push({
+            id: productId,
+            name: product.name,
+            price: product.price,
+            image: product.image,
+            quantity: quantity
+        });
+    }
+    
+    saveCartToStorage();
+    updateCartCount();
+    updateCartDisplay();
+}
+
+// Enhanced wishlist function
+function toggleWishlist(productId) {
+    const existingIndex = wishlistItems.findIndex(item => item.id === productId);
+    
+    if (existingIndex !== -1) {
+        wishlistItems.splice(existingIndex, 1);
+    } else {
+        const product = allProducts.find(p => p.id === productId);
+        if (product) {
+            wishlistItems.push({
+                id: productId,
+                name: product.name,
+                price: product.price,
+                image: product.image
+            });
+        }
+    }
+    
+    saveWishlistToStorage();
+    updateWishlistCount();
+}
+
+// Storage functions
+function saveCartToStorage() {
+    localStorage.setItem('nearNowCartItems', JSON.stringify(cartItems));
+}
+
+function saveWishlistToStorage() {
+    localStorage.setItem('nearNowWishlistItems', JSON.stringify(wishlistItems));
+}
+
+function updateCartCount() {
+    cartCount = cartItems.reduce((total, item) => total + item.quantity, 0);
+    const cartCountElement = document.getElementById('cartCount');
+    if (cartCountElement) {
+        cartCountElement.textContent = cartCount;
+    }
+}
+
+function updateWishlistCount() {
+    wishlistCount = wishlistItems.length;
+    const wishlistCountElement = document.getElementById('wishlistCount');
+    if (wishlistCountElement) {
+        wishlistCountElement.textContent = wishlistCount;
+    }
+}
+
+function updateCartDisplay() {
+    // This function can be implemented to update cart display if needed
+    console.log('Cart updated:', cartItems);
+}
+
+// Notification function
+function showNotification(message, type = 'info') {
+    // Create notification element
+    const notification = document.createElement('div');
+    notification.className = `fixed top-4 right-4 z-50 p-4 rounded-lg shadow-lg transition-all duration-300 transform translate-x-full ${
+        type === 'success' ? 'bg-green-500 text-white' :
+        type === 'error' ? 'bg-red-500 text-white' :
+        'bg-blue-500 text-white'
+    }`;
+    notification.innerHTML = `
+        <div class="flex items-center space-x-2">
+            <i class="fas ${type === 'success' ? 'fa-check-circle' : type === 'error' ? 'fa-exclamation-circle' : 'fa-info-circle'}"></i>
+            <span>${message}</span>
+        </div>
+    `;
+    
+    document.body.appendChild(notification);
+    
+    // Animate in
+    setTimeout(() => {
+        notification.classList.remove('translate-x-full');
+    }, 100);
+    
+    // Remove after 3 seconds
+    setTimeout(() => {
+        notification.classList.add('translate-x-full');
+        setTimeout(() => {
+            document.body.removeChild(notification);
+        }, 300);
+    }, 3000);
 }
 
 // Initialize authentication
