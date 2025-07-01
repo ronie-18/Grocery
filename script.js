@@ -77,13 +77,19 @@ const categories = [
 
 // Initialize the website
 document.addEventListener("DOMContentLoaded", () => {
-    showLoadingScreen()
-    setTimeout(() => {
-        hideLoadingScreen()
-        initializeWebsite()
-    }, 3000) // 3 second loading screen
+    // TEMPORARILY COMMENTED OUT - Loading screen disabled
+    // showLoadingScreen()
+    // setTimeout(() => {
+    //     hideLoadingScreen()
+    //     initializeWebsite()
+    // }, 3000) // 3 second loading screen
+    
+    // Initialize website immediately without loading screen
+    initializeWebsite()
 })
 
+// TEMPORARILY COMMENTED OUT - Loading screen functions disabled
+/*
 function showLoadingScreen() {
     const loadingScreen = document.getElementById("loadingScreen")
     loadingScreen.style.display = "flex"
@@ -96,6 +102,7 @@ function hideLoadingScreen() {
         loadingScreen.style.display = "none"
     }, 500)
 }
+*/
 
 function initializeWebsite() {
     allProducts = [...products]
