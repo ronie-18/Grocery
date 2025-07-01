@@ -107,7 +107,9 @@ function generateStarRating(rating) {
     const hasHalfStar = rating % 1 !== 0;
     let stars = '';
     for (let i = 0; i < fullStars; i++) stars += '<i class="fas fa-star"></i>';
-    if (hasHalfStar) stars += '<i class="fas fa-star-half-alt"></i>';
+    if (hasHalfStar) {
+        stars += '<i class="fas fa-star-half-alt"></i>';
+    }
     const emptyStars = 5 - Math.ceil(rating);
     for (let i = 0; i < emptyStars; i++) stars += '<i class="far fa-star"></i>';
     return stars;
@@ -185,7 +187,7 @@ function initializeQuickView() {
     document.addEventListener('click', (e) => {
         if (e.target.closest('.quick-view-btn') || e.target.closest('.quick-view-btn-mobile') || e.target.closest('.product-name')) {
             const productCard = e.target.closest('.product-card');
-            const productId = productCard.dataset.productId;
+            const { productId } = productCard.dataset;
             showQuickView(productId);
         }
     });
@@ -234,7 +236,9 @@ function initializeQuickView() {
 
 function showQuickView(productId) {
     const product = allProducts.find(p => p.id === productId);
-    if (!product) return;
+    if (!product) {
+        return;
+    }
 
     quickViewProduct = product;
     const modal = document.getElementById('quickViewModal');
@@ -300,7 +304,9 @@ function closeQuickView() {
 }
 
 function updateQuickViewWishlistButton() {
-    if (!quickViewProduct) return;
+    if (!quickViewProduct) {
+        return;
+    }
 
     const isInWishlist = wishlistItems.some(item => item.id === quickViewProduct.id);
     const wishlistBtn = document.getElementById('quickViewWishlist');
@@ -381,8 +387,8 @@ function performEnhancedSearch(query) {
     const searchTerm = query.toLowerCase();
     const filtered = allProducts.filter(product => {
         return product.name.toLowerCase().includes(searchTerm) ||
-               product.description.toLowerCase().includes(searchTerm) ||
-               (product.category && product.category.toLowerCase().includes(searchTerm));
+            product.description.toLowerCase().includes(searchTerm) ||
+            (product.category && product.category.toLowerCase().includes(searchTerm));
     });
 
     displayedProducts = filtered;
@@ -401,7 +407,7 @@ function addProductEventListeners() {
     document.addEventListener('click', (e) => {
         if (e.target.closest('.add-to-cart')) {
             const productCard = e.target.closest('.product-card');
-            const productId = productCard.dataset.productId;
+            const { productId } = productCard.dataset;
             addToCart(productId, 1);
             showNotification('Product added to cart!', 'success');
         }
@@ -411,7 +417,7 @@ function addProductEventListeners() {
     document.addEventListener('click', (e) => {
         if (e.target.closest('.wishlist-btn')) {
             const productCard = e.target.closest('.product-card');
-            const productId = productCard.dataset.productId;
+            const { productId } = productCard.dataset;
             toggleWishlist(productId);
 
             // Update button appearance
@@ -512,11 +518,10 @@ function updateCartDisplay() {
 function showNotification(message, type = 'info') {
     // Create notification element
     const notification = document.createElement('div');
-    notification.className = `fixed top-4 right-4 z-50 p-4 rounded-lg shadow-lg transition-all duration-300 transform translate-x-full ${
-        type === 'success' ? 'bg-green-500 text-white' :
+    notification.className = `fixed top-4 right-4 z-50 p-4 rounded-lg shadow-lg transition-all duration-300 transform translate-x-full ${type === 'success' ? 'bg-green-500 text-white' :
         type === 'error' ? 'bg-red-500 text-white' :
-        'bg-blue-500 text-white'
-    }`;
+            'bg-blue-500 text-white'
+        }`;
     notification.innerHTML = `
         <div class="flex items-center space-x-2">
             <i class="fas ${type === 'success' ? 'fa-check-circle' : type === 'error' ? 'fa-exclamation-circle' : 'fa-info-circle'}"></i>
@@ -576,7 +581,7 @@ function initializeLoginSystem() {
 }
 
 // Initialize everything when DOM is loaded
-document.addEventListener('DOMContentLoaded', function() {
+document.addEventListener('DOMContentLoaded', function () {
     // Initialize authentication
     initializeAuth()
     initializeLoginSystem()
