@@ -72,20 +72,6 @@ function createProductCard(product) {
                         <i class="fas fa-eye text-gray-600 hover:text-primary"></i>
                     </button>
                 </div>
-                <div class="absolute bottom-4 left-4 right-4">
-                    <div class="bg-white bg-opacity-95 rounded-lg p-3 transform translate-y-full group-hover:translate-y-0 transition duration-300">
-                        <div class="flex items-center justify-between">
-                            <div class="flex items-center space-x-2">
-                                <span class="text-primary font-bold text-lg">₹${price}</span>
-                                ${originalPrice ? `<span class="text-gray-400 line-through text-sm">₹${originalPrice}</span>` : ''}
-                            </div>
-                            <button class="add-to-cart-btn bg-primary text-white px-4 py-2 rounded-full hover:bg-secondary transition duration-300 flex items-center space-x-2">
-                                <i class="fas fa-plus"></i>
-                                <span>Add</span>
-                            </button>
-                        </div>
-                    </div>
-                </div>
             </div>
             <div class="p-6">
                 <div class="flex items-center justify-between mb-2">
@@ -95,7 +81,6 @@ function createProductCard(product) {
                     <span class="text-gray-500 text-sm">(${product.rating})</span>
                 </div>
                 <h3 class="font-bold text-gray-800 text-lg mb-2 cursor-pointer hover:text-primary transition duration-300 product-name">${product.name}</h3>
-                <p class="text-gray-600 text-sm mb-4 line-clamp-2">${product.description}</p>
                 <div class="flex items-center justify-between">
                     <div class="flex items-center space-x-2">
                         <span class="text-primary font-bold text-xl">₹${price}</span>
@@ -253,17 +238,16 @@ function showQuickView(productId) {
 
     quickViewProduct = product;
     const modal = document.getElementById('quickViewModal');
-    
+
     // Populate quick view content
     document.getElementById('quickViewImage').src = product.image;
     document.getElementById('quickViewImage').alt = product.name;
     document.getElementById('quickViewName').textContent = product.name;
-    document.getElementById('quickViewDescription').textContent = product.description;
-    
+
     // Price and discount
     const price = typeof product.price === 'string' ? product.price.replace(/^₹/, '') : product.price;
     const originalPrice = product.originalPrice ? (typeof product.originalPrice === 'string' ? product.originalPrice.replace(/^₹/, '') : product.originalPrice) : null;
-    
+
     document.getElementById('quickViewPrice').textContent = `₹${price}`;
     if (originalPrice) {
         document.getElementById('quickViewOriginalPrice').textContent = `₹${originalPrice}`;
@@ -274,7 +258,7 @@ function showQuickView(productId) {
         document.getElementById('quickViewOriginalPrice').classList.add('hidden');
         document.getElementById('quickViewDiscountText').classList.add('hidden');
     }
-    
+
     // Discount badge
     if (product.discount > 0) {
         document.getElementById('quickViewDiscount').textContent = `-${product.discount}%`;
@@ -282,25 +266,25 @@ function showQuickView(productId) {
     } else {
         document.getElementById('quickViewDiscount').classList.add('hidden');
     }
-    
+
     // Rating and reviews
     document.getElementById('quickViewRating').innerHTML = generateStarRating(product.rating);
     document.getElementById('quickViewRatingText').textContent = product.rating;
     document.getElementById('quickViewReviews').textContent = `${product.reviews} reviews`;
-    
+
     // Stock status
     document.getElementById('quickViewStock').textContent = product.inStock ? 'In Stock' : 'Out of Stock';
     document.getElementById('quickViewStock').className = product.inStock ? 'text-sm text-green-600 font-semibold' : 'text-sm text-red-600 font-semibold';
-    
+
     // Reset quantity
     document.getElementById('quickViewQuantity').textContent = '1';
-    
+
     // Update wishlist button
     updateQuickViewWishlistButton();
-    
+
     // Load reviews
     loadQuickViewReviews(product);
-    
+
     // Show modal
     modal.classList.remove('hidden');
     modal.classList.add('flex');
@@ -317,11 +301,11 @@ function closeQuickView() {
 
 function updateQuickViewWishlistButton() {
     if (!quickViewProduct) return;
-    
+
     const isInWishlist = wishlistItems.some(item => item.id === quickViewProduct.id);
     const wishlistBtn = document.getElementById('quickViewWishlist');
     const icon = wishlistBtn.querySelector('i');
-    
+
     if (isInWishlist) {
         wishlistBtn.classList.add('text-red-500');
         icon.className = 'fas fa-heart';
@@ -333,7 +317,7 @@ function updateQuickViewWishlistButton() {
 
 function loadQuickViewReviews(product) {
     const reviewsContainer = document.getElementById('quickViewReviewsList');
-    
+
     if (product.reviewsList && product.reviewsList.length > 0) {
         const reviewsHTML = product.reviewsList.slice(0, 3).map(review => `
             <div class="border-b border-gray-200 pb-3 last:border-b-0">
@@ -346,11 +330,10 @@ function loadQuickViewReviews(product) {
                         ${generateStarRating(review.rating)}
                     </div>
                 </div>
-                <p class="text-gray-600 text-sm">${review.comment}</p>
                 <span class="text-gray-400 text-xs">${new Date(review.date).toLocaleDateString()}</span>
             </div>
         `).join('');
-        
+
         reviewsContainer.innerHTML = reviewsHTML;
     } else {
         reviewsContainer.innerHTML = '<p class="text-gray-500 text-center py-4">No reviews yet. Be the first to review this product!</p>';
@@ -366,7 +349,7 @@ function initializeAdvancedFilters() {
 // Enhanced Search Functionality
 function initializeEnhancedSearch() {
     const searchInput = document.getElementById('searchInput');
-    
+
     // Debounced search function
     let searchTimeout;
     const debouncedSearch = (query) => {
@@ -375,7 +358,7 @@ function initializeEnhancedSearch() {
             performEnhancedSearch(query);
         }, 300);
     };
-    
+
     // Enhanced search
     if (searchInput) {
         searchInput.addEventListener('input', (e) => {
@@ -394,14 +377,14 @@ function performEnhancedSearch(query) {
         filterAndSortProducts();
         return;
     }
-    
+
     const searchTerm = query.toLowerCase();
     const filtered = allProducts.filter(product => {
         return product.name.toLowerCase().includes(searchTerm) ||
                product.description.toLowerCase().includes(searchTerm) ||
                (product.category && product.category.toLowerCase().includes(searchTerm));
     });
-    
+
     displayedProducts = filtered;
     currentPage = 1;
     renderProducts();
@@ -423,19 +406,19 @@ function addProductEventListeners() {
             showNotification('Product added to cart!', 'success');
         }
     });
-    
+
     // Wishlist buttons
     document.addEventListener('click', (e) => {
         if (e.target.closest('.wishlist-btn')) {
             const productCard = e.target.closest('.product-card');
             const productId = productCard.dataset.productId;
             toggleWishlist(productId);
-            
+
             // Update button appearance
             const wishlistBtn = e.target.closest('.wishlist-btn');
             const icon = wishlistBtn.querySelector('i');
             const isInWishlist = wishlistItems.some(item => item.id === productId);
-            
+
             if (isInWishlist) {
                 wishlistBtn.classList.add('text-red-500');
                 icon.className = 'fas fa-heart';
@@ -453,9 +436,9 @@ function addProductEventListeners() {
 function addToCart(productId, quantity = 1) {
     const product = allProducts.find(p => p.id === productId);
     if (!product) return;
-    
+
     const existingItem = cartItems.find(item => item.id === productId);
-    
+
     if (existingItem) {
         existingItem.quantity += quantity;
     } else {
@@ -467,7 +450,7 @@ function addToCart(productId, quantity = 1) {
             quantity: quantity
         });
     }
-    
+
     saveCartToStorage();
     updateCartCount();
     updateCartDisplay();
@@ -476,7 +459,7 @@ function addToCart(productId, quantity = 1) {
 // Enhanced wishlist function
 function toggleWishlist(productId) {
     const existingIndex = wishlistItems.findIndex(item => item.id === productId);
-    
+
     if (existingIndex !== -1) {
         wishlistItems.splice(existingIndex, 1);
     } else {
@@ -490,7 +473,7 @@ function toggleWishlist(productId) {
             });
         }
     }
-    
+
     saveWishlistToStorage();
     updateWishlistCount();
 }
@@ -540,14 +523,14 @@ function showNotification(message, type = 'info') {
             <span>${message}</span>
         </div>
     `;
-    
+
     document.body.appendChild(notification);
-    
+
     // Animate in
     setTimeout(() => {
         notification.classList.remove('translate-x-full');
     }, 100);
-    
+
     // Remove after 3 seconds
     setTimeout(() => {
         notification.classList.add('translate-x-full');
@@ -578,7 +561,7 @@ function initializeAuth() {
 function initializeLoginSystem() {
     // Initialize reCAPTCHA verifier
     initializeRecaptcha()
-    
+
     // Form event listeners
     document.getElementById("mobileForm").addEventListener("submit", handleMobileSubmit)
     document.getElementById("otpForm").addEventListener("submit", handleOtpSubmit)
@@ -597,7 +580,7 @@ document.addEventListener('DOMContentLoaded', function() {
     // Initialize authentication
     initializeAuth()
     initializeLoginSystem()
-    
+
     // Update cart and wishlist counts
     document.getElementById("cartCount").textContent = cartCount
     document.getElementById("wishlistCount").textContent = wishlistCount

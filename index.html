@@ -1,19 +1,22 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Near & Now - Online Grocery Store</title>
-    <meta name="description" content="Order fresh groceries online with Near & Now. Fast delivery, best prices, and quality products!">
+    <meta name="description"
+        content="Order fresh groceries online with Near & Now. Fast delivery, best prices, and quality products!">
     <meta property="og:title" content="Near & Now - Online Grocery Store">
-    <meta property="og:description" content="Order fresh groceries online with Near & Now. Fast delivery, best prices, and quality products!">
+    <meta property="og:description"
+        content="Order fresh groceries online with Near & Now. Fast delivery, best prices, and quality products!">
     <meta property="og:type" content="website">
     <meta property="og:url" content="https://nearnow.com/">
     <meta property="og:image" content="/logo.png">
     <link rel="icon" type="image/png" href="/favicon.png">
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.7.2/css/all.min.css">
-    
+
     <!-- Firebase SDK -->
     <script type="module">
         // Import the functions you need from the SDKs you need
@@ -42,7 +45,7 @@
         window.RecaptchaVerifier = RecaptchaVerifier;
         window.signInWithPhoneNumber = signInWithPhoneNumber;
     </script>
-    
+
     <script>
         tailwind.config = {
             theme: {
@@ -105,18 +108,39 @@
             animation: bounce 1.4s ease-in-out infinite both;
         }
 
-        .loading-dot:nth-child(1) { animation-delay: -0.32s; }
-        .loading-dot:nth-child(2) { animation-delay: -0.16s; }
-        .loading-dot:nth-child(3) { animation-delay: 0s; }
+        .loading-dot:nth-child(1) {
+            animation-delay: -0.32s;
+        }
+
+        .loading-dot:nth-child(2) {
+            animation-delay: -0.16s;
+        }
+
+        .loading-dot:nth-child(3) {
+            animation-delay: 0s;
+        }
 
         @keyframes spin {
-            0% { transform: rotate(0deg); }
-            100% { transform: rotate(360deg); }
+            0% {
+                transform: rotate(0deg);
+            }
+
+            100% {
+                transform: rotate(360deg);
+            }
         }
 
         @keyframes bounce {
-            0%, 80%, 100% { transform: scale(0); }
-            40% { transform: scale(1); }
+
+            0%,
+            80%,
+            100% {
+                transform: scale(0);
+            }
+
+            40% {
+                transform: scale(1);
+            }
         }
 
         .cart-sidebar {
@@ -130,8 +154,13 @@
 
         /* Custom animations for enhanced buttons */
         @keyframes spin-slow {
-            from { transform: rotate(0deg); }
-            to { transform: rotate(360deg); }
+            from {
+                transform: rotate(0deg);
+            }
+
+            to {
+                transform: rotate(360deg);
+            }
         }
 
         .animate-spin-slow {
@@ -139,8 +168,15 @@
         }
 
         @keyframes float {
-            0%, 100% { transform: translateY(0px); }
-            50% { transform: translateY(-5px); }
+
+            0%,
+            100% {
+                transform: translateY(0px);
+            }
+
+            50% {
+                transform: translateY(-5px);
+            }
         }
 
         .animate-float {
@@ -174,8 +210,15 @@
         }
 
         @keyframes fadeIn {
-            from { opacity: 0; transform: translateY(20px); }
-            to { opacity: 1; transform: translateY(0); }
+            from {
+                opacity: 0;
+                transform: translateY(20px);
+            }
+
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
         }
 
         .slide-in-right {
@@ -183,8 +226,13 @@
         }
 
         @keyframes slideInRight {
-            from { transform: translateX(100%); }
-            to { transform: translateX(0); }
+            from {
+                transform: translateX(100%);
+            }
+
+            to {
+                transform: translateX(0);
+            }
         }
 
         .otp-input:focus {
@@ -257,6 +305,7 @@
                 opacity: 0;
                 transform: translateY(-20px);
             }
+
             to {
                 opacity: 1;
                 transform: translateY(0);
@@ -340,12 +389,12 @@
             .product-card {
                 margin-bottom: 1rem;
             }
-            
+
             .quick-view-modal {
                 margin: 1rem;
                 max-height: calc(100vh - 2rem);
             }
-            
+
             .filter-panel {
                 margin: 1rem;
             }
@@ -383,18 +432,21 @@
     </style>
     <script src="products-data.js"></script>
 </head>
+
 <body class="bg-gray-50">
     <!-- Mobile Nav Hamburger -->
-    <button id="mobileNavBtn" class="fixed top-4 left-4 z-50 bg-white p-2 rounded-full shadow-md md:hidden" aria-label="Open navigation menu">
+    <button id="mobileNavBtn" class="fixed top-4 left-4 z-50 bg-white p-2 rounded-full shadow-md md:hidden"
+        aria-label="Open navigation menu">
         <i class="fas fa-bars text-2xl text-primary"></i>
     </button>
 
     <!-- Mobile Navigation Menu -->
-    <div id="mobileNavMenu" class="fixed top-0 left-0 h-full w-80 bg-white shadow-2xl z-50 transform -translate-x-full transition-transform duration-300 ease-in-out md:hidden">
+    <div id="mobileNavMenu"
+        class="fixed top-0 left-0 h-full w-80 bg-white shadow-2xl z-50 transform -translate-x-full transition-transform duration-300 ease-in-out md:hidden">
         <div class="p-6 border-b border-gray-200">
             <div class="flex items-center justify-between">
                 <div class="flex items-center">
-                    <img src="Logo.jpg" alt="Near & Now" class="w-12 h-12 mr-3">
+                    <img src="Logo.png" alt="Near & Now" class="w-12 h-12 mr-3">
                     <div>
                         <h1 class="text-xl font-bold text-gray-800">Near & Now</h1>
                         <p class="text-xs text-gray-500">Online Grocery Store</p>
@@ -405,13 +457,13 @@
                 </button>
             </div>
         </div>
-        
+
         <div class="flex-1 overflow-y-auto">
             <!-- Mobile Search -->
             <div class="p-4 border-b border-gray-200">
                 <div class="relative">
                     <input type="text" id="mobileSearchInput" placeholder="Search products..."
-                           class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:border-primary">
+                        class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:border-primary">
                     <button class="absolute right-2 top-1/2 transform -translate-y-1/2 text-gray-400">
                         <i class="fas fa-search"></i>
                     </button>
@@ -422,7 +474,9 @@
             <nav class="p-4">
                 <ul class="space-y-2">
                     <li>
-                        <a href="#" class="mobile-nav-link flex items-center justify-between py-3 px-4 rounded-lg hover:bg-gray-100 transition duration-300" data-section="home">
+                        <a href="#"
+                            class="mobile-nav-link flex items-center justify-between py-3 px-4 rounded-lg hover:bg-gray-100 transition duration-300"
+                            data-section="home">
                             <div class="flex items-center">
                                 <i class="fas fa-home text-primary mr-3"></i>
                                 <span class="font-medium">Home</span>
@@ -431,7 +485,9 @@
                         </a>
                     </li>
                     <li>
-                        <a href="#" class="mobile-nav-link flex items-center justify-between py-3 px-4 rounded-lg hover:bg-gray-100 transition duration-300" data-section="shop">
+                        <a href="#"
+                            class="mobile-nav-link flex items-center justify-between py-3 px-4 rounded-lg hover:bg-gray-100 transition duration-300"
+                            data-section="shop">
                             <div class="flex items-center">
                                 <i class="fas fa-shopping-bag text-primary mr-3"></i>
                                 <span class="font-medium">Shop</span>
@@ -440,24 +496,41 @@
                         </a>
                     </li>
                     <li class="relative">
-                        <button class="mobile-nav-link w-full flex items-center justify-between py-3 px-4 rounded-lg hover:bg-gray-100 transition duration-300" id="mobileCategoriesBtn">
+                        <button
+                            class="mobile-nav-link w-full flex items-center justify-between py-3 px-4 rounded-lg hover:bg-gray-100 transition duration-300"
+                            id="mobileCategoriesBtn">
                             <div class="flex items-center">
                                 <i class="fas fa-th-large text-primary mr-3"></i>
                                 <span class="font-medium">Categories</span>
                             </div>
-                            <i class="fas fa-chevron-down text-gray-400 transition-transform duration-300" id="mobileCategoriesIcon"></i>
+                            <i class="fas fa-chevron-down text-gray-400 transition-transform duration-300"
+                                id="mobileCategoriesIcon"></i>
                         </button>
                         <div id="mobileCategoriesDropdown" class="hidden pl-11 space-y-1">
-                            <a href="#" class="block py-2 px-4 text-sm text-gray-600 hover:text-primary transition duration-300 category-filter" data-category="staples">Staples</a>
-                            <a href="#" class="block py-2 px-4 text-sm text-gray-600 hover:text-primary transition duration-300 category-filter" data-category="spices">Spices</a>
-                            <a href="#" class="block py-2 px-4 text-sm text-gray-600 hover:text-primary transition duration-300 category-filter" data-category="dairy">Dairy Products</a>
-                            <a href="#" class="block py-2 px-4 text-sm text-gray-600 hover:text-primary transition duration-300 category-filter" data-category="vegetables">Vegetables</a>
-                            <a href="#" class="block py-2 px-4 text-sm text-gray-600 hover:text-primary transition duration-300 category-filter" data-category="snacks">Snacks</a>
-                            <a href="#" class="block py-2 px-4 text-sm text-gray-600 hover:text-primary transition duration-300 category-filter" data-category="beverages">Beverages</a>
+                            <a href="#"
+                                class="block py-2 px-4 text-sm text-gray-600 hover:text-primary transition duration-300 category-filter"
+                                data-category="staples">Staples</a>
+                            <a href="#"
+                                class="block py-2 px-4 text-sm text-gray-600 hover:text-primary transition duration-300 category-filter"
+                                data-category="spices">Spices</a>
+                            <a href="#"
+                                class="block py-2 px-4 text-sm text-gray-600 hover:text-primary transition duration-300 category-filter"
+                                data-category="dairy">Dairy Products</a>
+                            <a href="#"
+                                class="block py-2 px-4 text-sm text-gray-600 hover:text-primary transition duration-300 category-filter"
+                                data-category="vegetables">Vegetables</a>
+                            <a href="#"
+                                class="block py-2 px-4 text-sm text-gray-600 hover:text-primary transition duration-300 category-filter"
+                                data-category="snacks">Snacks</a>
+                            <a href="#"
+                                class="block py-2 px-4 text-sm text-gray-600 hover:text-primary transition duration-300 category-filter"
+                                data-category="beverages">Beverages</a>
                         </div>
                     </li>
                     <li>
-                        <a href="#" class="mobile-nav-link flex items-center justify-between py-3 px-4 rounded-lg hover:bg-gray-100 transition duration-300" data-section="about">
+                        <a href="#"
+                            class="mobile-nav-link flex items-center justify-between py-3 px-4 rounded-lg hover:bg-gray-100 transition duration-300"
+                            data-section="about">
                             <div class="flex items-center">
                                 <i class="fas fa-info-circle text-primary mr-3"></i>
                                 <span class="font-medium">About Us</span>
@@ -466,7 +539,9 @@
                         </a>
                     </li>
                     <li>
-                        <a href="#" class="mobile-nav-link flex items-center justify-between py-3 px-4 rounded-lg hover:bg-gray-100 transition duration-300" data-section="contact">
+                        <a href="#"
+                            class="mobile-nav-link flex items-center justify-between py-3 px-4 rounded-lg hover:bg-gray-100 transition duration-300"
+                            data-section="contact">
                             <div class="flex items-center">
                                 <i class="fas fa-phone text-primary mr-3"></i>
                                 <span class="font-medium">Contact Us</span>
@@ -481,10 +556,14 @@
             <div class="p-4 border-t border-gray-200">
                 <h3 class="font-semibold text-gray-800 mb-3">Quick Actions</h3>
                 <div class="grid grid-cols-1 gap-3">
-                    <button id="mobileCartBtn" class="group flex items-center justify-center py-4 px-6 bg-gradient-to-r from-primary via-secondary to-primary text-white rounded-2xl hover:from-secondary hover:via-primary hover:to-secondary transform hover:scale-105 hover:-translate-y-1 transition-all duration-500 shadow-xl border-2 border-white/20">
+                    <button id="mobileCartBtn"
+                        class="group flex items-center justify-center py-4 px-6 bg-gradient-to-r from-primary via-secondary to-primary text-white rounded-2xl hover:from-secondary hover:via-primary hover:to-secondary transform hover:scale-105 hover:-translate-y-1 transition-all duration-500 shadow-xl border-2 border-white/20">
                         <div class="relative mr-3">
-                            <i class="fa-solid fa-cart-shopping text-xl group-hover:rotate-12 transition-all duration-500"></i>
-                            <div class="absolute -inset-2 bg-white/20 rounded-full opacity-0 group-hover:opacity-100 transition-all duration-300 animate-pulse"></div>
+                            <i
+                                class="fa-solid fa-cart-shopping text-xl group-hover:rotate-12 transition-all duration-500"></i>
+                            <div
+                                class="absolute -inset-2 bg-white/20 rounded-full opacity-0 group-hover:opacity-100 transition-all duration-300 animate-pulse">
+                            </div>
                         </div>
                         <span class="text-base font-bold group-hover:scale-105 transition-all duration-300">Cart</span>
                     </button>
@@ -495,7 +574,8 @@
         <!-- Mobile User Section -->
         <div class="p-4 border-t border-gray-200">
             <div id="mobileUserSection">
-                <button id="mobileLoginBtn" class="w-full bg-primary text-white py-3 rounded-lg font-semibold hover:bg-secondary transition duration-300">
+                <button id="mobileLoginBtn"
+                    class="w-full bg-primary text-white py-3 rounded-lg font-semibold hover:bg-secondary transition duration-300">
                     <i class="fas fa-user mr-2"></i>
                     Login / Sign Up
                 </button>
@@ -507,7 +587,7 @@
     <div id="mobileNavOverlay" class="fixed inset-0 bg-black bg-opacity-50 z-40 hidden md:hidden"></div>
 
     <!-- Loading Screen - TEMPORARILY COMMENTED OUT -->
-    <!-- 
+    <!--
     <div id="loadingScreen" class="loading-screen">
         <div class="text-center">
             <div class="flex items-center justify-center mb-8">
@@ -546,7 +626,8 @@
                 <span class="text-xl font-bold">Total:</span>
                 <span id="cartTotal" class="text-2xl font-bold text-primary">₹0</span>
             </div>
-            <button id="checkoutBtn" class="w-full bg-primary text-white py-3 rounded-lg font-bold hover:bg-secondary transition duration-300">
+            <button id="checkoutBtn"
+                class="w-full bg-primary text-white py-3 rounded-lg font-bold hover:bg-secondary transition duration-300">
                 Proceed to Checkout
             </button>
         </div>
@@ -563,9 +644,7 @@
             </button>
             <div class="p-8">
                 <div class="text-center mb-8">
-                    <div class="bg-primary text-white p-3 rounded-full w-16 h-16 mx-auto mb-4 flex items-center justify-center">
-                        <i class="fas fa-clock text-2xl"></i>
-                    </div>
+                    <img src="Logo.png" alt="Near & Now Logo" class="w-16 h-16 mx-auto mb-4 rounded-full shadow-md" />
                     <h2 class="text-2xl font-bold text-gray-800">Welcome to Near & Now</h2>
                     <p class="text-gray-600">Enter your details to continue</p>
                 </div>
@@ -575,21 +654,27 @@
                     <form id="mobileForm">
                         <div class="mb-4">
                             <label class="block text-gray-700 text-sm font-bold mb-2">Full Name</label>
-                            <input type="text" id="userName" class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:border-primary" placeholder="Enter your full name" required>
+                            <input type="text" id="userName"
+                                class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:border-primary"
+                                placeholder="Enter your full name" required>
                         </div>
                         <div class="mb-6">
                             <label class="block text-gray-700 text-sm font-bold mb-2">Mobile Number</label>
                             <div class="flex">
-                                <span class="inline-flex items-center px-3 text-sm text-gray-900 bg-gray-200 border border-r-0 border-gray-300 rounded-l-lg">
+                                <span
+                                    class="inline-flex items-center px-3 text-sm text-gray-900 bg-gray-200 border border-r-0 border-gray-300 rounded-l-lg">
                                     +91
                                 </span>
-                                <input type="tel" id="userMobile" class="w-full px-4 py-3 border border-gray-300 rounded-r-lg focus:outline-none focus:border-primary" placeholder="Enter mobile number" pattern="[0-9]{10}" maxlength="10" required>
+                                <input type="tel" id="userMobile"
+                                    class="w-full px-4 py-3 border border-gray-300 rounded-r-lg focus:outline-none focus:border-primary"
+                                    placeholder="Enter mobile number" pattern="[0-9]{10}" maxlength="10" required>
                             </div>
                             <p class="text-xs text-gray-500 mt-1">We'll send you an OTP for verification</p>
                         </div>
                         <!-- reCAPTCHA container for Firebase -->
                         <div id="recaptcha-container" class="mb-4"></div>
-                        <button type="submit" id="sendOtpBtn" class="w-full bg-primary text-white py-3 rounded-lg font-bold hover:bg-secondary transition duration-300">
+                        <button type="submit" id="sendOtpBtn"
+                            class="w-full bg-primary text-white py-3 rounded-lg font-bold hover:bg-secondary transition duration-300">
                             Send OTP
                         </button>
                     </form>
@@ -608,21 +693,35 @@
                         <div class="mb-6">
                             <label class="block text-gray-700 text-sm font-bold mb-2">Enter OTP</label>
                             <div class="flex justify-center space-x-2 mb-4">
-                                <input type="text" class="otp-input w-12 h-12 text-center border border-gray-300 rounded-lg focus:outline-none focus:border-primary text-lg font-bold" maxlength="1" pattern="[0-9]">
-                                <input type="text" class="otp-input w-12 h-12 text-center border border-gray-300 rounded-lg focus:outline-none focus:border-primary text-lg font-bold" maxlength="1" pattern="[0-9]">
-                                <input type="text" class="otp-input w-12 h-12 text-center border border-gray-300 rounded-lg focus:outline-none focus:border-primary text-lg font-bold" maxlength="1" pattern="[0-9]">
-                                <input type="text" class="otp-input w-12 h-12 text-center border border-gray-300 rounded-lg focus:outline-none focus:border-primary text-lg font-bold" maxlength="1" pattern="[0-9]">
-                                <input type="text" class="otp-input w-12 h-12 text-center border border-gray-300 rounded-lg focus:outline-none focus:border-primary text-lg font-bold" maxlength="1" pattern="[0-9]">
-                                <input type="text" class="otp-input w-12 h-12 text-center border border-gray-300 rounded-lg focus:outline-none focus:border-primary text-lg font-bold" maxlength="1" pattern="[0-9]">
+                                <input type="text"
+                                    class="otp-input w-12 h-12 text-center border border-gray-300 rounded-lg focus:outline-none focus:border-primary text-lg font-bold"
+                                    maxlength="1" pattern="[0-9]">
+                                <input type="text"
+                                    class="otp-input w-12 h-12 text-center border border-gray-300 rounded-lg focus:outline-none focus:border-primary text-lg font-bold"
+                                    maxlength="1" pattern="[0-9]">
+                                <input type="text"
+                                    class="otp-input w-12 h-12 text-center border border-gray-300 rounded-lg focus:outline-none focus:border-primary text-lg font-bold"
+                                    maxlength="1" pattern="[0-9]">
+                                <input type="text"
+                                    class="otp-input w-12 h-12 text-center border border-gray-300 rounded-lg focus:outline-none focus:border-primary text-lg font-bold"
+                                    maxlength="1" pattern="[0-9]">
+                                <input type="text"
+                                    class="otp-input w-12 h-12 text-center border border-gray-300 rounded-lg focus:outline-none focus:border-primary text-lg font-bold"
+                                    maxlength="1" pattern="[0-9]">
+                                <input type="text"
+                                    class="otp-input w-12 h-12 text-center border border-gray-300 rounded-lg focus:outline-none focus:border-primary text-lg font-bold"
+                                    maxlength="1" pattern="[0-9]">
                             </div>
                             <div class="text-center">
                                 <p class="text-sm text-gray-600 mb-2">Didn't receive OTP?</p>
-                                <button type="button" id="resendOtpBtn" class="text-primary hover:text-secondary font-semibold text-sm disabled:text-gray-400 disabled:cursor-not-allowed">
+                                <button type="button" id="resendOtpBtn"
+                                    class="text-primary hover:text-secondary font-semibold text-sm disabled:text-gray-400 disabled:cursor-not-allowed">
                                     Resend OTP (<span id="resendTimer">30</span>s)
                                 </button>
                             </div>
                         </div>
-                        <button type="submit" id="verifyOtpBtn" class="w-full bg-primary text-white py-3 rounded-lg font-bold hover:bg-secondary transition duration-300">
+                        <button type="submit" id="verifyOtpBtn"
+                            class="w-full bg-primary text-white py-3 rounded-lg font-bold hover:bg-secondary transition duration-300">
                             Verify & Continue
                         </button>
                     </form>
@@ -637,13 +736,15 @@
                 <!-- Success Step -->
                 <div id="step3" class="login-step hidden text-center">
                     <div class="mb-6">
-                        <div class="bg-green-100 text-green-600 p-4 rounded-full w-20 h-20 mx-auto mb-4 flex items-center justify-center">
+                        <div
+                            class="bg-green-100 text-green-600 p-4 rounded-full w-20 h-20 mx-auto mb-4 flex items-center justify-center">
                             <i class="fas fa-check text-3xl"></i>
                         </div>
                         <h3 class="text-xl font-bold text-gray-800 mb-2">Welcome!</h3>
                         <p class="text-gray-600">Your account has been verified successfully</p>
                     </div>
-                    <button id="continueShoppingBtn" class="w-full bg-primary text-white py-3 rounded-lg font-bold hover:bg-secondary transition duration-300">
+                    <button id="continueShoppingBtn"
+                        class="w-full bg-primary text-white py-3 rounded-lg font-bold hover:bg-secondary transition duration-300">
                         Continue Shopping
                     </button>
                 </div>
@@ -662,9 +763,11 @@
                     <!-- Product Image -->
                     <div class="relative">
                         <img id="quickViewImage" src="" alt="" class="w-full h-96 object-cover rounded-lg">
-                        <div id="quickViewDiscount" class="absolute top-4 left-4 bg-red-500 text-white px-3 py-1 rounded-full text-sm font-semibold hidden"></div>
+                        <div id="quickViewDiscount"
+                            class="absolute top-4 left-4 bg-red-500 text-white px-3 py-1 rounded-full text-sm font-semibold hidden">
+                        </div>
                     </div>
-                    
+
                     <!-- Product Details -->
                     <div class="space-y-6">
                         <div>
@@ -676,33 +779,37 @@
                                 <span id="quickViewReviews" class="text-gray-500 text-sm"></span>
                             </div>
                         </div>
-                        
+
                         <div>
                             <p id="quickViewDescription" class="text-gray-600 text-lg leading-relaxed"></p>
                         </div>
-                        
+
                         <div class="flex items-center space-x-4">
                             <span id="quickViewPrice" class="text-3xl font-bold text-primary"></span>
                             <span id="quickViewOriginalPrice" class="text-xl text-gray-400 line-through hidden"></span>
                             <span id="quickViewDiscountText" class="text-green-600 font-semibold hidden"></span>
                         </div>
-                        
+
                         <div class="flex items-center space-x-4">
                             <div class="flex items-center border border-gray-300 rounded-lg">
-                                <button id="decreaseQuantity" class="px-4 py-2 text-gray-600 hover:text-primary">-</button>
-                                <span id="quickViewQuantity" class="px-4 py-2 border-x border-gray-300 font-semibold">1</span>
-                                <button id="increaseQuantity" class="px-4 py-2 text-gray-600 hover:text-primary">+</button>
+                                <button id="decreaseQuantity"
+                                    class="px-4 py-2 text-gray-600 hover:text-primary">-</button>
+                                <span id="quickViewQuantity"
+                                    class="px-4 py-2 border-x border-gray-300 font-semibold">1</span>
+                                <button id="increaseQuantity"
+                                    class="px-4 py-2 text-gray-600 hover:text-primary">+</button>
                             </div>
                             <span id="quickViewStock" class="text-sm text-green-600 font-semibold"></span>
                         </div>
-                        
+
                         <div class="flex space-x-4">
-                            <button id="quickViewAddToCart" class="w-full bg-gradient-to-r from-primary to-secondary text-white py-3 rounded-lg font-bold hover:from-secondary hover:to-primary transform hover:scale-105 transition duration-300 flex items-center justify-center space-x-2 shadow-md">
+                            <button id="quickViewAddToCart"
+                                class="w-full bg-gradient-to-r from-primary to-secondary text-white py-3 rounded-lg font-bold hover:from-secondary hover:to-primary transform hover:scale-105 transition duration-300 flex items-center justify-center space-x-2 shadow-md">
                                 <i class="fa-solid fa-cart-shopping text-lg"></i>
                                 <span>Add to Cart</span>
                             </button>
                         </div>
-                        
+
                         <!-- Product Reviews Section -->
                         <div class="border-t pt-6">
                             <h3 class="text-xl font-bold text-gray-800 mb-4">Customer Reviews</h3>
@@ -741,7 +848,7 @@
                 <!-- Logo - Fixed width -->
                 <div class="col-span-3 flex items-center cursor-pointer" onclick="location.reload()">
                     <div class="mr-3">
-                        <img src="Logo.jpg" alt="Near & Now" class="w-20 h-20 md:w-24 md:h-24">
+                        <img src="Logo.png" alt="Near & Now" class="w-20 h-20 md:w-24 md:h-24">
                     </div>
                     <div>
                         <h1 class="text-2xl md:text-3xl font-bold text-gray-800">Near & Now</h1>
@@ -752,47 +859,57 @@
                 <!-- Centered Search Bar - Takes middle space -->
                 <div class="col-span-6">
                     <div class="relative max-w-2xl mx-auto">
-                        <div class="flex items-center border-2 border-gray-200 rounded-full focus-within:border-primary focus-within:shadow-lg transition duration-300">
+                        <div
+                            class="flex items-center border-2 border-gray-200 rounded-full focus-within:border-primary focus-within:shadow-lg transition duration-300">
                             <!-- Categories Dropdown Inside Search Bar -->
-                            <select id="categoryFilter" class="px-4 py-4 bg-transparent focus:outline-none text-sm md:text-base cursor-pointer border-r border-gray-200 text-gray-700">
+                            <select id="categoryFilter"
+                                class="px-4 py-4 bg-transparent focus:outline-none text-sm md:text-base cursor-pointer border-r border-gray-200 text-gray-700">
                                 <option value="all">All Categories</option>
                                 <!-- Categories will be populated dynamically from products-data.js -->
                             </select>
-                            
+
                             <!-- Search Input -->
                             <input type="text" id="searchInput" placeholder="Search for products, brands and more..."
-                                   class="flex-1 px-4 py-4 bg-transparent focus:outline-none text-sm md:text-lg text-gray-700 placeholder-gray-400">
-                            
+                                class="flex-1 px-4 py-4 bg-transparent focus:outline-none text-sm md:text-lg text-gray-700 placeholder-gray-400">
+
                             <!-- Search Button -->
-                            <button id="searchBtn" class="m-1 bg-gradient-to-r from-primary to-secondary text-white px-6 py-3 rounded-full hover:from-secondary hover:to-primary transform hover:scale-105 transition duration-300 shadow-md" onclick="window.location.href='all-products.html'">
+                            <button id="searchBtn"
+                                class="m-1 bg-gradient-to-r from-primary to-secondary text-white px-6 py-3 rounded-full hover:from-secondary hover:to-primary transform hover:scale-105 transition duration-300 shadow-md"
+                                onclick="window.location.href='all-products.html'">
                                 <i class="fas fa-search text-lg"></i>
                             </button>
                         </div>
-                        
+
                         <!-- Search Suggestions (positioned under search input) -->
-                        <div id="searchSuggestions" class="absolute top-full left-0 right-0 bg-white border border-gray-200 rounded-lg mt-2 shadow-lg hidden z-50 max-h-96 overflow-y-auto">
+                        <div id="searchSuggestions"
+                            class="absolute top-full left-0 right-0 bg-white border border-gray-200 rounded-lg mt-2 shadow-lg hidden z-50 max-h-96 overflow-y-auto">
                             <!-- Search suggestions will be populated here -->
                         </div>
-                        
+
                         <!-- Advanced Search Filters (positioned under search input) -->
-                        <div id="advancedSearchFilters" class="absolute top-full left-0 right-0 bg-white border border-gray-200 rounded-lg mt-2 shadow-lg hidden z-50 p-4">
+                        <div id="advancedSearchFilters"
+                            class="absolute top-full left-0 right-0 bg-white border border-gray-200 rounded-lg mt-2 shadow-lg hidden z-50 p-4">
                             <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
                                 <div>
                                     <label class="block text-sm font-medium text-gray-700 mb-2">Price Range</label>
                                     <div class="flex space-x-2">
-                                        <input type="number" id="minPrice" placeholder="Min" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:border-primary">
-                                        <input type="number" id="maxPrice" placeholder="Max" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:border-primary">
+                                        <input type="number" id="minPrice" placeholder="Min"
+                                            class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:border-primary">
+                                        <input type="number" id="maxPrice" placeholder="Max"
+                                            class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:border-primary">
                                     </div>
                                 </div>
                                 <div>
                                     <label class="block text-sm font-medium text-gray-700 mb-2">Category</label>
-                                    <select id="searchCategory" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:border-primary">
+                                    <select id="searchCategory"
+                                        class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:border-primary">
                                         <option value="">All Categories</option>
                                     </select>
                                 </div>
                                 <div>
                                     <label class="block text-sm font-medium text-gray-700 mb-2">Rating</label>
-                                    <select id="searchRating" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:border-primary">
+                                    <select id="searchRating"
+                                        class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:border-primary">
                                         <option value="">Any Rating</option>
                                         <option value="4">4+ Stars</option>
                                         <option value="3">3+ Stars</option>
@@ -804,7 +921,8 @@
                                 <button id="clearFilters" class="text-gray-600 hover:text-gray-800 text-sm">
                                     Clear Filters
                                 </button>
-                                <button id="applyFilters" class="bg-primary text-white px-4 py-2 rounded-lg hover:bg-secondary transition duration-300">
+                                <button id="applyFilters"
+                                    class="bg-primary text-white px-4 py-2 rounded-lg hover:bg-secondary transition duration-300">
                                     Apply Filters
                                 </button>
                             </div>
@@ -815,33 +933,42 @@
                 <!-- Header Actions - Positioned closer to search, not at extreme right -->
                 <div class="col-span-3 flex items-center justify-center space-x-6 ml-8">
                     <!-- Account Button -->
-                    <div id="accountBtn" class="group flex flex-col items-center justify-center cursor-pointer p-4 rounded-2xl bg-white border-2 border-gray-100 hover:border-primary hover:shadow-xl transition-all duration-500 transform hover:scale-110 hover:-translate-y-1 min-h-[120px] w-[80px]">
+                    <div id="accountBtn"
+                        class="group flex flex-col items-center justify-center cursor-pointer p-4 rounded-2xl bg-white border-2 border-gray-100 hover:border-primary hover:shadow-xl transition-all duration-500 transform hover:scale-110 hover:-translate-y-1 min-h-[120px] w-[80px]">
                         <div class="relative mb-2">
-                            <div class="absolute -inset-3 bg-gradient-to-r from-primary via-secondary to-primary rounded-full opacity-0 group-hover:opacity-100 transition-all duration-500 animate-spin-slow"></div>
-                            <div class="relative bg-gradient-to-br from-gray-50 to-gray-100 group-hover:from-primary group-hover:to-secondary p-4 rounded-full transition-all duration-500 shadow-lg group-hover:shadow-xl">
-                                <i class="fas fa-user text-2xl text-gray-600 group-hover:text-white transition-all duration-500 transform group-hover:scale-110"></i>
+                            <div
+                                class="absolute -inset-3 bg-gradient-to-r from-primary via-secondary to-primary rounded-full opacity-0 group-hover:opacity-100 transition-all duration-500 animate-spin-slow">
+                            </div>
+                            <div
+                                class="relative bg-gradient-to-br from-gray-50 to-gray-100 group-hover:from-primary group-hover:to-secondary p-4 rounded-full transition-all duration-500 shadow-lg group-hover:shadow-xl">
+                                <i
+                                    class="fas fa-user text-2xl text-gray-600 group-hover:text-white transition-all duration-500 transform group-hover:scale-110"></i>
                             </div>
                         </div>
                         <div class="text-center">
-                            <span class="text-sm font-semibold text-gray-700 group-hover:text-primary transition-all duration-300 group-hover:scale-105 block">Login</span>
-                            <span class="text-xs text-gray-500 group-hover:text-primary/80 transition-all duration-300 block">Account</span>
+                            <span
+                                class="text-sm font-semibold text-gray-700 group-hover:text-primary transition-all duration-300 group-hover:scale-105 block">Login</span>
                         </div>
                     </div>
-                    
+
                     <!-- Cart Button -->
-                    <div id="cartBtn" class="group flex flex-col items-center justify-center cursor-pointer p-4 rounded-2xl bg-white border-2 border-gray-100 hover:border-secondary hover:shadow-xl transition-all duration-500 transform hover:scale-110 hover:-translate-y-1 relative min-h-[120px] w-[80px]">
+                    <div id="cartBtn"
+                        class="group flex flex-col items-center justify-center cursor-pointer p-4 rounded-2xl bg-white border-2 border-gray-100 hover:border-secondary hover:shadow-xl transition-all duration-500 transform hover:scale-110 hover:-translate-y-1 relative min-h-[120px] w-[80px]">
                         <div class="relative mb-2">
-                            <div class="relative bg-gradient-to-br from-gray-50 to-gray-100 group-hover:from-secondary group-hover:to-primary p-4 rounded-full transition-all duration-500 shadow-lg group-hover:shadow-xl">
-                                <i class="fa-solid fa-cart-shopping text-2xl text-gray-600 group-hover:text-white transition-all duration-500 transform group-hover:scale-110 group-hover:rotate-12"></i>
+                            <div
+                                class="relative bg-gradient-to-br from-gray-50 to-gray-100 group-hover:from-secondary group-hover:to-primary p-4 rounded-full transition-all duration-500 shadow-lg group-hover:shadow-xl">
+                                <i
+                                    class="fa-solid fa-cart-shopping text-2xl text-gray-600 group-hover:text-white transition-all duration-500 transform group-hover:scale-110 group-hover:rotate-12"></i>
                             </div>
                         </div>
                         <div class="text-center">
-                            <span class="text-sm font-semibold text-gray-700 group-hover:text-secondary transition-all duration-300 group-hover:scale-105 block">Cart</span>
-                            <span class="text-xs text-gray-500 group-hover:text-secondary/80 transition-all duration-300 block">Shopping</span>
+                            <span
+                                class="text-sm font-semibold text-gray-700 group-hover:text-secondary transition-all duration-300 group-hover:scale-105 block">Cart</span>
                         </div>
-                        
+
                         <!-- Enhanced Cart Count Badge -->
-                        <span id="cartCount" class="absolute -top-2 -right-2 bg-gradient-to-r from-red-500 via-red-600 to-red-700 text-white text-sm font-bold rounded-full h-7 w-7 flex items-center justify-center shadow-lg transform transition-all duration-300 group-hover:scale-125 group-hover:animate-bounce border-2 border-white">0</span>
+                        <span id="cartCount"
+                            class="absolute -top-2 -right-2 bg-gradient-to-r from-red-500 via-red-600 to-red-700 text-white text-sm font-bold rounded-full h-7 w-7 flex items-center justify-center shadow-lg transform transition-all duration-300 group-hover:scale-125 group-hover:animate-bounce border-2 border-white">0</span>
                     </div>
                 </div>
             </div>
@@ -860,18 +987,22 @@
                         <div class="grid md:grid-cols-2 gap-12 items-center">
                             <div class="text-white">
                                 <h2 class="text-5xl font-bold mb-6 leading-tight">Fresh Groceries<br>Near & Now</h2>
-                                <p class="text-xl mb-8 opacity-90">Get farm-fresh produce and daily essentials delivered to your doorstep in just 30 minutes</p>
+                                <p class="text-xl mb-8 opacity-90">Get farm-fresh produce and daily essentials delivered
+                                    to your doorstep in just 30 minutes</p>
                                 <div class="flex space-x-4">
-                                    <button class="shop-now-btn bg-white text-primary px-8 py-4 rounded-full font-bold text-lg hover:bg-gray-100 transition duration-300">
+                                    <button
+                                        class="shop-now-btn bg-white text-primary px-8 py-4 rounded-full font-bold text-lg hover:bg-gray-100 transition duration-300">
                                         Shop Now
                                     </button>
-                                    <button class="border-2 border-white text-white px-8 py-4 rounded-full font-bold text-lg hover:bg-white hover:text-primary transition duration-300">
+                                    <button
+                                        class="border-2 border-white text-white px-8 py-4 rounded-full font-bold text-lg hover:bg-white hover:text-primary transition duration-300">
                                         Learn More
                                     </button>
                                 </div>
                             </div>
                             <div class="text-center">
-                                <img src="/placeholder.svg?height=500&width=600" alt="Fresh Groceries" class="rounded-2xl shadow-2xl" loading="lazy">
+                                <img src="https://imgmedia.lbb.in/media/2020/05/5eafca57d213323de061cf9b_1588578903903.jpg" alt="Fresh Groceries"
+                                    class="rounded-2xl shadow-2xl" loading="lazy">
                             </div>
                         </div>
                     </div>
@@ -883,13 +1014,16 @@
                         <div class="grid md:grid-cols-2 gap-12 items-center">
                             <div class="text-white">
                                 <h2 class="text-5xl font-bold mb-6 leading-tight">Weekend Special<br>Up to 50% Off</h2>
-                                <p class="text-xl mb-8 opacity-90">Amazing deals on fresh fruits, vegetables and daily essentials. Limited time offer!</p>
-                                <button class="grab-deals-btn bg-white text-red-500 px-8 py-4 rounded-full font-bold text-lg hover:bg-gray-100 transition duration-300">
+                                <p class="text-xl mb-8 opacity-90">Amazing deals on fresh fruits, vegetables and daily
+                                    essentials. Limited time offer!</p>
+                                <button
+                                    class="grab-deals-btn bg-white text-red-500 px-8 py-4 rounded-full font-bold text-lg hover:bg-gray-100 transition duration-300">
                                     Grab Deals
                                 </button>
                             </div>
                             <div class="text-center">
-                                <img src="/placeholder.svg?height=500&width=600" alt="Special Offers" class="rounded-2xl shadow-2xl" loading="lazy">
+                                <img src="https://www.shutterstock.com/image-vector/sale-banner-template-design-this-600nw-2511673505.jpg" alt="Special Offers"
+                                    class="rounded-2xl shadow-2xl" loading="lazy">
                             </div>
                         </div>
                     </div>
@@ -898,17 +1032,21 @@
         </div>
 
         <!-- Slider Controls -->
-        <button id="prevSlide" class="absolute left-4 top-1/2 transform -translate-y-1/2 bg-white bg-opacity-80 hover:bg-opacity-100 p-3 rounded-full shadow-lg transition duration-300">
+        <button id="prevSlide"
+            class="absolute left-4 top-1/2 transform -translate-y-1/2 bg-white bg-opacity-80 hover:bg-opacity-100 p-3 rounded-full shadow-lg transition duration-300">
             <i class="fas fa-chevron-left text-gray-800"></i>
         </button>
-        <button id="nextSlide" class="absolute right-4 top-1/2 transform -translate-y-1/2 bg-white bg-opacity-80 hover:bg-opacity-100 p-3 rounded-full shadow-lg transition duration-300">
+        <button id="nextSlide"
+            class="absolute right-4 top-1/2 transform -translate-y-1/2 bg-white bg-opacity-80 hover:bg-opacity-100 p-3 rounded-full shadow-lg transition duration-300">
             <i class="fas fa-chevron-right text-gray-800"></i>
         </button>
 
         <!-- Slider Dots -->
         <div class="absolute bottom-6 left-1/2 transform -translate-x-1/2 flex space-x-2">
-            <button class="slider-dot w-3 h-3 rounded-full bg-white bg-opacity-50 hover:bg-opacity-100 transition duration-300 active"></button>
-            <button class="slider-dot w-3 h-3 rounded-full bg-white bg-opacity-50 hover:bg-opacity-100 transition duration-300"></button>
+            <button
+                class="slider-dot w-3 h-3 rounded-full bg-white bg-opacity-50 hover:bg-opacity-100 transition duration-300 active"></button>
+            <button
+                class="slider-dot w-3 h-3 rounded-full bg-white bg-opacity-50 hover:bg-opacity-100 transition duration-300"></button>
         </div>
     </section>
 
@@ -935,11 +1073,13 @@
                     <p class="text-xl text-gray-600">Handpicked products just for you</p>
                 </div>
                 <div class="flex items-center space-x-4">
-                    <button id="showFilters" class="px-4 py-2 border border-gray-300 rounded-lg hover:border-primary hover:text-primary transition duration-300 flex items-center space-x-2">
+                    <button id="showFilters"
+                        class="px-4 py-2 border border-gray-300 rounded-lg hover:border-primary hover:text-primary transition duration-300 flex items-center space-x-2">
                         <i class="fas fa-filter"></i>
                         <span>Filters</span>
                     </button>
-                    <select id="sortProducts" class="px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:border-primary">
+                    <select id="sortProducts"
+                        class="px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:border-primary">
                         <option value="default">Sort by</option>
                         <option value="price-low">Price: Low to High</option>
                         <option value="price-high">Price: High to Low</option>
@@ -948,7 +1088,8 @@
                         <option value="newest">Newest First</option>
                         <option value="popularity">Most Popular</option>
                     </select>
-                    <a href="all-products.html" class="text-primary hover:text-secondary font-semibold text-lg flex items-center">
+                    <a href="all-products.html"
+                        class="text-primary hover:text-secondary font-semibold text-lg flex items-center">
                         View All Products <i class="fas fa-arrow-right ml-2"></i>
                     </a>
                 </div>
@@ -966,8 +1107,10 @@
                                 <span id="priceRangeValue" class="text-sm font-medium text-gray-600">₹1000</span>
                             </div>
                             <div class="flex space-x-2">
-                                <input type="number" id="minPriceFilter" placeholder="Min" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:border-primary text-sm">
-                                <input type="number" id="maxPriceFilter" placeholder="Max" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:border-primary text-sm">
+                                <input type="number" id="minPriceFilter" placeholder="Min"
+                                    class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:border-primary text-sm">
+                                <input type="number" id="maxPriceFilter" placeholder="Max"
+                                    class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:border-primary text-sm">
                             </div>
                         </div>
                     </div>
@@ -1039,16 +1182,18 @@
                         </div>
                     </div>
                 </div>
-                
+
                 <div class="flex justify-between items-center mt-6 pt-6 border-t">
                     <button id="clearAllFilters" class="text-gray-600 hover:text-gray-800 text-sm">
                         Clear All Filters
                     </button>
                     <div class="flex space-x-3">
-                        <button id="applyAllFilters" class="bg-primary text-white px-6 py-2 rounded-lg hover:bg-secondary transition duration-300">
+                        <button id="applyAllFilters"
+                            class="bg-primary text-white px-6 py-2 rounded-lg hover:bg-secondary transition duration-300">
                             Apply Filters
                         </button>
-                        <button id="hideFilters" class="px-6 py-2 border border-gray-300 rounded-lg hover:border-primary hover:text-primary transition duration-300">
+                        <button id="hideFilters"
+                            class="px-6 py-2 border border-gray-300 rounded-lg hover:border-primary hover:text-primary transition duration-300">
                             Hide Filters
                         </button>
                     </div>
@@ -1061,7 +1206,8 @@
 
             <!-- Load More Button -->
             <div class="text-center mt-12">
-                <button id="loadMoreBtn" class="bg-primary text-white px-8 py-3 rounded-lg font-semibold hover:bg-secondary transition duration-300">
+                <button id="loadMoreBtn"
+                    class="bg-primary text-white px-8 py-3 rounded-lg font-semibold hover:bg-secondary transition duration-300">
                     Load More Products
                 </button>
             </div>
@@ -1072,11 +1218,13 @@
     <section class="py-16">
         <div class="container mx-auto px-4">
             <div class="grid md:grid-cols-2 gap-8">
-                <div class="bg-gradient-to-r from-orange-400 to-red-500 rounded-3xl p-12 text-white relative overflow-hidden cursor-pointer hover:scale-105 transition duration-300">
+                <div
+                    class="bg-gradient-to-r from-orange-400 to-red-500 rounded-3xl p-12 text-white relative overflow-hidden cursor-pointer hover:scale-105 transition duration-300">
                     <div class="relative z-10">
                         <h3 class="text-3xl font-bold mb-4">Weekend Special</h3>
                         <p class="text-xl mb-6 opacity-90">Get up to 40% off on fresh fruits and vegetables</p>
-                        <button class="weekend-special-btn bg-white text-red-500 px-8 py-3 rounded-full font-bold hover:bg-gray-100 transition duration-300">
+                        <button
+                            class="weekend-special-btn bg-white text-red-500 px-8 py-3 rounded-full font-bold hover:bg-gray-100 transition duration-300">
                             Shop Now
                         </button>
                     </div>
@@ -1085,11 +1233,13 @@
                     </div>
                 </div>
 
-                <div class="bg-gradient-to-r from-purple-500 to-pink-500 rounded-3xl p-12 text-white relative overflow-hidden cursor-pointer hover:scale-105 transition duration-300">
+                <div
+                    class="bg-gradient-to-r from-purple-500 to-pink-500 rounded-3xl p-12 text-white relative overflow-hidden cursor-pointer hover:scale-105 transition duration-300">
                     <div class="relative z-10">
                         <h3 class="text-3xl font-bold mb-4">Free Delivery</h3>
                         <p class="text-xl mb-6 opacity-90">Free delivery on orders above ₹999</p>
-                        <button class="free-delivery-btn bg-white text-purple-500 px-8 py-3 rounded-full font-bold hover:bg-gray-100 transition duration-300">
+                        <button
+                            class="free-delivery-btn bg-white text-purple-500 px-8 py-3 rounded-full font-bold hover:bg-gray-100 transition duration-300">
                             Order Now
                         </button>
                     </div>
@@ -1106,11 +1256,13 @@
         <div class="container mx-auto px-4 text-center">
             <div class="max-w-2xl mx-auto">
                 <h2 class="text-4xl font-bold text-white mb-4">Stay Updated</h2>
-                <p class="text-xl text-white opacity-90 mb-8">Subscribe to our newsletter for the latest deals and offers</p>
+                <p class="text-xl text-white opacity-90 mb-8">Subscribe to our newsletter for the latest deals and
+                    offers</p>
                 <form id="newsletterForm" class="flex flex-col md:flex-row gap-4">
                     <input type="email" id="newsletterEmail" placeholder="Enter your email address"
-                           class="flex-1 px-6 py-4 rounded-full text-lg focus:outline-none" required>
-                    <button type="submit" class="bg-white text-primary px-8 py-4 rounded-full font-bold hover:bg-gray-100 transition duration-300">
+                        class="flex-1 px-6 py-4 rounded-full text-lg focus:outline-none" required>
+                    <button type="submit"
+                        class="bg-white text-primary px-8 py-4 rounded-full font-bold hover:bg-gray-100 transition duration-300">
                         Subscribe
                     </button>
                 </form>
@@ -1124,15 +1276,15 @@
             <div class="grid md:grid-cols-4 gap-12">
                 <div>
                     <div class="flex items-center mb-6">
-                        <div class="bg-primary text-white p-3 rounded-xl mr-3">
-                            <i class="fas fa-clock text-2xl"></i>
-                        </div>
+                        <img src="Logo.png" alt="Near & Now Logo"
+                            class="w-12 h-12 md:w-16 md:h-16 mr-3 rounded-xl shadow-md" />
                         <div>
                             <h3 class="text-2xl font-bold">Near & Now</h3>
                             <p class="text-sm text-gray-400">Online Grocery Store</p>
                         </div>
                     </div>
-                    <p class="text-gray-400 mb-6 leading-relaxed">Your trusted partner for fresh groceries and household essentials. We deliver quality products right to your doorstep.</p>
+                    <p class="text-gray-400 mb-6 leading-relaxed">Your trusted partner for fresh groceries and household
+                        essentials. We deliver quality products right to your doorstep.</p>
                     <div class="flex space-x-4">
                         <a href="#" class="bg-gray-800 p-3 rounded-full hover:bg-primary transition duration-300">
                             <i class="fab fa-facebook text-xl"></i>
@@ -1153,9 +1305,12 @@
                     <h4 class="text-xl font-bold mb-6">Quick Links</h4>
                     <ul class="space-y-3">
                         <li><a href="#" class="text-gray-400 hover:text-white transition duration-300">About Us</a></li>
-                        <li><a href="#" class="text-gray-400 hover:text-white transition duration-300">Contact Us</a></li>
-                        <li><a href="#" class="text-gray-400 hover:text-white transition duration-300">Privacy Policy</a></li>
-                        <li><a href="#" class="text-gray-400 hover:text-white transition duration-300">Terms of Service</a></li>
+                        <li><a href="#" class="text-gray-400 hover:text-white transition duration-300">Contact Us</a>
+                        </li>
+                        <li><a href="#" class="text-gray-400 hover:text-white transition duration-300">Privacy
+                                Policy</a></li>
+                        <li><a href="#" class="text-gray-400 hover:text-white transition duration-300">Terms of
+                                Service</a></li>
                         <li><a href="#" class="text-gray-400 hover:text-white transition duration-300">FAQ</a></li>
                     </ul>
                 </div>
@@ -1163,11 +1318,16 @@
                 <div>
                     <h4 class="text-xl font-bold mb-6">Categories</h4>
                     <ul class="space-y-3">
-                        <li><a href="#" class="text-gray-400 hover:text-white transition duration-300">Fruits & Vegetables</a></li>
-                        <li><a href="#" class="text-gray-400 hover:text-white transition duration-300">Dairy Products</a></li>
-                        <li><a href="#" class="text-gray-400 hover:text-white transition duration-300">Meat & Seafood</a></li>
-                        <li><a href="#" class="text-gray-400 hover:text-white transition duration-300">Bakery Items</a></li>
-                        <li><a href="#" class="text-gray-400 hover:text-white transition duration-300">Beverages</a></li>
+                        <li><a href="#" class="text-gray-400 hover:text-white transition duration-300">Fruits &
+                                Vegetables</a></li>
+                        <li><a href="#" class="text-gray-400 hover:text-white transition duration-300">Dairy
+                                Products</a></li>
+                        <li><a href="#" class="text-gray-400 hover:text-white transition duration-300">Meat &
+                                Seafood</a></li>
+                        <li><a href="#" class="text-gray-400 hover:text-white transition duration-300">Bakery Items</a>
+                        </li>
+                        <li><a href="#" class="text-gray-400 hover:text-white transition duration-300">Beverages</a>
+                        </li>
                     </ul>
                 </div>
 
@@ -1201,10 +1361,12 @@
     </footer>
 
     <!-- Back to Top Button -->
-    <button id="backToTop" class="fixed bottom-8 right-8 bg-primary text-white p-4 rounded-full shadow-lg hover:bg-secondary transition duration-300 opacity-0 invisible">
+    <button id="backToTop"
+        class="fixed bottom-8 right-8 bg-primary text-white p-4 rounded-full shadow-lg hover:bg-secondary transition duration-300 opacity-0 invisible">
         <i class="fas fa-arrow-up"></i>
     </button>
 
     <script src="script.js"></script>
 </body>
+
 </html>

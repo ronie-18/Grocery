@@ -83,7 +83,7 @@ document.addEventListener("DOMContentLoaded", () => {
     //     hideLoadingScreen()
     //     initializeWebsite()
     // }, 3000) // 3 second loading screen
-    
+
     // Initialize website immediately without loading screen
     initializeWebsite()
 })
@@ -107,7 +107,7 @@ function hideLoadingScreen() {
 function initializeWebsite() {
     allProducts = [...products]
     displayedProducts = [...allProducts]
-    
+
     // Ensure category starts with "all" on every page load
     currentCategory = "all"
 
@@ -139,7 +139,7 @@ function initializeWebsite() {
 function initializeLoginSystem() {
     // Initialize reCAPTCHA verifier
     initializeRecaptcha()
-    
+
     // Form event listeners
     document.getElementById("mobileForm").addEventListener("submit", handleMobileSubmit)
     document.getElementById("otpForm").addEventListener("submit", handleOtpSubmit)
@@ -171,7 +171,7 @@ function initializeRecaptcha() {
         }
 
         console.log('Initializing reCAPTCHA...')
-        
+
         recaptchaVerifier = new window.RecaptchaVerifier(window.firebaseAuth, 'recaptcha-container', {
             'size': 'normal',
             'callback': (response) => {
@@ -186,7 +186,7 @@ function initializeRecaptcha() {
                 showNotification("reCAPTCHA error. Please refresh the page.", "error")
             }
         })
-        
+
         console.log('Rendering reCAPTCHA...')
         recaptchaVerifier.render().then((widgetId) => {
             console.log('reCAPTCHA rendered successfully with widget ID:', widgetId)
@@ -194,7 +194,7 @@ function initializeRecaptcha() {
             console.error('Error rendering reCAPTCHA:', error)
             showNotification("Error loading verification. Please refresh the page.", "error")
         })
-        
+
     } catch (error) {
         console.error('Error initializing reCAPTCHA:', error)
         showNotification("Error initializing verification. Please refresh the page.", "error")
@@ -256,7 +256,7 @@ function handleMobileSubmit(e) {
         .then((confirmation) => {
             confirmationResult = confirmation
             console.log('OTP sent successfully')
-            
+
             // Update display mobile number
             document.getElementById("displayMobile").textContent = userDetails.fullMobile
 
@@ -276,7 +276,7 @@ function handleMobileSubmit(e) {
             console.error('Error sending OTP:', error)
             console.error('Error code:', error.code)
             console.error('Error message:', error.message)
-            
+
             // Reset button
             sendBtn.innerHTML = "Send OTP"
             sendBtn.disabled = false
@@ -330,7 +330,7 @@ function handleOtpSubmit(e) {
             // OTP is correct
             const user = result.user
             console.log('OTP verified successfully:', user)
-            
+
             showStep(3)
 
             // Store user in localStorage
@@ -357,7 +357,7 @@ function handleOtpSubmit(e) {
         })
         .catch((error) => {
             console.error('Error verifying OTP:', error)
-            
+
             // Reset button
             verifyBtn.innerHTML = "Verify & Continue"
             verifyBtn.disabled = false
@@ -370,7 +370,7 @@ function handleOtpSubmit(e) {
             } else {
                 showNotification("Failed to verify OTP. Please try again.", "error")
             }
-            
+
             clearOtpInputs()
         })
 }
@@ -665,7 +665,7 @@ function initializeCategories() {
     if (categoryFilter) {
         // Set default value to "all" on page load
         categoryFilter.value = "all"
-        
+
         // Add event listener for category changes
         categoryFilter.addEventListener("change", function (e) {
             const category = e.target.value
@@ -679,7 +679,7 @@ function initializeCategories() {
             e.preventDefault()
             const category = this.dataset.category
             filterByCategory(category)
-            
+
             // Update the header dropdown to match
             if (categoryFilter) {
                 categoryFilter.value = category
@@ -693,7 +693,7 @@ function populateHeaderCategoryDropdown() {
     const categoryFilter = document.getElementById("categoryFilter")
     if (categoryFilter && typeof getAvailableCategories === 'function') {
         const categories = getAvailableCategories()
-        
+
         // Clear existing options except "All Categories"
         const allCategoriesOption = categoryFilter.querySelector('option[value="all"]')
         categoryFilter.innerHTML = ''
@@ -702,7 +702,7 @@ function populateHeaderCategoryDropdown() {
         } else {
             categoryFilter.innerHTML = '<option value="all">All Categories</option>'
         }
-        
+
         // Add dynamic category options with proper formatting
         categories.forEach(category => {
             const option = document.createElement('option')
@@ -806,7 +806,7 @@ function renderProducts() {
 function createProductCard(product) {
     const price = typeof product.price === 'string' ? product.price.replace(/^₹/, '') : product.price;
     const originalPrice = product.originalPrice ? (typeof product.originalPrice === 'string' ? product.originalPrice.replace(/^₹/, '') : product.originalPrice) : null;
-    
+
     return `
         <div class="product-card bg-white rounded-2xl shadow-lg hover:shadow-xl transition duration-300 overflow-hidden group" data-product-id="${product.id}">
             <div class="relative overflow-hidden">
@@ -817,20 +817,6 @@ function createProductCard(product) {
                         <i class="fas fa-eye text-gray-600 hover:text-primary"></i>
                     </button>
                 </div>
-                <div class="absolute bottom-4 left-4 right-4">
-                    <div class="bg-white bg-opacity-95 rounded-lg p-3 transform translate-y-full group-hover:translate-y-0 transition duration-300">
-                        <div class="flex items-center justify-between">
-                            <div class="flex items-center space-x-2">
-                                <span class="text-primary font-bold text-lg">₹${price}</span>
-                                ${originalPrice ? `<span class="text-gray-400 line-through text-sm">₹${originalPrice}</span>` : ''}
-                            </div>
-                            <button class="add-to-cart-btn bg-primary text-white px-4 py-2 rounded-full hover:bg-secondary transition duration-300 flex items-center space-x-2">
-                                <i class="fas fa-plus"></i>
-                                <span>Add</span>
-                            </button>
-                        </div>
-                    </div>
-                </div>
             </div>
             <div class="p-6">
                 <div class="flex items-center justify-between mb-2">
@@ -840,23 +826,16 @@ function createProductCard(product) {
                     <span class="text-gray-500 text-sm">(${product.rating})</span>
                 </div>
                 <h3 class="font-bold text-gray-800 text-lg mb-2 cursor-pointer hover:text-primary transition duration-300 product-name">${product.name}</h3>
-                <p class="text-gray-600 text-sm mb-4 line-clamp-2">${product.description}</p>
                 <div class="flex items-center justify-between">
                     <div class="flex items-center space-x-2">
-                        <span class="text-primary font-bold text-xl">₹${price}</span>
+                        <span class="text-primary font-bold text-lg">₹${price}</span>
                         ${originalPrice ? `<span class="text-gray-400 line-through text-sm">₹${originalPrice}</span>` : ''}
                     </div>
-                    <div class="flex items-center space-x-2">
-                        <button class="quick-view-btn-mobile md:hidden bg-gray-100 hover:bg-gray-200 p-2 rounded-full transition duration-300" title="Quick View">
-                            <i class="fas fa-eye text-gray-600"></i>
-                        </button>
-                        <button class="add-to-cart-btn-mobile bg-primary text-white px-4 py-2 rounded-full hover:bg-secondary transition duration-300 flex items-center space-x-2">
-                            <i class="fas fa-plus"></i>
-                            <span>Add</span>
-                        </button>
-                    </div>
+                    <button class="add-to-cart-btn bg-primary text-white px-4 py-2 rounded-full hover:bg-secondary transition duration-300 flex items-center space-x-2">
+                        <i class="fas fa-plus"></i>
+                        <span>Add</span>
+                    </button>
                 </div>
-                ${product.inStock ? '<div class="mt-2"><span class="text-green-600 text-sm font-semibold"><i class="fas fa-check-circle mr-1"></i>In Stock</span></div>' : '<div class="mt-2"><span class="text-red-600 text-sm font-semibold"><i class="fas fa-times-circle mr-1"></i>Out of Stock</span></div>'}
             </div>
         </div>
     `;
@@ -1233,7 +1212,7 @@ function hideLoginModal() {
         recaptchaVerifier.clear()
         recaptchaVerifier.render()
     }
-    
+
     // Reset Firebase session
     confirmationResult = null
     userDetails = {}
@@ -1520,7 +1499,6 @@ function showProductQuickView(productId) {
                                 </div>
                                 <span class="text-gray-500 text-sm">(${product.reviews} reviews)</span>
                             </div>
-                            <p class="text-gray-600 mb-4">${product.description}</p>
                             <div class="flex items-center space-x-2 mb-6">
                                 <span class="text-primary font-bold text-2xl">₹${product.price}</span>
                                 ${product.originalPrice ? `<span class="text-gray-400 line-through text-lg">₹${product.originalPrice}</span>` : ""}
@@ -1766,17 +1744,16 @@ function showQuickView(productId) {
 
     quickViewProduct = product
     const modal = document.getElementById('quickViewModal')
-    
+
     // Populate quick view content
     document.getElementById('quickViewImage').src = product.image
     document.getElementById('quickViewImage').alt = product.name
     document.getElementById('quickViewName').textContent = product.name
-    document.getElementById('quickViewDescription').textContent = product.description
-    
+
     // Price and discount
     const price = typeof product.price === 'string' ? product.price.replace(/^₹/, '') : product.price
     const originalPrice = product.originalPrice ? (typeof product.originalPrice === 'string' ? product.originalPrice.replace(/^₹/, '') : product.originalPrice) : null
-    
+
     document.getElementById('quickViewPrice').textContent = `₹${price}`
     if (originalPrice) {
         document.getElementById('quickViewOriginalPrice').textContent = `₹${originalPrice}`
@@ -1787,7 +1764,7 @@ function showQuickView(productId) {
         document.getElementById('quickViewOriginalPrice').classList.add('hidden')
         document.getElementById('quickViewDiscountText').classList.add('hidden')
     }
-    
+
     // Discount badge
     if (product.discount > 0) {
         document.getElementById('quickViewDiscount').textContent = `-${product.discount}%`
@@ -1795,25 +1772,25 @@ function showQuickView(productId) {
     } else {
         document.getElementById('quickViewDiscount').classList.add('hidden')
     }
-    
+
     // Rating and reviews
     document.getElementById('quickViewRating').innerHTML = generateStarRating(product.rating)
     document.getElementById('quickViewRatingText').textContent = product.rating
     document.getElementById('quickViewReviews').textContent = `${product.reviews} reviews`
-    
+
     // Stock status
     document.getElementById('quickViewStock').textContent = product.inStock ? 'In Stock' : 'Out of Stock'
     document.getElementById('quickViewStock').className = product.inStock ? 'text-sm text-green-600 font-semibold' : 'text-sm text-red-600 font-semibold'
-    
+
     // Reset quantity
     document.getElementById('quickViewQuantity').textContent = '1'
-    
+
     // Update wishlist button
     updateQuickViewWishlistButton()
-    
+
     // Load reviews
     loadQuickViewReviews(product)
-    
+
     // Show modal
     modal.classList.remove('hidden')
     modal.classList.add('flex')
@@ -1830,11 +1807,11 @@ function closeQuickView() {
 
 function updateQuickViewWishlistButton() {
     if (!quickViewProduct) return
-    
+
     const isInWishlist = wishlistItems.some(item => item.id === quickViewProduct.id)
     const wishlistBtn = document.getElementById('quickViewWishlist')
     const icon = wishlistBtn.querySelector('i')
-    
+
     if (isInWishlist) {
         wishlistBtn.classList.add('text-red-500')
         icon.className = 'fas fa-heart'
@@ -1846,7 +1823,7 @@ function updateQuickViewWishlistButton() {
 
 function loadQuickViewReviews(product) {
     const reviewsContainer = document.getElementById('quickViewReviewsList')
-    
+
     if (product.reviewsList && product.reviewsList.length > 0) {
         const reviewsHTML = product.reviewsList.slice(0, 3).map(review => `
             <div class="border-b border-gray-200 pb-3 last:border-b-0">
@@ -1863,7 +1840,7 @@ function loadQuickViewReviews(product) {
                 <span class="text-gray-400 text-xs">${new Date(review.date).toLocaleDateString()}</span>
             </div>
         `).join('')
-        
+
         reviewsContainer.innerHTML = reviewsHTML
     } else {
         reviewsContainer.innerHTML = '<p class="text-gray-500 text-center py-4">No reviews yet. Be the first to review this product!</p>'
@@ -1876,51 +1853,51 @@ function initializeAdvancedFilters() {
     document.getElementById('showFilters').addEventListener('click', () => {
         document.getElementById('filtersPanel').classList.remove('hidden')
     })
-    
+
     document.getElementById('hideFilters').addEventListener('click', () => {
         document.getElementById('filtersPanel').classList.add('hidden')
     })
-    
+
     // Price range slider
     const priceRange = document.getElementById('priceRange')
     const priceRangeValue = document.getElementById('priceRangeValue')
-    
+
     priceRange.addEventListener('input', (e) => {
         const value = e.target.value
         priceRangeValue.textContent = `₹${value}`
         currentFilters.priceRange.max = parseInt(value)
         document.getElementById('maxPriceFilter').value = value
     })
-    
+
     // Price input fields
     document.getElementById('minPriceFilter').addEventListener('input', (e) => {
         currentFilters.priceRange.min = parseInt(e.target.value) || 0
     })
-    
+
     document.getElementById('maxPriceFilter').addEventListener('input', (e) => {
         const value = parseInt(e.target.value) || 1000
         currentFilters.priceRange.max = value
         priceRange.value = value
         priceRangeValue.textContent = `₹${value}`
     })
-    
+
     // Category filters
     populateCategoryFilters()
-    
+
     // Rating filters
     document.querySelectorAll('.rating-filter').forEach(checkbox => {
         checkbox.addEventListener('change', () => {
             updateRatingFilters()
         })
     })
-    
+
     // Availability filters
     document.querySelectorAll('.availability-filter').forEach(checkbox => {
         checkbox.addEventListener('change', () => {
             updateAvailabilityFilters()
         })
     })
-    
+
     // Apply filters
     document.getElementById('applyAllFilters').addEventListener('click', applyAllFilters)
     document.getElementById('clearAllFilters').addEventListener('click', clearAllFilters)
@@ -1929,16 +1906,16 @@ function initializeAdvancedFilters() {
 function populateCategoryFilters() {
     const categories = getAvailableCategories()
     const container = document.getElementById('categoryFilters')
-    
+
     const categoriesHTML = categories.map(category => `
         <label class="flex items-center space-x-2 cursor-pointer">
             <input type="checkbox" value="${category}" class="category-filter-checkbox">
             <span class="text-sm text-gray-600">${category.charAt(0).toUpperCase() + category.slice(1)}</span>
         </label>
     `).join('')
-    
+
     container.innerHTML = categoriesHTML
-    
+
     // Add event listeners
     document.querySelectorAll('.category-filter-checkbox').forEach(checkbox => {
         checkbox.addEventListener('change', () => {
@@ -1964,25 +1941,25 @@ function updateAvailabilityFilters() {
 
 function applyAllFilters() {
     let filtered = [...allProducts]
-    
+
     // Apply price filter
     filtered = filtered.filter(product => {
         const price = parseInt(typeof product.price === 'string' ? product.price.replace(/^₹/, '') : product.price)
         return price >= currentFilters.priceRange.min && price <= currentFilters.priceRange.max
     })
-    
+
     // Apply category filter
     if (currentFilters.categories.length > 0) {
         filtered = filtered.filter(product => currentFilters.categories.includes(product.category))
     }
-    
+
     // Apply rating filter
     if (currentFilters.ratings.length > 0) {
-        filtered = filtered.filter(product => 
+        filtered = filtered.filter(product =>
             currentFilters.ratings.some(rating => product.rating >= rating)
         )
     }
-    
+
     // Apply availability filter
     if (currentFilters.availability.length > 0) {
         filtered = filtered.filter(product => {
@@ -1998,16 +1975,16 @@ function applyAllFilters() {
             return true
         })
     }
-    
+
     displayedProducts = filtered
     currentPage = 1
     renderProducts()
-    
+
     // Hide filters panel on mobile
     if (window.innerWidth <= 768) {
         document.getElementById('filtersPanel').classList.add('hidden')
     }
-    
+
     showNotification(`Found ${filtered.length} products matching your filters`, 'info')
 }
 
@@ -2016,13 +1993,13 @@ function clearAllFilters() {
     document.querySelectorAll('.category-filter-checkbox, .rating-filter, .availability-filter').forEach(checkbox => {
         checkbox.checked = false
     })
-    
+
     // Reset price range
     document.getElementById('priceRange').value = 1000
     document.getElementById('priceRangeValue').textContent = '₹1000'
     document.getElementById('minPriceFilter').value = ''
     document.getElementById('maxPriceFilter').value = ''
-    
+
     // Reset filters
     currentFilters = {
         priceRange: { min: 0, max: 1000 },
@@ -2030,12 +2007,12 @@ function clearAllFilters() {
         ratings: [],
         availability: []
     }
-    
+
     // Reset products
     displayedProducts = [...allProducts]
     currentPage = 1
     renderProducts()
-    
+
     showNotification('All filters cleared', 'info')
 }
 
@@ -2043,7 +2020,7 @@ function clearAllFilters() {
 function initializeEnhancedSearch() {
     const searchInput = document.getElementById('searchInput')
     const mobileSearchInput = document.getElementById('mobileSearchInput')
-    
+
     // Debounced search function
     let searchTimeout
     const debouncedSearch = (query) => {
@@ -2052,7 +2029,7 @@ function initializeEnhancedSearch() {
             performEnhancedSearch(query)
         }, 300)
     }
-    
+
     // Desktop search
     searchInput.addEventListener('input', (e) => {
         const query = e.target.value.trim()
@@ -2064,7 +2041,7 @@ function initializeEnhancedSearch() {
             hideAdvancedSearchFilters()
         }
     })
-    
+
     // Mobile search
     if (mobileSearchInput) {
         mobileSearchInput.addEventListener('input', (e) => {
@@ -2074,16 +2051,16 @@ function initializeEnhancedSearch() {
             }
         })
     }
-    
+
     // Advanced search filters
     document.getElementById('applyFilters').addEventListener('click', () => {
         applySearchFilters()
     })
-    
+
     document.getElementById('clearFilters').addEventListener('click', () => {
         clearSearchFilters()
     })
-    
+
     // Search suggestions
     document.getElementById('searchSuggestions').addEventListener('click', (e) => {
         if (e.target.classList.contains('search-suggestion-item')) {
@@ -2101,30 +2078,30 @@ function performEnhancedSearch(query) {
         renderProducts()
         return
     }
-    
+
     const searchTerm = query.toLowerCase()
     const filtered = allProducts.filter(product => {
         return product.name.toLowerCase().includes(searchTerm) ||
                product.description.toLowerCase().includes(searchTerm) ||
                product.category.toLowerCase().includes(searchTerm)
     })
-    
+
     displayedProducts = filtered
     currentPage = 1
     renderProducts()
-    
+
     // Update search suggestions
     updateSearchSuggestions(query)
 }
 
 function updateSearchSuggestions(query) {
     const searchTerm = query.toLowerCase()
-    const suggestions = allProducts.filter(product => 
+    const suggestions = allProducts.filter(product =>
         product.name.toLowerCase().includes(searchTerm)
     ).slice(0, 5)
-    
+
     const suggestionsContainer = document.getElementById('searchSuggestions')
-    
+
     if (suggestions.length > 0) {
         const suggestionsHTML = suggestions.map(product => `
             <div class="search-suggestion-item flex items-center p-3 hover:bg-gray-100 cursor-pointer" data-product-name="${product.name}">
@@ -2135,7 +2112,7 @@ function updateSearchSuggestions(query) {
                 </div>
             </div>
         `).join('')
-        
+
         suggestionsContainer.innerHTML = suggestionsHTML
         suggestionsContainer.classList.remove('hidden')
     } else {
@@ -2149,24 +2126,24 @@ function applySearchFilters() {
     const maxPrice = parseInt(document.getElementById('maxPrice').value) || 1000
     const category = document.getElementById('searchCategory').value
     const rating = parseInt(document.getElementById('searchRating').value) || 0
-    
+
     let filtered = displayedProducts.filter(product => {
         const price = parseInt(typeof product.price === 'string' ? product.price.replace(/^₹/, '') : product.price)
         return price >= minPrice && price <= maxPrice
     })
-    
+
     if (category) {
         filtered = filtered.filter(product => product.category === category)
     }
-    
+
     if (rating > 0) {
         filtered = filtered.filter(product => product.rating >= rating)
     }
-    
+
     displayedProducts = filtered
     currentPage = 1
     renderProducts()
-    
+
     hideAdvancedSearchFilters()
     showNotification(`Found ${filtered.length} products`, 'info')
 }
@@ -2191,25 +2168,25 @@ function initializeMobileNavigation() {
     const mobileCategoriesBtn = document.getElementById('mobileCategoriesBtn')
     const mobileCategoriesDropdown = document.getElementById('mobileCategoriesDropdown')
     const mobileCategoriesIcon = document.getElementById('mobileCategoriesIcon')
-    
+
     // Open mobile navigation
     mobileNavBtn.addEventListener('click', () => {
         openMobileNavigation()
     })
-    
+
     // Close mobile navigation
     closeMobileNav.addEventListener('click', () => {
         closeMobileNavigation()
     })
-    
+
     mobileNavOverlay.addEventListener('click', () => {
         closeMobileNavigation()
     })
-    
+
     // Mobile categories dropdown
     mobileCategoriesBtn.addEventListener('click', () => {
         const isOpen = mobileCategoriesDropdown.classList.contains('hidden')
-        
+
         if (isOpen) {
             mobileCategoriesDropdown.classList.remove('hidden')
             mobileCategoriesIcon.style.transform = 'rotate(180deg)'
@@ -2218,7 +2195,7 @@ function initializeMobileNavigation() {
             mobileCategoriesIcon.style.transform = 'rotate(0deg)'
         }
     })
-    
+
     // Mobile navigation links
     document.querySelectorAll('.mobile-nav-link').forEach(link => {
         link.addEventListener('click', (e) => {
@@ -2229,24 +2206,24 @@ function initializeMobileNavigation() {
             }
         })
     })
-    
+
     // Mobile quick actions
     document.getElementById('mobileCartBtn').addEventListener('click', () => {
         toggleCartSidebar()
         closeMobileNavigation()
     })
-    
+
     document.getElementById('mobileWishlistBtn').addEventListener('click', () => {
         // Navigate to wishlist or show wishlist modal
         closeMobileNavigation()
     })
-    
+
     // Mobile login
     document.getElementById('mobileLoginBtn').addEventListener('click', () => {
         showLoginModal()
         closeMobileNavigation()
     })
-    
+
     // Mobile search
     const mobileSearchInput = document.getElementById('mobileSearchInput')
     if (mobileSearchInput) {
@@ -2265,11 +2242,11 @@ function initializeMobileNavigation() {
 function openMobileNavigation() {
     const mobileNavMenu = document.getElementById('mobileNavMenu')
     const mobileNavOverlay = document.getElementById('mobileNavOverlay')
-    
+
     mobileNavMenu.classList.remove('-translate-x-full')
     mobileNavOverlay.classList.remove('hidden')
     mobileNavOpen = true
-    
+
     // Prevent body scroll
     document.body.style.overflow = 'hidden'
 }
@@ -2277,11 +2254,11 @@ function openMobileNavigation() {
 function closeMobileNavigation() {
     const mobileNavMenu = document.getElementById('mobileNavMenu')
     const mobileNavOverlay = document.getElementById('mobileNavOverlay')
-    
+
     mobileNavMenu.classList.add('-translate-x-full')
     mobileNavOverlay.classList.add('hidden')
     mobileNavOpen = false
-    
+
     // Restore body scroll
     document.body.style.overflow = ''
 }
@@ -2297,9 +2274,9 @@ function initializeProductReviews() {
 function addToCart(productId, quantity = 1) {
     const product = allProducts.find(p => p.id === productId)
     if (!product) return
-    
+
     const existingItem = cartItems.find(item => item.id === productId)
-    
+
     if (existingItem) {
         existingItem.quantity += quantity
     } else {
@@ -2311,7 +2288,7 @@ function addToCart(productId, quantity = 1) {
             quantity: quantity
         })
     }
-    
+
     saveCartToStorage()
     updateCartCount()
     updateCartDisplay()
@@ -2328,19 +2305,19 @@ function addProductEventListeners() {
             showNotification('Product added to cart!', 'success')
         }
     })
-    
+
     // Wishlist buttons
     document.addEventListener('click', (e) => {
         if (e.target.closest('.wishlist-btn')) {
             const productCard = e.target.closest('.product-card')
             const productId = productCard.dataset.productId
             toggleWishlist(productId)
-            
+
             // Update button appearance
             const wishlistBtn = e.target.closest('.wishlist-btn')
             const icon = wishlistBtn.querySelector('i')
             const isInWishlist = wishlistItems.some(item => item.id === productId)
-            
+
             if (isInWishlist) {
                 wishlistBtn.classList.add('text-red-500')
                 icon.className = 'fas fa-heart'
