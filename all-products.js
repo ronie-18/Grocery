@@ -441,7 +441,9 @@ function addProductEventListeners() {
 // Enhanced add to cart function
 function addToCart(productId, quantity = 1) {
     const product = allProducts.find(p => p.id === productId);
-    if (!product) return;
+    if (!product) {
+      return;
+    }
 
     const existingItem = cartItems.find(item => item.id === productId);
 
