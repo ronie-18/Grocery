@@ -29,42 +29,35 @@ let resendTimer = 30
 let confirmationResult = null
 let recaptchaVerifier = null
 
-// Categories Data
+// Categories Data - Updated to match products-data.js
 const categories = [
     {
-        id: "fruits",
-        name: "Fruits & Vegetables",
-        description: "Fresh & Organic",
-        image: "https://i.pinimg.com/736x/ba/b9/67/bab967df39385b6360ef769fe35893bd.jpg",
-        color: "from-green-100 to-green-200",
+        id: "staples",
+        name: "Staples",
+        description: "Rice, Dal & Atta",
+        image: "https://img.freepik.com/free-photo/top-view-raw-rice-inside-plate-dark-desk_179666-27235.jpg?semt=ais_hybrid&w=740",
+        color: "from-yellow-100 to-yellow-200",
+    },
+    {
+        id: "spices",
+        name: "Spices",
+        description: "Fresh & Aromatic",
+        image: "https://www.viralspices.com/wp-content/uploads/2024/11/Untitled-1-624x312.jpg",
+        color: "from-red-100 to-red-200",
     },
     {
         id: "dairy",
         name: "Dairy Products",
-        description: "Milk, Cheese & More",
+        description: "Milk, Paneer & More",
         image: "https://pngimg.com/d/milk_PNG12717.png",
         color: "from-blue-100 to-blue-200",
     },
     {
-        id: "meat",
-        name: "Meat & Seafood",
-        description: "Fresh & Premium",
-        image: "https://pngimg.com/d/fish_PNG25189.png",
-        color: "from-red-100 to-red-200",
-    },
-    {
-        id: "bakery",
-        name: "Bakery Items",
-        description: "Fresh Baked Daily",
-        image: "https://pngimg.com/d/bread_PNG2289.png",
-        color: "from-yellow-100 to-yellow-200",
-    },
-    {
-        id: "beverages",
-        name: "Beverages",
-        description: "Juices & Drinks",
-        image: "https://pngimg.com/d/orange_juice_PNG35.png",
-        color: "from-purple-100 to-purple-200",
+        id: "vegetables",
+        name: "Vegetables",
+        description: "Fresh & Organic",
+        image: "https://i.pinimg.com/736x/ba/b9/67/bab967df39385b6360ef769fe35893bd.jpg",
+        color: "from-green-100 to-green-200",
     },
     {
         id: "snacks",
@@ -72,6 +65,13 @@ const categories = [
         description: "Healthy & Tasty",
         image: "https://pngimg.com/d/chips_PNG10125.png",
         color: "from-pink-100 to-pink-200",
+    },
+    {
+        id: "beverages",
+        name: "Beverages",
+        description: "Tea & Drinks",
+        image: "https://pngimg.com/d/orange_juice_PNG35.png",
+        color: "from-purple-100 to-purple-200",
     },
 ]
 
@@ -107,6 +107,9 @@ function hideLoadingScreen() {
 function initializeWebsite() {
     allProducts = [...products]
     displayedProducts = [...allProducts]
+    
+    // Ensure category starts with "all" on every page load
+    currentCategory = "all"
 
     initializeSlider()
     initializeSearch()
@@ -655,15 +658,66 @@ function performSearch() {
 // Categories Functionality
 function initializeCategories() {
     renderCategories()
+    populateHeaderCategoryDropdown()
 
-    // Category filter functionality
+    // Header category filter dropdown functionality
+    const categoryFilter = document.getElementById("categoryFilter")
+    if (categoryFilter) {
+        // Set default value to "all" on page load
+        categoryFilter.value = "all"
+        
+        // Add event listener for category changes
+        categoryFilter.addEventListener("change", function (e) {
+            const category = e.target.value
+            filterByCategory(category)
+        })
+    }
+
+    // Category filter functionality (existing)
     document.querySelectorAll(".category-filter").forEach((filter) => {
         filter.addEventListener("click", function (e) {
             e.preventDefault()
             const category = this.dataset.category
             filterByCategory(category)
+            
+            // Update the header dropdown to match
+            if (categoryFilter) {
+                categoryFilter.value = category
+            }
         })
     })
+}
+
+// Function to populate header category dropdown from products-data.js
+function populateHeaderCategoryDropdown() {
+    const categoryFilter = document.getElementById("categoryFilter")
+    if (categoryFilter && typeof getAvailableCategories === 'function') {
+        const categories = getAvailableCategories()
+        
+        // Clear existing options except "All Categories"
+        const allCategoriesOption = categoryFilter.querySelector('option[value="all"]')
+        categoryFilter.innerHTML = ''
+        if (allCategoriesOption) {
+            categoryFilter.appendChild(allCategoriesOption)
+        } else {
+            categoryFilter.innerHTML = '<option value="all">All Categories</option>'
+        }
+        
+        // Add dynamic category options with proper formatting
+        categories.forEach(category => {
+            const option = document.createElement('option')
+            option.value = category
+            option.textContent = formatCategoryName(category)
+            categoryFilter.appendChild(option)
+        })
+    }
+}
+
+// Function to format category names for display
+function formatCategoryName(category) {
+    // Use the categories array for consistent naming
+    const categoryInfo = categories.find(cat => cat.id === category)
+    return categoryInfo ? categoryInfo.name : category.charAt(0).toUpperCase() + category.slice(1)
 }
 
 function renderCategories() {
@@ -699,12 +753,19 @@ function filterByCategory(category) {
         displayedProducts = allProducts.filter((product) => product.category === category)
     }
 
+    // Update the header category dropdown to match current selection
+    const categoryFilter = document.getElementById("categoryFilter")
+    if (categoryFilter) {
+        categoryFilter.value = category
+    }
+
     currentPage = 1
     renderProducts()
     document.getElementById("productsSection").scrollIntoView({ behavior: "smooth" })
 
-    const categoryName = categories.find((cat) => cat.id === category)?.name || "All Products"
-    showNotification(`Showing ${categoryName}`, "info")
+    // Use proper category name for notification
+    const categoryName = category === "all" ? "All Products" : formatCategoryName(category)
+    showNotification(`Showing ${categoryName} (${displayedProducts.length} products)`, "info")
 }
 
 // Products Functionality
@@ -970,7 +1031,7 @@ function updateCartDisplay() {
     if (cartItems.length === 0) {
         cartItemsContainer.innerHTML = `
             <div class="text-center py-12">
-                <i class="fas fa-shopping-cart text-6xl text-gray-300 mb-4"></i>
+                <i class="fa-solid fa-cart-shopping text-6xl text-gray-300 mb-4"></i>
                 <p class="text-xl text-gray-500">Your cart is empty</p>
                 <p class="text-gray-400">Add some products to get started</p>
             </div>
