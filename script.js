@@ -1,7 +1,7 @@
 // Global Variables
 let currentSlide = 0
-let cartCount = 0
 let cartItems = JSON.parse(localStorage.getItem("nearNowCartItems")) || []
+let cartCount = cartItems.reduce((total, item) => total + item.quantity, 0)
 let currentUser = JSON.parse(localStorage.getItem("nearNowCurrentUser")) || null
 let allProducts = []
 let displayedProducts = []
@@ -130,6 +130,7 @@ function initializeWebsite() {
     initializeMobileNavigation()
     initializeProductReviews()
 
+    // Update cart count after everything is initialized
     updateCartCount()
 
     console.log("Near & Now website fully initialized!")
@@ -863,11 +864,12 @@ function generateStarRating(rating) {
 }
 
 function addProductEventListeners() {
-    // Add to cart buttons
-    document.querySelectorAll(".add-to-cart").forEach((button) => {
+    // Add to cart buttons - Updated to use correct selectors
+    document.querySelectorAll(".add-to-cart-btn, .add-to-cart-btn-mobile").forEach((button) => {
         button.addEventListener("click", function (e) {
             e.preventDefault()
-            const productId = Number.parseInt(this.dataset.productId)
+            const productCard = this.closest('.product-card')
+            const productId = productCard.dataset.productId
             addToCart(productId)
         })
     })
@@ -876,7 +878,8 @@ function addProductEventListeners() {
     document.querySelectorAll(".wishlist-btn").forEach((button) => {
         button.addEventListener("click", function (e) {
             e.preventDefault()
-            const productId = Number.parseInt(this.dataset.productId)
+            const productCard = this.closest('.product-card')
+            const productId = productCard.dataset.productId
             toggleWishlist(productId)
         })
     })
@@ -884,7 +887,7 @@ function addProductEventListeners() {
     // Product card click for quick view
     document.querySelectorAll(".product-card").forEach((card) => {
         card.addEventListener("dblclick", function () {
-            const productId = Number.parseInt(this.dataset.productId)
+            const productId = this.dataset.productId
             showProductQuickView(productId)
         })
     })
@@ -920,6 +923,8 @@ function loadMoreProducts() {
 
 // Cart Functionality
 function initializeCart() {
+    // Update cart count and display immediately
+    updateCartCount()
     updateCartDisplay()
 
     document.getElementById("cartBtn").addEventListener("click", toggleCartSidebar)
@@ -946,10 +951,15 @@ function addToCart(productId) {
         })
     }
 
+    // Always recalculate cart count from the items array
     cartCount = cartItems.reduce((total, item) => total + item.quantity, 0)
+    
+    // Save to localStorage first
+    saveCartToStorage()
+    
+    // Then update the display
     updateCartCount()
     updateCartDisplay()
-    saveCartToStorage()
 
     // Update button state
     const button = document.querySelector(`[data-product-id="${productId}"].add-to-cart`)
@@ -993,14 +1003,23 @@ function updateCartQuantity(productId, newQuantity) {
 }
 
 function updateCartCount() {
-    document.getElementById("cartCount").textContent = cartCount
-
-    // Add bounce animation
+    // Update main cart count badge
     const cartCountElement = document.getElementById("cartCount")
-    cartCountElement.classList.add("animate-bounce")
-    setTimeout(() => {
-        cartCountElement.classList.remove("animate-bounce")
-    }, 1000)
+    if (cartCountElement) {
+        cartCountElement.textContent = cartCount
+        
+        // Add bounce animation
+        cartCountElement.classList.add("animate-bounce")
+        setTimeout(() => {
+            cartCountElement.classList.remove("animate-bounce")
+        }, 1000)
+    }
+    
+    // Update mobile cart count if it exists
+    const mobileCartCountElement = document.getElementById("mobileCartCount")
+    if (mobileCartCountElement) {
+        mobileCartCountElement.textContent = cartCount
+    }
 }
 
 function updateCartDisplay() {
@@ -1026,20 +1045,20 @@ function updateCartDisplay() {
             <img src="${item.image}" alt="${item.name}" class="w-16 h-16 rounded-lg object-cover">
             <div class="flex-1">
                 <h4 class="font-semibold text-gray-800">${item.name}</h4>
-                <p class="text-sm text-gray-600">₹${item.price} each</p>
+                <p class="text-sm text-gray-600">₹${typeof item.price === 'string' ? item.price.replace(/^₹/, '') : item.price} each</p>
                 <div class="flex items-center space-x-2 mt-2">
-                    <button class="quantity-btn bg-gray-200 text-gray-700 w-8 h-8 rounded-full hover:bg-gray-300" onclick="updateCartQuantity(${item.id}, ${item.quantity - 1})">
+                    <button class="quantity-btn bg-gray-200 text-gray-700 w-8 h-8 rounded-full hover:bg-gray-300" onclick="updateCartQuantity('${item.id}', ${item.quantity - 1})">
                         <i class="fas fa-minus text-xs"></i>
                     </button>
                     <span class="font-semibold px-3">${item.quantity}</span>
-                    <button class="quantity-btn bg-gray-200 text-gray-700 w-8 h-8 rounded-full hover:bg-gray-300" onclick="updateCartQuantity(${item.id}, ${item.quantity + 1})">
+                    <button class="quantity-btn bg-gray-200 text-gray-700 w-8 h-8 rounded-full hover:bg-gray-300" onclick="updateCartQuantity('${item.id}', ${item.quantity + 1})">
                         <i class="fas fa-plus text-xs"></i>
                     </button>
                 </div>
             </div>
             <div class="text-right">
-                <p class="font-bold text-primary">₹${item.price * item.quantity}</p>
-                <button class="text-red-500 hover:text-red-700 mt-2" onclick="removeFromCart(${item.id})">
+                <p class="font-bold text-primary">₹${(typeof item.price === 'string' ? parseFloat(item.price.replace(/^₹/, '')) : item.price) * item.quantity}</p>
+                <button class="text-red-500 hover:text-red-700 mt-2" onclick="removeFromCart('${item.id}')">
                     <i class="fas fa-trash text-sm"></i>
                 </button>
             </div>
@@ -1048,7 +1067,10 @@ function updateCartDisplay() {
         )
         .join("")
 
-    const total = cartItems.reduce((sum, item) => sum + item.price * item.quantity, 0)
+    const total = cartItems.reduce((sum, item) => {
+        const price = typeof item.price === 'string' ? parseFloat(item.price.replace(/^₹/, '')) : item.price
+        return sum + (price * item.quantity)
+    }, 0)
     cartTotal.textContent = `₹${total}`
 }
 
@@ -1080,7 +1102,10 @@ function proceedToCheckout() {
         return
     }
 
-    const total = cartItems.reduce((sum, item) => sum + item.price * item.quantity, 0)
+    const total = cartItems.reduce((sum, item) => {
+        const price = typeof item.price === 'string' ? parseFloat(item.price.replace(/^₹/, '')) : item.price
+        return sum + (price * item.quantity)
+    }, 0)
     showNotification(`Proceeding to checkout with ₹${total}`, "success")
 
     // In a real application, this would redirect to checkout page
@@ -1592,17 +1617,11 @@ document.addEventListener("DOMContentLoaded", () => {
     })
 })
 
-// Initialize cart and wishlist from localStorage on page load
+// Additional saved data loading (wishlist and user)
 document.addEventListener("DOMContentLoaded", () => {
-    // Load saved data
-    const savedCart = localStorage.getItem("nearNowCartItems")
+    // Load saved wishlist and user data
     const savedWishlist = localStorage.getItem("nearNowWishlistItems")
     const savedUser = localStorage.getItem("nearNowCurrentUser")
-
-    if (savedCart) {
-        cartItems = JSON.parse(savedCart)
-        cartCount = cartItems.reduce((total, item) => total + item.quantity, 0)
-    }
 
     if (savedWishlist) {
         wishlistItems = JSON.parse(savedWishlist)
@@ -2289,44 +2308,15 @@ function addToCart(productId, quantity = 1) {
         })
     }
 
+    // Always recalculate cart count from the items array
+    cartCount = cartItems.reduce((total, item) => total + item.quantity, 0)
+    
+    // Save to localStorage first
     saveCartToStorage()
+    
+    // Then update the display
     updateCartCount()
     updateCartDisplay()
 }
 
-// Enhanced event listeners for product cards
-function addProductEventListeners() {
-    // Add to cart buttons
-    document.addEventListener('click', (e) => {
-        if (e.target.closest('.add-to-cart-btn') || e.target.closest('.add-to-cart-btn-mobile')) {
-            const productCard = e.target.closest('.product-card')
-            const productId = productCard.dataset.productId
-            addToCart(productId, 1)
-            showNotification('Product added to cart!', 'success')
-        }
-    })
-
-    // Wishlist buttons
-    document.addEventListener('click', (e) => {
-        if (e.target.closest('.wishlist-btn')) {
-            const productCard = e.target.closest('.product-card')
-            const productId = productCard.dataset.productId
-            toggleWishlist(productId)
-
-            // Update button appearance
-            const wishlistBtn = e.target.closest('.wishlist-btn')
-            const icon = wishlistBtn.querySelector('i')
-            const isInWishlist = wishlistItems.some(item => item.id === productId)
-
-            if (isInWishlist) {
-                wishlistBtn.classList.add('text-red-500')
-                icon.className = 'fas fa-heart'
-                showNotification('Added to wishlist!', 'success')
-            } else {
-                wishlistBtn.classList.remove('text-red-500')
-                icon.className = 'far fa-heart'
-                showNotification('Removed from wishlist', 'info')
-            }
-        }
-    })
-}
+// Enhanced event listeners for product cards (REMOVED DUPLICATE - using querySelectorAll version above to avoid double clicks)

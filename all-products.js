@@ -401,11 +401,12 @@ function initializeProductReviews() {
     console.log('Product reviews system initialized for all products page');
 }
 
-// Enhanced Product Event Listeners
+// Enhanced Product Event Listeners - Using event delegation to prevent duplicates
 function addProductEventListeners() {
-    // Add to cart buttons
+    // Add to cart buttons - Fixed to use correct CSS classes
     document.addEventListener('click', (e) => {
-        if (e.target.closest('.add-to-cart')) {
+        if (e.target.closest('.add-to-cart-btn-mobile')) {
+            e.preventDefault();
             const productCard = e.target.closest('.product-card');
             const { productId } = productCard.dataset;
             addToCart(productId, 1);
@@ -416,6 +417,7 @@ function addProductEventListeners() {
     // Wishlist buttons
     document.addEventListener('click', (e) => {
         if (e.target.closest('.wishlist-btn')) {
+            e.preventDefault();
             const productCard = e.target.closest('.product-card');
             const { productId } = productCard.dataset;
             toggleWishlist(productId);
@@ -459,7 +461,13 @@ function addToCart(productId, quantity = 1) {
         });
     }
 
+    // Always recalculate cart count from the items array
+    cartCount = cartItems.reduce((total, item) => total + item.quantity, 0);
+    
+    // Save to localStorage first
     saveCartToStorage();
+    
+    // Then update the display
     updateCartCount();
     updateCartDisplay();
 }
@@ -496,10 +504,25 @@ function saveWishlistToStorage() {
 }
 
 function updateCartCount() {
+    // Always recalculate cart count from the items array
     cartCount = cartItems.reduce((total, item) => total + item.quantity, 0);
+    
+    // Update main cart count badge
     const cartCountElement = document.getElementById('cartCount');
     if (cartCountElement) {
         cartCountElement.textContent = cartCount;
+        
+        // Add bounce animation
+        cartCountElement.classList.add("animate-bounce");
+        setTimeout(() => {
+            cartCountElement.classList.remove("animate-bounce");
+        }, 1000);
+    }
+    
+    // Update mobile cart count if it exists
+    const mobileCartCountElement = document.getElementById("mobileCartCount");
+    if (mobileCartCountElement) {
+        mobileCartCountElement.textContent = cartCount;
     }
 }
 
@@ -512,8 +535,60 @@ function updateWishlistCount() {
 }
 
 function updateCartDisplay() {
-    // This function can be implemented to update cart display if needed
-    console.log('Cart updated:', cartItems);
+    const cartItemsContainer = document.getElementById("cartItems");
+    const cartTotal = document.getElementById("cartTotal");
+
+    if (!cartItemsContainer || !cartTotal) {
+        console.log('Cart elements not found, cart updated:', cartItems);
+        return;
+    }
+
+    if (cartItems.length === 0) {
+        cartItemsContainer.innerHTML = `
+            <div class="text-center py-12">
+                <i class="fa-solid fa-cart-shopping text-6xl text-gray-300 mb-4"></i>
+                <p class="text-xl text-gray-500">Your cart is empty</p>
+                <p class="text-gray-400">Add some products to get started</p>
+            </div>
+        `;
+        cartTotal.textContent = "₹0";
+        return;
+    }
+
+    cartItemsContainer.innerHTML = cartItems
+        .map(
+            (item) => `
+        <div class="flex items-center space-x-4 p-4 border-b border-gray-200">
+            <img src="${item.image}" alt="${item.name}" class="w-16 h-16 rounded-lg object-cover">
+            <div class="flex-1">
+                <h4 class="font-semibold text-gray-800">${item.name}</h4>
+                <p class="text-sm text-gray-600">₹${typeof item.price === 'string' ? item.price.replace(/^₹/, '') : item.price} each</p>
+                <div class="flex items-center space-x-2 mt-2">
+                    <button class="quantity-btn bg-gray-200 text-gray-700 w-8 h-8 rounded-full hover:bg-gray-300" onclick="updateCartQuantity('${item.id}', ${item.quantity - 1})">
+                        <i class="fas fa-minus text-xs"></i>
+                    </button>
+                    <span class="font-semibold px-3">${item.quantity}</span>
+                    <button class="quantity-btn bg-gray-200 text-gray-700 w-8 h-8 rounded-full hover:bg-gray-300" onclick="updateCartQuantity('${item.id}', ${item.quantity + 1})">
+                        <i class="fas fa-plus text-xs"></i>
+                    </button>
+                </div>
+            </div>
+            <div class="text-right">
+                <p class="font-bold text-primary">₹${(typeof item.price === 'string' ? parseFloat(item.price.replace(/^₹/, '')) : item.price) * item.quantity}</p>
+                <button class="text-red-500 hover:text-red-700 mt-2" onclick="removeFromCart('${item.id}')">
+                    <i class="fas fa-trash text-sm"></i>
+                </button>
+            </div>
+        </div>
+    `,
+        )
+        .join("");
+
+    const total = cartItems.reduce((sum, item) => {
+        const price = typeof item.price === 'string' ? parseFloat(item.price.replace(/^₹/, '')) : item.price;
+        return sum + (price * item.quantity);
+    }, 0);
+    cartTotal.textContent = `₹${total}`;
 }
 
 // Notification function
@@ -584,11 +659,18 @@ function initializeLoginSystem() {
 
 // Initialize everything when DOM is loaded
 document.addEventListener('DOMContentLoaded', function () {
+    // Load cart items from localStorage and update count
+    const savedCart = localStorage.getItem("nearNowCartItems");
+    if (savedCart) {
+        cartItems = JSON.parse(savedCart);
+        cartCount = cartItems.reduce((total, item) => total + item.quantity, 0);
+    }
+    
     // Initialize authentication
     initializeAuth()
     initializeLoginSystem()
 
-    // Update cart and wishlist counts
-    document.getElementById("cartCount").textContent = cartCount
-    document.getElementById("wishlistCount").textContent = wishlistCount
+    // Update cart and wishlist counts after loading from localStorage
+    updateCartCount();
+    updateWishlistCount();
 });
