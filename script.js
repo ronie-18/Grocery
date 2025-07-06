@@ -2289,34 +2289,6 @@ function initializeProductReviews() {
     console.log('Product reviews system initialized')
 }
 
-// Enhanced add to cart function
-function addToCart(productId, quantity = 1) {
-    const product = allProducts.find(p => p.id === productId)
-    if (!product) return
-
-    const existingItem = cartItems.find(item => item.id === productId)
-
-    if (existingItem) {
-        existingItem.quantity += quantity
-    } else {
-        cartItems.push({
-            id: productId,
-            name: product.name,
-            price: product.price,
-            image: product.image,
-            quantity: quantity
-        })
-    }
-
-    // Always recalculate cart count from the items array
-    cartCount = cartItems.reduce((total, item) => total + item.quantity, 0)
-    
-    // Save to localStorage first
-    saveCartToStorage()
-    
-    // Then update the display
-    updateCartCount()
-    updateCartDisplay()
-}
-
 // Enhanced event listeners for product cards (REMOVED DUPLICATE - using querySelectorAll version above to avoid double clicks)
+
+// ===== END OF ENHANCED FEATURES =====
