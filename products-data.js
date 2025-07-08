@@ -72,7 +72,7 @@ const productsByCategory = {
     {
       "id": "wheat-atta-1",
       "name": "Whole Wheat Atta",
-      "image": "https://w7.pngwing.com/pngs/521/890/png-transparent-atta-flour-maida-flour-bakery-bread-flour-food-bread-superfood-thumbnail.png",
+      "image": "https://healthybuddha.in/image/cache/catalog/Atta-500x515.jpg",
       "price": "₹250",
       "originalPrice": "₹280",
       "rating": 4.2,
@@ -165,7 +165,7 @@ const productsByCategory = {
     {
       "id": "garam-masala-1",
       "name": "Garam Masala",
-      "image": "https://img.favpng.com/18/10/21/indian-cuisine-spice-mix-garam-masala-food-png-favpng-XQkNqYG2guqW8XfQze5n9Q2yw.jpg",
+      "image": "https://www.natureloc.com/image/cache/catalog/New%202022/khada-garam-masala-600x600.png",
       "price": "₹85",
       "originalPrice": "₹95",
       "rating": 4.6,
@@ -319,7 +319,7 @@ const productsByCategory = {
     {
       "id": "onions-1",
       "name": "Onions",
-      "image": "https://i.pinimg.com/736x/df/b2/8b/dfb28b96f1dc9cf2dce282cda2b57701.jpg",
+      "image": "https://plantix.net/en/library/assets/custom/crop-images/onion.jpeg",
       "price": "₹40",
       "originalPrice": "₹50",
       "rating": 4.2,
@@ -341,7 +341,7 @@ const productsByCategory = {
     {
       "id": "potatoes-1",
       "name": "Potatoes",
-      "image": "https://w7.pngwing.com/pngs/186/818/png-transparent-brown-potatoes-illustration-potato-potato-food-smoothie-gym.png",
+      "image": "https://images.ctfassets.net/0dkgxhks0leg/RKiZ605RAV8kjDQnxFCWP/b03b8729817c90b29b88d536bfd37ac5/9-Unusual-Uses-For-Potatoes.jpg",
       "price": "₹60",
       "originalPrice": "₹70",
       "rating": 4.1,
@@ -410,7 +410,7 @@ const productsByCategory = {
     {
       "id": "namkeen-mix-1",
       "name": "Namkeen Mix",
-      "image": "https://png.pngtree.com/png-vector/20240812/ourlarge/pngtree-explore-the-flavors-of-indian-crunchy-mix-namkeen-png-image_13452116.png",
+      "image": "https://ratlamisevbhandar.com/wp-content/uploads/2024/06/20.jpg",
       "price": "₹95",
       "originalPrice": "₹110",
       "rating": 4.0,
@@ -435,7 +435,7 @@ const productsByCategory = {
     {
       "id": "assam-tea-1",
       "name": "Assam Tea Powder",
-      "image": "https://img.favpng.com/10/5/0/assam-tea-tea-leaf-grading-green-tea-black-tea-png-favpng-PnS4rCcZ8HWXN43QWhHEjQHWf.jpg",
+      "image": "https://upload.wikimedia.org/wikipedia/commons/3/3b/Assam-Tee_SFTGFOP1.jpg",
       "price": "₹120",
       "originalPrice": "₹140",
       "rating": 4.5,
