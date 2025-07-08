@@ -19,13 +19,11 @@ let searchSuggestions = [];
 let quickViewProduct = null;
 let mobileNavOpen = false;
 
-// Firebase Authentication Variables
+// Authentication Variables
 let currentStep = 1;
 let userDetails = {};
 let otpTimer = null;
 let resendTimer = 30;
-let confirmationResult = null;
-let recaptchaVerifier = null;
 let currentUser = JSON.parse(localStorage.getItem("nearNowCurrentUser")) || null;
 let cartItems = JSON.parse(localStorage.getItem("nearNowCartItems")) || [];
 let cartCount = cartItems.reduce((total, item) => total + item.quantity, 0);
@@ -641,9 +639,6 @@ function initializeAuth() {
 
 // Initialize login system
 function initializeLoginSystem() {
-    // Initialize reCAPTCHA verifier
-    initializeRecaptcha()
-
     // Form event listeners
     document.getElementById("mobileForm").addEventListener("submit", handleMobileSubmit)
     document.getElementById("otpForm").addEventListener("submit", handleOtpSubmit)

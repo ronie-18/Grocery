@@ -363,7 +363,7 @@ const productsByCategory = {
     {
       "id": "tomatoes-1",
       "name": "Tomatoes",
-      "image": "https://freepngimg.com/download/tomato/159306-fresh-photos-tomatoes-bunch-free-photo.png",
+      "image": "https://media.istockphoto.com/id/847335116/photo/tomatoes-on-the-vine.jpg?s=612x612&w=0&k=20&c=XspM2ySvUfqjnt7HL5qKyn0tyRb5qLsf1GAP6-3xQsw=",
       "price": "₹35",
       "originalPrice": "₹45",
       "rating": 4.3,
@@ -388,7 +388,7 @@ const productsByCategory = {
     {
       "id": "masala-papad-1",
       "name": "Masala Papad",
-      "image": "https://5.imimg.com/data5/SELLER/Default/2025/3/494508142/NP/WE/CR/16142548/urad-masala-papad.png",
+      "image": "https://media.istockphoto.com/id/666595984/photo/indian-snacks-deep-fried-crackers-or-papad-mung-dal-and-urad-dal-papad-an-indian-fried-dish.jpg?s=612x612&w=0&k=20&c=WNBWP2z6sXYhPSFbfxmVJe1oVkWtQHY-lc7RbWeM84o=",
       "price": "₹60",
       "originalPrice": "₹70",
       "rating": 4.1,

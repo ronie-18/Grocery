@@ -21,13 +21,11 @@ let searchSuggestions = []
 let quickViewProduct = null
 let mobileNavOpen = false
 
-// Firebase Authentication Variables
+// Authentication Variables
 let currentStep = 1
 let userDetails = {}
 let otpTimer = null
 let resendTimer = 30
-let confirmationResult = null
-let recaptchaVerifier = null
 
 // Categories Data - Updated to match products-data.js
 const categories = [
@@ -138,9 +136,6 @@ function initializeWebsite() {
 
 // Login System Functions
 function initializeLoginSystem() {
-    // Initialize reCAPTCHA verifier
-    initializeRecaptcha()
-
     // Form event listeners
     document.getElementById("mobileForm").addEventListener("submit", handleMobileSubmit)
     document.getElementById("otpForm").addEventListener("submit", handleOtpSubmit)
@@ -154,52 +149,14 @@ function initializeLoginSystem() {
     initializeOtpInputs()
 }
 
-// Initialize reCAPTCHA verifier
-function initializeRecaptcha() {
-    try {
-        // Check if Firebase auth is available
-        if (!window.firebaseAuth) {
-            console.error('Firebase auth not available')
-            showNotification("Authentication service not ready. Please refresh the page.", "error")
-            return
-        }
+// Generate random OTP for demo purposes
+function generateOTP() {
+    return Math.floor(100000 + Math.random() * 900000).toString()
+}
 
-        // Check if RecaptchaVerifier is available
-        if (!window.RecaptchaVerifier) {
-            console.error('RecaptchaVerifier not available')
-            showNotification("Verification service not ready. Please refresh the page.", "error")
-            return
-        }
-
-        console.log('Initializing reCAPTCHA...')
-
-        recaptchaVerifier = new window.RecaptchaVerifier(window.firebaseAuth, 'recaptcha-container', {
-            'size': 'normal',
-            'callback': (response) => {
-                console.log('reCAPTCHA solved:', response)
-            },
-            'expired-callback': () => {
-                console.log('reCAPTCHA expired')
-                showNotification("reCAPTCHA expired. Please try again.", "error")
-            },
-            'error-callback': (error) => {
-                console.error('reCAPTCHA error:', error)
-                showNotification("reCAPTCHA error. Please refresh the page.", "error")
-            }
-        })
-
-        console.log('Rendering reCAPTCHA...')
-        recaptchaVerifier.render().then((widgetId) => {
-            console.log('reCAPTCHA rendered successfully with widget ID:', widgetId)
-        }).catch((error) => {
-            console.error('Error rendering reCAPTCHA:', error)
-            showNotification("Error loading verification. Please refresh the page.", "error")
-        })
-
-    } catch (error) {
-        console.error('Error initializing reCAPTCHA:', error)
-        showNotification("Error initializing verification. Please refresh the page.", "error")
-    }
+// Generate a simple user ID
+function generateUserId() {
+    return 'user_' + Date.now() + '_' + Math.floor(Math.random() * 1000)
 }
 
 // Handle mobile number and name submission
@@ -220,25 +177,12 @@ function handleMobileSubmit(e) {
         return
     }
 
-    // Check if Firebase is properly initialized
-    if (!window.firebaseAuth || !window.signInWithPhoneNumber) {
-        console.error('Firebase not properly initialized')
-        showNotification("Authentication service not available. Please refresh the page.", "error")
-        return
-    }
-
-    // Check if reCAPTCHA is initialized
-    if (!recaptchaVerifier) {
-        console.error('reCAPTCHA not initialized')
-        showNotification("Verification not ready. Please refresh the page.", "error")
-        return
-    }
-
     // Store user details
     userDetails = {
         name: name,
         mobile: mobile,
         fullMobile: `+91${mobile}`,
+        otp: generateOTP() // Generate OTP for demo
     }
 
     // Show loading state
@@ -246,67 +190,25 @@ function handleMobileSubmit(e) {
     sendBtn.innerHTML = '<i class="fas fa-spinner fa-spin mr-2"></i>Sending OTP...'
     sendBtn.disabled = true
 
-    // Send OTP using Firebase
-    const phoneNumber = userDetails.fullMobile
-    const appVerifier = recaptchaVerifier
+    // Simulate OTP sending delay
+    setTimeout(() => {
+        console.log('Demo OTP generated:', userDetails.otp)
 
-    console.log('Attempting to send OTP to:', phoneNumber)
-    console.log('reCAPTCHA verifier:', appVerifier)
+        // Update display mobile number
+        document.getElementById("displayMobile").textContent = userDetails.fullMobile
 
-    window.signInWithPhoneNumber(window.firebaseAuth, phoneNumber, appVerifier)
-        .then((confirmation) => {
-            confirmationResult = confirmation
-            console.log('OTP sent successfully')
+        // Move to step 2
+        showStep(2)
 
-            // Update display mobile number
-            document.getElementById("displayMobile").textContent = userDetails.fullMobile
+        // Start resend timer
+        startResendTimer()
 
-            // Move to step 2
-            showStep(2)
+        // Reset button
+        sendBtn.innerHTML = "Send OTP"
+        sendBtn.disabled = false
 
-            // Start resend timer
-            startResendTimer()
-
-            // Reset button
-            sendBtn.innerHTML = "Send OTP"
-            sendBtn.disabled = false
-
-            showNotification(`OTP sent to ${userDetails.fullMobile}`, "success")
-        })
-        .catch((error) => {
-            console.error('Error sending OTP:', error)
-            console.error('Error code:', error.code)
-            console.error('Error message:', error.message)
-
-            // Reset button
-            sendBtn.innerHTML = "Send OTP"
-            sendBtn.disabled = false
-
-            // Handle specific error cases
-            if (error.code === 'auth/invalid-phone-number') {
-                showNotification("Invalid phone number format", "error")
-            } else if (error.code === 'auth/too-many-requests') {
-                showNotification("Too many attempts. Please try again later.", "error")
-            } else if (error.code === 'auth/quota-exceeded') {
-                showNotification("SMS quota exceeded. Please try again later.", "error")
-            } else if (error.code === 'auth/invalid-recaptcha-token') {
-                showNotification("reCAPTCHA verification failed. Please try again.", "error")
-            } else if (error.code === 'auth/missing-recaptcha-token') {
-                showNotification("Please complete the reCAPTCHA verification.", "error")
-            } else if (error.code === 'auth/operation-not-allowed') {
-                showNotification("Phone authentication is not enabled for this app.", "error")
-            } else if (error.code === 'auth/network-request-failed') {
-                showNotification("Network error. Please check your internet connection.", "error")
-            } else {
-                showNotification(`Failed to send OTP: ${error.message}`, "error")
-            }
-
-            // Reset reCAPTCHA
-            if (recaptchaVerifier) {
-                recaptchaVerifier.clear()
-                recaptchaVerifier.render()
-            }
-        })
+        showNotification(`Demo OTP sent to ${userDetails.fullMobile}. Demo OTP: ${userDetails.otp}`, "success")
+    }, 1500)
 }
 
 // Handle OTP verification
@@ -325,24 +227,23 @@ function handleOtpSubmit(e) {
     verifyBtn.innerHTML = '<i class="fas fa-spinner fa-spin mr-2"></i>Verifying...'
     verifyBtn.disabled = true
 
-    // Verify OTP using Firebase
-    confirmationResult.confirm(enteredOtp)
-        .then((result) => {
+    // Simulate verification delay
+    setTimeout(() => {
+        // Verify OTP with generated one
+        if (enteredOtp === userDetails.otp) {
             // OTP is correct
-            const user = result.user
-            console.log('OTP verified successfully:', user)
+            console.log('OTP verified successfully')
 
             showStep(3)
 
             // Store user in localStorage
             const userData = {
-                id: user.uid,
+                id: generateUserId(),
                 name: userDetails.name,
                 mobile: userDetails.mobile,
                 fullMobile: userDetails.fullMobile,
                 loginTime: new Date().toISOString(),
-                isVerified: true,
-                firebaseUid: user.uid
+                isVerified: true
             }
 
             currentUser = userData
@@ -355,25 +256,20 @@ function handleOtpSubmit(e) {
                 hideLoginModal()
                 updateUserDisplay()
             }, 2000)
-        })
-        .catch((error) => {
-            console.error('Error verifying OTP:', error)
+        } else {
+            // OTP is incorrect
+            console.error('Invalid OTP entered')
 
             // Reset button
             verifyBtn.innerHTML = "Verify & Continue"
             verifyBtn.disabled = false
 
-            // Handle specific error cases
-            if (error.code === 'auth/invalid-verification-code') {
-                showNotification("Invalid OTP. Please try again.", "error")
-            } else if (error.code === 'auth/code-expired') {
-                showNotification("OTP has expired. Please request a new one.", "error")
-            } else {
-                showNotification("Failed to verify OTP. Please try again.", "error")
-            }
+            showNotification("Invalid OTP. Please check and try again.", "error")
 
+            // Clear OTP inputs on error
             clearOtpInputs()
-        })
+        }
+    }, 1000)
 }
 
 // Get entered OTP from inputs
@@ -471,10 +367,14 @@ function startResendTimer() {
 
 // Resend OTP
 function resendOtp() {
-    if (!confirmationResult) {
+    if (!userDetails.mobile) {
         showNotification("No active session. Please start over.", "error")
         return
     }
+
+    // Generate new OTP
+    userDetails.otp = generateOTP()
+    console.log('New demo OTP generated:', userDetails.otp)
 
     // Clear current OTP inputs
     clearOtpInputs()
@@ -482,7 +382,7 @@ function resendOtp() {
     // Start timer again
     startResendTimer()
 
-    showNotification(`New OTP sent to ${userDetails.fullMobile}`, "success")
+    showNotification(`New demo OTP sent to ${userDetails.fullMobile}. Demo OTP: ${userDetails.otp}`, "success")
 }
 
 // Change mobile number
@@ -497,15 +397,8 @@ function changeNumber() {
         clearInterval(otpTimer)
     }
 
-    // Reset user details and Firebase session
+    // Reset user details
     userDetails = {}
-    confirmationResult = null
-
-    // Reset reCAPTCHA
-    if (recaptchaVerifier) {
-        recaptchaVerifier.clear()
-        recaptchaVerifier.render()
-    }
 
     // Go back to step 1
     showStep(1)
@@ -1232,14 +1125,7 @@ function hideLoginModal() {
     clearOtpInputs()
     currentStep = 1
 
-    // Clean up Firebase resources
-    if (recaptchaVerifier) {
-        recaptchaVerifier.clear()
-        recaptchaVerifier.render()
-    }
-
-    // Reset Firebase session
-    confirmationResult = null
+    // Reset session
     userDetails = {}
 }
 
@@ -1710,51 +1596,69 @@ function initializeQuickView() {
     document.addEventListener('click', (e) => {
         if (e.target.closest('.quick-view-btn') || e.target.closest('.quick-view-btn-mobile') || e.target.closest('.product-name')) {
             const productCard = e.target.closest('.product-card')
-            const productId = productCard.dataset.productId
-            showQuickView(productId)
+            if (productCard && productCard.dataset.productId) {
+                const productId = productCard.dataset.productId
+                showQuickView(productId)
+            }
         }
     })
 
     // Close quick view modal
-    document.getElementById('closeQuickView').addEventListener('click', closeQuickView)
-    document.getElementById('quickViewModal').addEventListener('click', (e) => {
-        if (e.target.id === 'quickViewModal') {
-            closeQuickView()
-        }
-    })
+    const closeBtn = document.getElementById('closeQuickView')
+    if (closeBtn) {
+        closeBtn.addEventListener('click', closeQuickView)
+    }
+    
+    const modal = document.getElementById('quickViewModal')
+    if (modal) {
+        modal.addEventListener('click', (e) => {
+            if (e.target.id === 'quickViewModal') {
+                closeQuickView()
+            }
+        })
+    }
 
     // Quick view quantity controls
-    document.getElementById('decreaseQuantity').addEventListener('click', () => {
-        const quantitySpan = document.getElementById('quickViewQuantity')
-        let quantity = parseInt(quantitySpan.textContent)
-        if (quantity > 1) {
-            quantitySpan.textContent = quantity - 1
-        }
-    })
+    const decreaseBtn = document.getElementById('decreaseQuantity')
+    if (decreaseBtn) {
+        decreaseBtn.addEventListener('click', () => {
+            const quantitySpan = document.getElementById('quickViewQuantity')
+            if (quantitySpan) {
+                let quantity = parseInt(quantitySpan.textContent)
+                if (quantity > 1) {
+                    quantitySpan.textContent = quantity - 1
+                }
+            }
+        })
+    }
 
-    document.getElementById('increaseQuantity').addEventListener('click', () => {
-        const quantitySpan = document.getElementById('quickViewQuantity')
-        let quantity = parseInt(quantitySpan.textContent)
-        quantitySpan.textContent = quantity + 1
-    })
+    const increaseBtn = document.getElementById('increaseQuantity')
+    if (increaseBtn) {
+        increaseBtn.addEventListener('click', () => {
+            const quantitySpan = document.getElementById('quickViewQuantity')
+            if (quantitySpan) {
+                let quantity = parseInt(quantitySpan.textContent)
+                quantitySpan.textContent = quantity + 1
+            }
+        })
+    }
 
     // Quick view add to cart
-    document.getElementById('quickViewAddToCart').addEventListener('click', () => {
-        if (quickViewProduct) {
-            const quantity = parseInt(document.getElementById('quickViewQuantity').textContent)
-            addToCart(quickViewProduct.id, quantity)
-            closeQuickView()
-            showNotification(`${quickViewProduct.name} added to cart!`, 'success')
-        }
-    })
-
-    // Quick view wishlist
-    document.getElementById('quickViewWishlist').addEventListener('click', () => {
-        if (quickViewProduct) {
-            toggleWishlist(quickViewProduct.id)
-            updateQuickViewWishlistButton()
-        }
-    })
+    const addToCartBtn = document.getElementById('quickViewAddToCart')
+    if (addToCartBtn) {
+        addToCartBtn.addEventListener('click', () => {
+            if (quickViewProduct) {
+                const quantitySpan = document.getElementById('quickViewQuantity')
+                const quantity = quantitySpan ? parseInt(quantitySpan.textContent) : 1
+                // Add the product multiple times based on quantity since addToCart only accepts productId
+                for (let i = 0; i < quantity; i++) {
+                    addToCart(quickViewProduct.id)
+                }
+                closeQuickView()
+                showNotification(`${quickViewProduct.name} added to cart!`, 'success')
+            }
+        })
+    }
 }
 
 function showQuickView(productId) {
@@ -1763,49 +1667,82 @@ function showQuickView(productId) {
 
     quickViewProduct = product
     const modal = document.getElementById('quickViewModal')
+    if (!modal) return
 
     // Populate quick view content
-    document.getElementById('quickViewImage').src = product.image
-    document.getElementById('quickViewImage').alt = product.name
-    document.getElementById('quickViewName').textContent = product.name
+    const imageEl = document.getElementById('quickViewImage')
+    const nameEl = document.getElementById('quickViewName')
+    
+    if (imageEl) {
+        imageEl.src = product.image
+        imageEl.alt = product.name
+    }
+    if (nameEl) {
+        nameEl.textContent = product.name
+    }
 
     // Price and discount
     const price = typeof product.price === 'string' ? product.price.replace(/^₹/, '') : product.price
     const originalPrice = product.originalPrice ? (typeof product.originalPrice === 'string' ? product.originalPrice.replace(/^₹/, '') : product.originalPrice) : null
 
-    document.getElementById('quickViewPrice').textContent = `₹${price}`
-    if (originalPrice) {
-        document.getElementById('quickViewOriginalPrice').textContent = `₹${originalPrice}`
-        document.getElementById('quickViewOriginalPrice').classList.remove('hidden')
-        document.getElementById('quickViewDiscountText').textContent = `Save ₹${originalPrice - price}`
-        document.getElementById('quickViewDiscountText').classList.remove('hidden')
-    } else {
-        document.getElementById('quickViewOriginalPrice').classList.add('hidden')
-        document.getElementById('quickViewDiscountText').classList.add('hidden')
+    const priceEl = document.getElementById('quickViewPrice')
+    const originalPriceEl = document.getElementById('quickViewOriginalPrice')
+    const discountTextEl = document.getElementById('quickViewDiscountText')
+    
+    if (priceEl) {
+        priceEl.textContent = `₹${price}`
+    }
+    
+    if (originalPriceEl && discountTextEl) {
+        if (originalPrice) {
+            originalPriceEl.textContent = `₹${originalPrice}`
+            originalPriceEl.classList.remove('hidden')
+            discountTextEl.textContent = `Save ₹${originalPrice - price}`
+            discountTextEl.classList.remove('hidden')
+        } else {
+            originalPriceEl.classList.add('hidden')
+            discountTextEl.classList.add('hidden')
+        }
     }
 
     // Discount badge
-    if (product.discount > 0) {
-        document.getElementById('quickViewDiscount').textContent = `-${product.discount}%`
-        document.getElementById('quickViewDiscount').classList.remove('hidden')
-    } else {
-        document.getElementById('quickViewDiscount').classList.add('hidden')
+    const discountEl = document.getElementById('quickViewDiscount')
+    if (discountEl) {
+        if (product.discount > 0) {
+            discountEl.textContent = `-${product.discount}%`
+            discountEl.classList.remove('hidden')
+        } else {
+            discountEl.classList.add('hidden')
+        }
     }
 
     // Rating and reviews
-    document.getElementById('quickViewRating').innerHTML = generateStarRating(product.rating)
-    document.getElementById('quickViewRatingText').textContent = product.rating
-    document.getElementById('quickViewReviews').textContent = `${product.reviews} reviews`
+    const ratingEl = document.getElementById('quickViewRating')
+    const ratingTextEl = document.getElementById('quickViewRatingText')
+    const reviewsEl = document.getElementById('quickViewReviews')
+    
+    if (ratingEl) {
+        ratingEl.innerHTML = generateStarRating(product.rating)
+    }
+    if (ratingTextEl) {
+        ratingTextEl.textContent = product.rating
+    }
+    if (reviewsEl) {
+        reviewsEl.textContent = `${product.reviews} reviews`
+    }
 
     // Stock status
-    document.getElementById('quickViewStock').textContent = product.inStock ? 'In Stock' : 'Out of Stock'
-    document.getElementById('quickViewStock').className = product.inStock ? 'text-sm text-green-600 font-semibold' : 'text-sm text-red-600 font-semibold'
+    const stockEl = document.getElementById('quickViewStock')
+    if (stockEl) {
+        stockEl.textContent = product.inStock ? 'In Stock' : 'Out of Stock'
+        stockEl.className = product.inStock ? 'text-sm text-green-600 font-semibold' : 'text-sm text-red-600 font-semibold'
+    }
 
     // Reset quantity
-    document.getElementById('quickViewQuantity').textContent = '1'
-
-    // Update wishlist button
-    updateQuickViewWishlistButton()
+    const quantityEl = document.getElementById('quickViewQuantity')
+    if (quantityEl) {
+        quantityEl.textContent = '1'
+    }
 
     // Load reviews
     loadQuickViewReviews(product)
@@ -1813,35 +1750,33 @@ function showQuickView(productId) {
     // Show modal
     modal.classList.remove('hidden')
     modal.classList.add('flex')
-    document.getElementById('modalOverlay').classList.remove('hidden')
+    
+    const overlay = document.getElementById('modalOverlay')
+    if (overlay) {
+        overlay.classList.remove('hidden')
+    }
 }
 
 function closeQuickView() {
     const modal = document.getElementById('quickViewModal')
-    modal.classList.add('hidden')
-    modal.classList.remove('flex')
-    document.getElementById('modalOverlay').classList.add('hidden')
+    if (modal) {
+        modal.classList.add('hidden')
+        modal.classList.remove('flex')
+    }
+    
+    const overlay = document.getElementById('modalOverlay')
+    if (overlay) {
+        overlay.classList.add('hidden')
+    }
+    
     quickViewProduct = null
 }
 
-function updateQuickViewWishlistButton() {
-    if (!quickViewProduct) return
 
-    const isInWishlist = wishlistItems.some(item => item.id === quickViewProduct.id)
-    const wishlistBtn = document.getElementById('quickViewWishlist')
-    const icon = wishlistBtn.querySelector('i')
-
-    if (isInWishlist) {
-        wishlistBtn.classList.add('text-red-500')
-        icon.className = 'fas fa-heart'
-    } else {
-        wishlistBtn.classList.remove('text-red-500')
-        icon.className = 'far fa-heart'
-    }
-}
 
 function loadQuickViewReviews(product) {
     const reviewsContainer = document.getElementById('quickViewReviewsList')
+    if (!reviewsContainer) return
 
     if (product.reviewsList && product.reviewsList.length > 0) {
         const reviewsHTML = product.reviewsList.slice(0, 3).map(review => `

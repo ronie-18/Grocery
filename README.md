@@ -1,6 +1,6 @@
 # Near & Now - Enhanced Online Grocery Store
 
-A modern, feature-rich online grocery store built with HTML5, CSS3, JavaScript, and Firebase authentication.
+A modern, feature-rich online grocery store built with HTML5, CSS3, and JavaScript.
 
 ## 🔄 Recent Analysis & Improvements (Latest Update)
 
@@ -74,13 +74,13 @@ A modern, feature-rich online grocery store built with HTML5, CSS3, JavaScript, 
 - **CSS3** with Tailwind utility classes
 - **Vanilla JavaScript** (ES6+)
 - **Font Awesome** icons
-- **Firebase** for authentication
+- **Demo Authentication** system for development
 
 ### Core Functionality
 - **Product Management**: Categories, filtering, sorting, search
 - **Shopping Cart**: Add/remove items, quantity management, total calculation
 - **Wishlist**: Save favorite products
-- **User Authentication**: Phone number OTP verification via Firebase
+- **User Authentication**: Demo phone number verification system
 - **Responsive Navigation**: Mobile hamburger menu
 - **Search**: Real-time product search with suggestions
 - **Local Storage**: Persist cart and user data
@@ -132,10 +132,9 @@ A modern, feature-rich online grocery store built with HTML5, CSS3, JavaScript, 
    - Open `index.html` in your web browser
    - Or serve using a local server for best experience
 
-3. **Firebase Setup** (for authentication)
-   - Configure Firebase project
-   - Update Firebase config in HTML files
-   - Enable Phone Authentication in Firebase Console
+3. **Demo Authentication**
+   - The authentication system works as a demo with generated OTPs
+   - For production, integrate with a real SMS service or authentication provider
 
 ## 📁 File Structure
 
@@ -146,7 +145,7 @@ Grocery/
 ├── script.js              # Main JavaScript functionality
 ├── all-products.js        # Product page JavaScript
 ├── products-data.js       # Product database with reviews
-├── firebase-test.html     # Firebase authentication test
+├── cart-utils.js         # Shared cart management utilities
 ├── Logo.jpg              # Brand logo
 ├── README.md             # Project documentation
 └── LICENSE               # MIT License
@@ -156,7 +155,7 @@ Grocery/
 
 ✅ **Complete E-commerce Functionality**
 ✅ **Modern, Responsive Design**
-✅ **Firebase Authentication**
+✅ **Demo Authentication System**
 ✅ **Product Quick View**
 ✅ **Advanced Search & Filtering**
 ✅ **Shopping Cart & Wishlist**
@@ -178,8 +177,7 @@ Grocery/
 
 ## 🔒 Security Features
 
-- **Firebase Authentication** with phone verification
-- **reCAPTCHA integration** for bot protection
+- **Demo Authentication** with simulated phone verification
 - **Input validation** and sanitization
 - **Secure token handling**
 - **XSS protection** through proper escaping
