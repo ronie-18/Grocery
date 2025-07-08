@@ -1868,11 +1868,7 @@ function loadQuickViewReviews(product) {
 
 // Advanced Filtering Functionality
 function initializeAdvancedFilters() {
-    // Show/hide filters panel
-    document.getElementById('showFilters').addEventListener('click', () => {
-        document.getElementById('filtersPanel').classList.remove('hidden')
-    })
-
+    // Hide filters panel
     document.getElementById('hideFilters').addEventListener('click', () => {
         document.getElementById('filtersPanel').classList.add('hidden')
     })
