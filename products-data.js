@@ -410,7 +410,7 @@ const productsByCategory = {
     {
       "id": "namkeen-mix-1",
       "name": "Namkeen Mix",
-      "image": "https://ratlamisevbhandar.com/wp-content/uploads/2024/06/20.jpg",
+      "image": "https://images.jdmagicbox.com/rep/b2b/shahi-namkeen-mix/shahi-namkeen-mix-7.jpg",
       "price": "₹95",
       "originalPrice": "₹110",
       "rating": 4.0,
@@ -435,7 +435,7 @@ const productsByCategory = {
     {
       "id": "assam-tea-1",
       "name": "Assam Tea Powder",
-      "image": "https://upload.wikimedia.org/wikipedia/commons/3/3b/Assam-Tee_SFTGFOP1.jpg",
+      "image": "https://cupoftea-oregon.com/wp-content/uploads/2024/09/cup_of_tea_oregon_golden_monkey_loose_tea-1500x1125.webp",
       "price": "₹120",
       "originalPrice": "₹140",
       "rating": 4.5,
