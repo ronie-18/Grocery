@@ -1,4 +1,12 @@
-1. ✅ In all products page the cart menu is not working - FIXED
-1.1. ✅ Quickview button not working in all-products.html - FIXED (Made identical to index.html)
-2. The dimentions of the cards have to make small - FIXED
-3. All-products.html page should be redesigned - FIXED
+Rounak:
+
+In checkout.html, reduce the header section.
+Make the icon big and more visible.
+
+
+Products section:
+For products not having images - populate images correctly
+For dairy products, except first two, shuffle them to right categories
+Household product category, the product renamed to SUGAR and to be added in the main page
+
+Final validation - products from excel to final page
