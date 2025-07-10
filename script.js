@@ -1,7 +1,7 @@
 // Global Variables
 let currentSlide = 0
-let cartItems = JSON.parse(localStorage.getItem("nearNowCartItems")) || []
-let cartCount = cartItems.reduce((total, item) => total + item.quantity, 0)
+let cartItems = []
+let cartCount = 0
 let currentUser = JSON.parse(localStorage.getItem("nearNowCurrentUser")) || null
 let allProducts = []
 let displayedProducts = []
@@ -270,10 +270,12 @@ function handleOtpSubmit(e) {
             currentUser = userData
             localStorage.setItem("nearNowCurrentUser", JSON.stringify(userData))
 
-            // **CHANGE 2: Restore user's cart after login**
-            restoreUserCart(userData.id)
+                    // Restore user's cart after login using CartManager
+        if (window.handleUserLogin) {
+            window.handleUserLogin();
+        }
 
-            showNotification("Mobile number verified successfully!", "success")
+        showNotification("Mobile number verified successfully!", "success")
 
             // Auto close after 2 seconds
             setTimeout(() => {
@@ -448,6 +450,10 @@ function changeNumber() {
 // Continue after successful login
 function continueAfterLogin() {
     hideLoginModal()
+    // Load user's cart after login using CartManager
+    if (window.handleUserLogin) {
+        window.handleUserLogin();
+    }
     showNotification(`Welcome ${currentUser.name}! Happy shopping with Near & Now! 🛒`, "success")
 }
 
@@ -469,33 +475,7 @@ function resetSendOtpButton() {
     }
 }
 
-// **CHANGE 3: NEW FUNCTION - Save user cart before logout**
-function saveUserCart(userId) {
-    if (!userId || !cart || cart.length === 0) return
 
-    const cartKey = `nearNowUserCart_${userId}`
-    localStorage.setItem(cartKey, JSON.stringify(cart))
-    console.log('Cart saved for user:', userId)
-}
-
-// **CHANGE 4: NEW FUNCTION - Restore user cart after login**
-function restoreUserCart(userId) {
-    if (!userId) return
-
-    const cartKey = `nearNowUserCart_${userId}`
-    const savedCart = localStorage.getItem(cartKey)
-
-    if (savedCart) {
-        try {
-            cart = JSON.parse(savedCart)
-            updateCartDisplay() // Update cart UI
-            updateCartCounter() // Update cart counter
-            console.log('Cart restored for user:', userId)
-        } catch (error) {
-            console.error('Error restoring cart:', error)
-        }
-    }
-}
 
 // **CHANGE 5: NEW FUNCTION - Clear current cart (call this on logout)**
 function clearCurrentCart() {
@@ -506,14 +486,13 @@ function clearCurrentCart() {
 
 // **CHANGE 6: MODIFY LOGOUT FUNCTION - Add this to your existing logout function**
 function logoutUser() {
-    if (currentUser && currentUser.id) {
-        // Save current cart before logout
-        saveUserCart(currentUser.id)
+    // Handle cart logout using CartManager
+    if (window.handleUserLogout) {
+        window.handleUserLogout();
     }
 
-    // Clear current user and cart
+    // Clear current user
     currentUser = null
-    clearCurrentCart()
 
     // Remove current user from localStorage
     localStorage.removeItem("nearNowCurrentUser")
@@ -958,6 +937,12 @@ function loadMoreProducts() {
 
 // Cart Functionality
 function initializeCart() {
+    // Sync with CartManager if available
+    if (window.cartManager) {
+        cartItems = window.cartManager.getItems();
+        cartCount = window.cartManager.getCount();
+    }
+
     // Update cart count and display immediately
     updateCartCount()
     updateCartDisplay()
@@ -971,6 +956,36 @@ function initializeCart() {
 }
 
 function addToCart(productId) {
+    // Use CartManager if available, otherwise fallback to local logic
+    if (window.cartManager) {
+        const success = window.cartManager.addToCart(productId, 1);
+        if (success) {
+            // Update local variables for UI consistency
+            cartItems = window.cartManager.getItems();
+            cartCount = window.cartManager.getCount();
+            
+            // Update UI
+            updateCartCount();
+            updateCartDisplay();
+        }
+        
+        // Update button state
+        const button = document.querySelector(`[data-product-id="${productId}"].add-to-cart`)
+        if (button) {
+            button.innerHTML = '<i class="fas fa-check"></i> <span>Added</span>'
+            button.classList.remove("bg-primary")
+            button.classList.add("bg-green-500")
+
+            setTimeout(() => {
+                button.innerHTML = '<i class="fas fa-plus"></i> <span>Add</span>'
+                button.classList.remove("bg-green-500")
+                button.classList.add("bg-primary")
+            }, 2000)
+        }
+        return success;
+    }
+
+    // Fallback logic for when CartManager is not available
     const product = allProducts.find((p) => p.id === productId)
     if (!product) return
 
@@ -1012,6 +1027,22 @@ function addToCart(productId) {
 }
 
 function removeFromCart(productId) {
+    // Use CartManager if available, otherwise fallback to local logic
+    if (window.cartManager) {
+        const success = window.cartManager.removeFromCart(productId);
+        if (success) {
+            // Update local variables for UI consistency
+            cartItems = window.cartManager.getItems();
+            cartCount = window.cartManager.getCount();
+            
+            // Update UI
+            updateCartCount();
+            updateCartDisplay();
+        }
+        return success;
+    }
+
+    // Fallback logic
     cartItems = cartItems.filter((item) => item.id !== productId)
     cartCount = cartItems.reduce((total, item) => total + item.quantity, 0)
     updateCartCount()
@@ -1021,6 +1052,22 @@ function removeFromCart(productId) {
 }
 
 function updateCartQuantity(productId, newQuantity) {
+    // Use CartManager if available, otherwise fallback to local logic
+    if (window.cartManager) {
+        const success = window.cartManager.updateQuantity(productId, newQuantity);
+        if (success) {
+            // Update local variables for UI consistency
+            cartItems = window.cartManager.getItems();
+            cartCount = window.cartManager.getCount();
+            
+            // Update UI
+            updateCartCount();
+            updateCartDisplay();
+        }
+        return success;
+    }
+
+    // Fallback logic
     const item = cartItems.find((item) => item.id === productId)
     if (item) {
         if (newQuantity <= 0) {
@@ -1056,6 +1103,11 @@ function updateCartCount() {
 }
 
 function updateCartDisplay() {
+    // Sync with CartManager if available
+    if (window.cartManager) {
+        cartItems = window.cartManager.getItems();
+    }
+
     const cartItemsContainer = document.getElementById("cartItems")
     const cartTotal = document.getElementById("cartTotal")
 
@@ -1221,9 +1273,8 @@ function initializeAuth() {
 
     document.getElementById("closeLogin").addEventListener("click", hideLoginModal)
 
-    if (currentUser) {
-        updateUserDisplay()
-    }
+    // Always call updateUserDisplay to set the correct initial state
+    updateUserDisplay()
 }
 
 function showLoginModal() {
@@ -1305,6 +1356,24 @@ function updateUserDisplay() {
 
         // Add event listeners for the dropdown
         initializeUserDropdown()
+    } else {
+        // Reset account button to login state when user is logged out
+        accountBtn.innerHTML = `
+            <div class="relative mb-2">
+                <div
+                    class="absolute -inset-3 bg-gradient-to-r from-primary via-secondary to-primary rounded-full opacity-0 group-hover:opacity-100 transition-all duration-500 animate-spin-slow">
+                </div>
+                <div
+                    class="relative bg-gradient-to-br from-gray-50 to-gray-100 group-hover:from-primary group-hover:to-secondary p-4 rounded-full transition-all duration-500 shadow-lg group-hover:shadow-xl">
+                    <i
+                        class="fas fa-user text-2xl text-gray-600 group-hover:text-white transition-all duration-500 transform group-hover:scale-110"></i>
+                </div>
+            </div>
+            <div class="text-center">
+                <span
+                    class="text-sm font-semibold text-gray-700 group-hover:text-primary transition-all duration-300 group-hover:scale-105 block">Login</span>
+            </div>
+        `
     }
 }
 
@@ -1395,14 +1464,16 @@ function showUserMenu() {
 
 // Logout Functionality
 function logout() {
+    // Handle cart logout using CartManager
+    if (window.handleUserLogout) {
+        window.handleUserLogout();
+    }
+
     localStorage.removeItem("nearNowCurrentUser")
     currentUser = null
 
-    // Reset account button
-    document.getElementById("accountBtn").innerHTML = `
-        <i class="fas fa-user-circle text-2xl"></i>
-        <span class="ml-2">Account</span>
-    `
+    // Update display using updateUserDisplay instead of manually setting HTML
+    updateUserDisplay()
 
     showNotification("Logged out successfully!", "success")
 }
@@ -2361,57 +2432,5 @@ function initializeProductReviews() {
 }
 
 // Enhanced event listeners for product cards (REMOVED DUPLICATE - using querySelectorAll version above to avoid double clicks)
-
-// --- Cart Persistence Per User ---
-function saveUserCart() {
-    if (currentUser && currentUser.mobile) {
-        localStorage.setItem(`nearNowCartItems_${currentUser.mobile}`, JSON.stringify(cartItems));
-    }
-}
-
-function loadUserCart() {
-    if (currentUser && currentUser.mobile) {
-        const userCart = localStorage.getItem(`nearNowCartItems_${currentUser.mobile}`);
-        if (userCart) {
-            cartItems = JSON.parse(userCart);
-            localStorage.setItem('nearNowCartItems', userCart);
-        } else {
-            cartItems = [];
-            localStorage.setItem('nearNowCartItems', '[]');
-        }
-        cartCount = cartItems.reduce((total, item) => total + item.quantity, 0);
-        updateCartCount && updateCartCount();
-        updateCartDisplay && updateCartDisplay();
-    }
-}
-
-// Patch logout to save cart before clearing
-const originalLogout = logout;
-logout = function() {
-    saveUserCart();
-    // Clear global cart
-    localStorage.removeItem('nearNowCartItems');
-    cartItems = [];
-    cartCount = 0;
-    updateCartCount && updateCartCount();
-    updateCartDisplay && updateCartDisplay();
-    originalLogout();
-};
-
-// Patch login to load user cart after login
-const originalContinueAfterLogin = continueAfterLogin;
-continueAfterLogin = function() {
-    originalContinueAfterLogin();
-    setTimeout(() => {
-        loadUserCart();
-    }, 100);
-};
-
-// On page load, if user is logged in, load their cart
-window.addEventListener('DOMContentLoaded', function() {
-    if (currentUser && currentUser.mobile) {
-        loadUserCart();
-    }
-});
 
 // ===== END OF ENHANCED FEATURES =====

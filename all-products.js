@@ -25,8 +25,9 @@ let userDetails = {};
 let otpTimer = null;
 let resendTimer = 30;
 let currentUser = JSON.parse(localStorage.getItem("nearNowCurrentUser")) || null;
-let cartItems = JSON.parse(localStorage.getItem("nearNowCartItems")) || [];
-let cartCount = cartItems.reduce((total, item) => total + item.quantity, 0);
+// Cart items will be managed by CartManager
+let cartItems = [];
+let cartCount = 0;
 
 // --- DOM Elements ---
 const productsGrid = document.getElementById('productsGrid');
@@ -440,34 +441,32 @@ function addProductEventListeners() {
 
 // Enhanced add to cart function
 function addToCart(productId, quantity = 1) {
-    const product = allProducts.find(p => p.id === productId);
-    if (!product) {
-      return;
+    // Use CartManager if available, otherwise fallback to global function
+    if (window.cartManager) {
+        return window.cartManager.addToCart(productId, quantity);
+    } else if (window.addToCart) {
+        return window.addToCart(productId, quantity);
     }
+}
 
-    const existingItem = cartItems.find(item => item.id === productId);
-
-    if (existingItem) {
-        existingItem.quantity += quantity;
-    } else {
-        cartItems.push({
-            id: productId,
-            name: product.name,
-            price: product.price,
-            image: product.image,
-            quantity: quantity
-        });
+// Remove from cart function
+function removeFromCart(productId) {
+    // Use CartManager if available, otherwise fallback to global function
+    if (window.cartManager) {
+        return window.cartManager.removeFromCart(productId);
+    } else if (window.removeFromCart) {
+        return window.removeFromCart(productId);
     }
+}
 
-    // Always recalculate cart count from the items array
-    cartCount = cartItems.reduce((total, item) => total + item.quantity, 0);
-
-    // Save to localStorage first
-    saveCartToStorage();
-
-    // Then update the display
-    updateCartCount();
-    updateCartDisplay();
+// Update cart quantity function
+function updateCartQuantity(productId, quantity) {
+    // Use CartManager if available, otherwise fallback to global function
+    if (window.cartManager) {
+        return window.cartManager.updateQuantity(productId, quantity);
+    } else if (window.updateCartQuantity) {
+        return window.updateCartQuantity(productId, quantity);
+    }
 }
 
 // Enhanced wishlist function
@@ -492,9 +491,10 @@ function toggleWishlist(productId) {
     updateWishlistCount();
 }
 
-// Storage functions
+// Storage functions - now handled by CartManager
 function saveCartToStorage() {
-    localStorage.setItem('nearNowCartItems', JSON.stringify(cartItems));
+    // This is now handled by CartManager
+    console.log('saveCartToStorage called - now handled by CartManager');
 }
 
 function saveWishlistToStorage() {
@@ -502,8 +502,14 @@ function saveWishlistToStorage() {
 }
 
 function updateCartCount() {
-    // Always recalculate cart count from the items array
-    cartCount = cartItems.reduce((total, item) => total + item.quantity, 0);
+    // Get current cart data from CartManager if available
+    if (window.cartManager) {
+        cartCount = window.cartManager.getCount();
+        cartItems = window.cartManager.getItems();
+    } else {
+        // Fallback to calculating from local cartItems
+        cartCount = cartItems.reduce((total, item) => total + item.quantity, 0);
+    }
 
     // Update main cart count badge
     const cartCountElement = document.getElementById('cartCount');
@@ -533,6 +539,11 @@ function updateWishlistCount() {
 }
 
 function updateCartDisplay() {
+    // Get current cart data from CartManager if available
+    if (window.cartManager) {
+        cartItems = window.cartManager.getItems();
+    }
+
     const cartItemsContainer = document.getElementById("cartItems");
     const cartTotal = document.getElementById("cartTotal");
 
@@ -620,6 +631,225 @@ function showNotification(message, type = 'info') {
     }, 3000);
 }
 
+// User display function
+function updateUserDisplay() {
+    const accountBtn = document.getElementById("accountBtn")
+    if (currentUser) {
+        accountBtn.innerHTML = `
+            <div class="relative">
+                <div class="text-center cursor-pointer user-menu-trigger">
+                    <i class="fas fa-user-circle text-2xl"></i>
+                    <p class="text-sm mt-1">${currentUser.name}</p>
+                </div>
+                <div class="user-dropdown absolute top-full right-0 mt-2 w-48 bg-white rounded-lg shadow-lg border border-gray-200 opacity-0 invisible transform scale-95 transition-all duration-200 z-50">
+                    <div class="py-2">
+                        <div class="px-4 py-2 border-b border-gray-100">
+                            <p class="font-semibold text-gray-800">${currentUser.name}</p>
+                            <p class="text-sm text-gray-500">${currentUser.fullMobile}</p>
+                        </div>
+                        <a href="#" class="user-menu-item block px-4 py-2 text-gray-700 hover:bg-gray-100 transition duration-200" data-action="profile">
+                            <i class="fas fa-user mr-3 text-primary"></i>View Profile
+                        </a>
+                        <a href="#" class="user-menu-item block px-4 py-2 text-gray-700 hover:bg-gray-100 transition duration-200" data-action="orders">
+                            <i class="fas fa-shopping-bag mr-3 text-primary"></i>Order History
+                        </a>
+                        <a href="#" class="user-menu-item block px-4 py-2 text-gray-700 hover:bg-gray-100 transition duration-200" data-action="settings">
+                            <i class="fas fa-cog mr-3 text-primary"></i>Settings
+                        </a>
+                        <div class="border-t border-gray-100 mt-1 pt-1">
+                            <a href="#" class="user-menu-item block px-4 py-2 text-red-600 hover:bg-red-50 transition duration-200" data-action="logout">
+                                <i class="fas fa-sign-out-alt mr-3"></i>Logout
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        `
+
+        // Add event listeners for the dropdown
+        initializeUserDropdown()
+    } else {
+        // Reset account button to login state when user is logged out
+        accountBtn.innerHTML = `
+            <div class="relative mb-2">
+                <div
+                    class="absolute -inset-3 bg-gradient-to-r from-primary via-secondary to-primary rounded-full opacity-0 group-hover:opacity-100 transition-all duration-500 animate-spin-slow">
+                </div>
+                <div
+                    class="relative bg-gradient-to-br from-gray-50 to-gray-100 group-hover:from-primary group-hover:to-secondary p-4 rounded-full transition-all duration-500 shadow-lg group-hover:shadow-xl">
+                    <i
+                        class="fas fa-user text-2xl text-gray-600 group-hover:text-white transition-all duration-500 transform group-hover:scale-110"></i>
+                </div>
+            </div>
+            <div class="text-center">
+                <span
+                    class="text-sm font-semibold text-gray-700 group-hover:text-primary transition-all duration-300 group-hover:scale-105 block">Login</span>
+            </div>
+        `
+    }
+}
+
+// User dropdown functions
+function initializeUserDropdown() {
+    const userMenuTrigger = document.querySelector(".user-menu-trigger")
+    const userDropdown = document.querySelector(".user-dropdown")
+    const userMenuItems = document.querySelectorAll(".user-menu-item")
+
+    if (!userMenuTrigger || !userDropdown) return
+
+    // Toggle dropdown on click
+    userMenuTrigger.addEventListener("click", (e) => {
+        e.stopPropagation()
+        toggleUserDropdown()
+    })
+
+    // Handle menu item clicks
+    userMenuItems.forEach((item) => {
+        item.addEventListener("click", function (e) {
+            e.preventDefault()
+            e.stopPropagation()
+
+            const action = this.dataset.action
+            handleUserMenuAction(action)
+            hideUserDropdown()
+        })
+    })
+
+    // Close dropdown when clicking outside
+    document.addEventListener("click", (e) => {
+        if (!userMenuTrigger.contains(e.target) && !userDropdown.contains(e.target)) {
+            hideUserDropdown()
+        }
+    })
+}
+
+function toggleUserDropdown() {
+    const userDropdown = document.querySelector(".user-dropdown")
+    if (!userDropdown) return
+
+    const isVisible = !userDropdown.classList.contains("opacity-0")
+
+    if (isVisible) {
+        hideUserDropdown()
+    } else {
+        showUserDropdown()
+    }
+}
+
+function showUserDropdown() {
+    const userDropdown = document.querySelector(".user-dropdown")
+    if (!userDropdown) return
+
+    userDropdown.classList.remove("opacity-0", "invisible", "scale-95")
+    userDropdown.classList.add("opacity-100", "visible", "scale-100")
+}
+
+function hideUserDropdown() {
+    const userDropdown = document.querySelector(".user-dropdown")
+    if (!userDropdown) return
+
+    userDropdown.classList.remove("opacity-100", "visible", "scale-100")
+    userDropdown.classList.add("opacity-0", "invisible", "scale-95")
+}
+
+function handleUserMenuAction(action) {
+    switch (action) {
+        case "profile":
+            showNotification("View Profile feature coming soon!", "info")
+            break
+        case "orders":
+            showNotification("Order History feature coming soon!", "info")
+            break
+        case "settings":
+            showNotification("Settings feature coming soon!", "info")
+            break
+        case "logout":
+            logout()
+            break
+    }
+}
+
+// Logout function
+function logout() {
+    // Handle cart logout using CartManager
+    if (window.handleUserLogout) {
+        window.handleUserLogout();
+    }
+
+    localStorage.removeItem("nearNowCurrentUser")
+    currentUser = null
+
+    // Update the display
+    updateUserDisplay()
+
+    showNotification("Logged out successfully!", "success")
+}
+
+// Modal functions (simplified versions for all-products page)
+function showLoginModal() {
+    const loginModal = document.getElementById("loginModal")
+    const modalOverlay = document.getElementById("modalOverlay")
+
+    if (loginModal && modalOverlay) {
+        loginModal.classList.remove("hidden")
+        loginModal.classList.add("flex")
+        modalOverlay.classList.remove("hidden")
+    }
+}
+
+function hideLoginModal() {
+    const loginModal = document.getElementById("loginModal")
+    const modalOverlay = document.getElementById("modalOverlay")
+
+    if (loginModal && modalOverlay) {
+        loginModal.classList.add("hidden")
+        loginModal.classList.remove("flex")
+        modalOverlay.classList.add("hidden")
+    }
+}
+
+// Placeholder functions for login system (redirected to main page for full functionality)
+function handleMobileSubmit(e) {
+    e.preventDefault()
+    showNotification("Please use the main page for login functionality", "info")
+    setTimeout(() => {
+        window.location.href = 'index.html'
+    }, 1500)
+}
+
+function handleOtpSubmit(e) {
+    e.preventDefault()
+    showNotification("Please use the main page for login functionality", "info")
+    setTimeout(() => {
+        window.location.href = 'index.html'
+    }, 1500)
+}
+
+function resendOtp() {
+    showNotification("Please use the main page for login functionality", "info")
+    setTimeout(() => {
+        window.location.href = 'index.html'
+    }, 1500)
+}
+
+function changeNumber() {
+    showNotification("Please use the main page for login functionality", "info")
+    setTimeout(() => {
+        window.location.href = 'index.html'
+    }, 1500)
+}
+
+function continueAfterLogin() {
+    showNotification("Please use the main page for login functionality", "info")
+    setTimeout(() => {
+        window.location.href = 'index.html'
+    }, 1500)
+}
+
+function initializeOtpInputs() {
+    // Placeholder - full functionality available on main page
+}
+
 // Initialize authentication
 function initializeAuth() {
     document.getElementById("accountBtn").addEventListener("click", () => {
@@ -632,9 +862,8 @@ function initializeAuth() {
 
     document.getElementById("closeLogin").addEventListener("click", hideLoginModal)
 
-    if (currentUser) {
-        updateUserDisplay()
-    }
+    // Always call updateUserDisplay to set the correct initial state
+    updateUserDisplay()
 }
 
 // Initialize login system
@@ -654,11 +883,17 @@ function initializeLoginSystem() {
 
 // Initialize everything when DOM is loaded
 document.addEventListener('DOMContentLoaded', function () {
-    // Load cart items from localStorage and update count
-    const savedCart = localStorage.getItem("nearNowCartItems");
-    if (savedCart) {
-        cartItems = JSON.parse(savedCart);
-        cartCount = cartItems.reduce((total, item) => total + item.quantity, 0);
+    // Cart items will be loaded by CartManager
+    if (window.cartManager) {
+        cartItems = window.cartManager.getItems();
+        cartCount = window.cartManager.getCount();
+    } else {
+        // Fallback: Load cart items from localStorage
+        const savedCart = localStorage.getItem("nearNowCartItems");
+        if (savedCart) {
+            cartItems = JSON.parse(savedCart);
+            cartCount = cartItems.reduce((total, item) => total + item.quantity, 0);
+        }
     }
 
     // Initialize authentication

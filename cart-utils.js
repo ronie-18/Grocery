@@ -3,9 +3,26 @@
 
 class CartManager {
     constructor() {
-        this.cartItems = JSON.parse(localStorage.getItem("nearNowCartItems")) || [];
+        this.loadCartItems();
         this.cartCount = this.cartItems.reduce((total, item) => total + item.quantity, 0);
         this.listeners = [];
+    }
+
+    // Load cart items based on current user
+    loadCartItems() {
+        const currentUser = JSON.parse(localStorage.getItem("nearNowCurrentUser")) || null;
+        
+        if (currentUser && currentUser.mobile) {
+            // Load user-specific cart
+            const userCartKey = `nearNowCartItems_${currentUser.mobile}`;
+            this.cartItems = JSON.parse(localStorage.getItem(userCartKey)) || [];
+            
+            // Also update the generic cart key for backward compatibility
+            localStorage.setItem("nearNowCartItems", JSON.stringify(this.cartItems));
+        } else {
+            // Load generic cart for non-logged-in users
+            this.cartItems = JSON.parse(localStorage.getItem("nearNowCartItems")) || [];
+        }
     }
 
     // Add item to cart
@@ -104,7 +121,41 @@ class CartManager {
     // Update cart state and save to localStorage
     updateCartState() {
         this.cartCount = this.cartItems.reduce((total, item) => total + item.quantity, 0);
+        
+        const currentUser = JSON.parse(localStorage.getItem("nearNowCurrentUser")) || null;
+        
+        if (currentUser && currentUser.mobile) {
+            // Save to user-specific cart
+            const userCartKey = `nearNowCartItems_${currentUser.mobile}`;
+            localStorage.setItem(userCartKey, JSON.stringify(this.cartItems));
+        }
+        
+        // Always save to generic key for backward compatibility
         localStorage.setItem("nearNowCartItems", JSON.stringify(this.cartItems));
+    }
+
+    // Handle user login - reload cart from user-specific storage
+    onUserLogin() {
+        this.loadCartItems();
+        this.cartCount = this.cartItems.reduce((total, item) => total + item.quantity, 0);
+        this.notifyListeners('userLogin', null, 0);
+    }
+
+    // Handle user logout - clear cart and save to user storage
+    onUserLogout() {
+        const currentUser = JSON.parse(localStorage.getItem("nearNowCurrentUser")) || null;
+        
+        if (currentUser && currentUser.mobile) {
+            // Save current cart to user-specific storage before logout
+            const userCartKey = `nearNowCartItems_${currentUser.mobile}`;
+            localStorage.setItem(userCartKey, JSON.stringify(this.cartItems));
+        }
+        
+        // Clear current cart
+        this.cartItems = [];
+        this.cartCount = 0;
+        localStorage.setItem("nearNowCartItems", JSON.stringify(this.cartItems));
+        this.notifyListeners('userLogout', null, 0);
     }
 
     // Add event listener
@@ -158,6 +209,19 @@ window.getCartCount = () => {
 
 window.getCartItems = () => {
     return window.cartManager.getItems();
+};
+
+// Global functions to handle user login/logout
+window.handleUserLogin = () => {
+    if (window.cartManager) {
+        window.cartManager.onUserLogin();
+    }
+};
+
+window.handleUserLogout = () => {
+    if (window.cartManager) {
+        window.cartManager.onUserLogout();
+    }
 };
 
 // Initialize cart state on page load
