@@ -600,10 +600,10 @@
                 <span class="text-xl font-bold">Total:</span>
                 <span id="cartTotal" class="text-2xl font-bold text-primary">₹0</span>
             </div>
-            <button id="checkoutBtn"
-                class="w-full bg-primary text-white py-3 rounded-lg font-bold hover:bg-secondary transition duration-300">
+            <a href="checkout.html" id="checkoutBtn"
+                class="w-full bg-primary text-white py-3 rounded-lg font-bold hover:bg-secondary transition duration-300 text-center block">
                 Proceed to Checkout
-            </button>
+            </a>
         </div>
     </div>
 
@@ -1264,6 +1264,38 @@
     <script>
     document.getElementById('footerYear').textContent = new Date().getFullYear();
     </script>
+    <script>
+// Intercept Proceed to Checkout
+window.addEventListener('DOMContentLoaded', function() {
+  var checkoutBtn = document.getElementById('checkoutBtn');
+  if (checkoutBtn) {
+    checkoutBtn.addEventListener('click', function(e) {
+      var currentUser = JSON.parse(localStorage.getItem('nearNowCurrentUser'));
+      if (!currentUser) {
+        e.preventDefault();
+        // Show login modal
+        var loginModal = document.getElementById('loginModal');
+        var modalOverlay = document.getElementById('modalOverlay');
+        if (loginModal && modalOverlay) {
+          loginModal.classList.remove('hidden');
+          loginModal.classList.add('flex');
+          modalOverlay.classList.remove('hidden');
+        }
+        // After successful login, redirect to checkout.html
+        var continueBtn = document.getElementById('continueShoppingBtn');
+        if (continueBtn) {
+          continueBtn.onclick = function() {
+            loginModal.classList.add('hidden');
+            loginModal.classList.remove('flex');
+            modalOverlay.classList.add('hidden');
+            window.location.href = 'checkout.html';
+          };
+        }
+      }
+    });
+  }
+});
+</script>
 </body>
 
 </html>

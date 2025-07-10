@@ -846,10 +846,10 @@ function addToCart(productId) {
 
     // Always recalculate cart count from the items array
     cartCount = cartItems.reduce((total, item) => total + item.quantity, 0)
-    
+
     // Save to localStorage first
     saveCartToStorage()
-    
+
     // Then update the display
     updateCartCount()
     updateCartDisplay()
@@ -867,8 +867,6 @@ function addToCart(productId) {
             button.classList.add("bg-primary")
         }, 2000)
     }
-
-    showNotification(`${product.name} added to cart!`, "success")
 }
 
 function removeFromCart(productId) {
@@ -900,14 +898,14 @@ function updateCartCount() {
     const cartCountElement = document.getElementById("cartCount")
     if (cartCountElement) {
         cartCountElement.textContent = cartCount
-        
+
         // Add bounce animation
         cartCountElement.classList.add("animate-bounce")
         setTimeout(() => {
             cartCountElement.classList.remove("animate-bounce")
         }, 1000)
     }
-    
+
     // Update mobile cart count if it exists
     const mobileCartCountElement = document.getElementById("mobileCartCount")
     if (mobileCartCountElement) {
@@ -1608,7 +1606,7 @@ function initializeQuickView() {
     if (closeBtn) {
         closeBtn.addEventListener('click', closeQuickView)
     }
-    
+
     const modal = document.getElementById('quickViewModal')
     if (modal) {
         modal.addEventListener('click', (e) => {
@@ -1672,7 +1670,7 @@ function showQuickView(productId) {
     // Populate quick view content
     const imageEl = document.getElementById('quickViewImage')
     const nameEl = document.getElementById('quickViewName')
-    
+
     if (imageEl) {
         imageEl.src = product.image
         imageEl.alt = product.name
@@ -1688,11 +1686,11 @@ function showQuickView(productId) {
     const priceEl = document.getElementById('quickViewPrice')
     const originalPriceEl = document.getElementById('quickViewOriginalPrice')
     const discountTextEl = document.getElementById('quickViewDiscountText')
-    
+
     if (priceEl) {
         priceEl.textContent = `₹${price}`
     }
-    
+
     if (originalPriceEl && discountTextEl) {
         if (originalPrice) {
             originalPriceEl.textContent = `₹${originalPrice}`
@@ -1720,7 +1718,7 @@ function showQuickView(productId) {
     const ratingEl = document.getElementById('quickViewRating')
     const ratingTextEl = document.getElementById('quickViewRatingText')
     const reviewsEl = document.getElementById('quickViewReviews')
-    
+
     if (ratingEl) {
         ratingEl.innerHTML = generateStarRating(product.rating)
     }
@@ -1750,7 +1748,7 @@ function showQuickView(productId) {
     // Show modal
     modal.classList.remove('hidden')
     modal.classList.add('flex')
-    
+
     const overlay = document.getElementById('modalOverlay')
     if (overlay) {
         overlay.classList.remove('hidden')
@@ -1763,12 +1761,12 @@ function closeQuickView() {
         modal.classList.add('hidden')
         modal.classList.remove('flex')
     }
-    
+
     const overlay = document.getElementById('modalOverlay')
     if (overlay) {
         overlay.classList.add('hidden')
     }
-    
+
     quickViewProduct = null
 }
 

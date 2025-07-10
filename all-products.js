@@ -219,7 +219,7 @@ function initializeQuickView() {
             const quantity = parseInt(document.getElementById('quickViewQuantity').textContent);
             addToCart(quickViewProduct.id, quantity);
             closeQuickView();
-            showNotification(`${quickViewProduct.name} added to cart!`, 'success');
+            // showNotification(`${quickViewProduct.name} added to cart!`, 'success');
         }
     });
 
@@ -408,7 +408,7 @@ function addProductEventListeners() {
             const productCard = e.target.closest('.product-card');
             const { productId } = productCard.dataset;
             addToCart(productId, 1);
-            showNotification('Product added to cart!', 'success');
+            // showNotification('Product added to cart!', 'success');
         }
     });
 
@@ -428,11 +428,11 @@ function addProductEventListeners() {
             if (isInWishlist) {
                 wishlistBtn.classList.add('text-red-500');
                 icon.className = 'fas fa-heart';
-                showNotification('Added to wishlist!', 'success');
+                // showNotification('Added to wishlist!', 'success');
             } else {
                 wishlistBtn.classList.remove('text-red-500');
                 icon.className = 'far fa-heart';
-                showNotification('Removed from wishlist', 'info');
+                // showNotification('Removed from wishlist', 'info');
             }
         }
     });
@@ -461,10 +461,10 @@ function addToCart(productId, quantity = 1) {
 
     // Always recalculate cart count from the items array
     cartCount = cartItems.reduce((total, item) => total + item.quantity, 0);
-    
+
     // Save to localStorage first
     saveCartToStorage();
-    
+
     // Then update the display
     updateCartCount();
     updateCartDisplay();
@@ -504,19 +504,19 @@ function saveWishlistToStorage() {
 function updateCartCount() {
     // Always recalculate cart count from the items array
     cartCount = cartItems.reduce((total, item) => total + item.quantity, 0);
-    
+
     // Update main cart count badge
     const cartCountElement = document.getElementById('cartCount');
     if (cartCountElement) {
         cartCountElement.textContent = cartCount;
-        
+
         // Add bounce animation
         cartCountElement.classList.add("animate-bounce");
         setTimeout(() => {
             cartCountElement.classList.remove("animate-bounce");
         }, 1000);
     }
-    
+
     // Update mobile cart count if it exists
     const mobileCartCountElement = document.getElementById("mobileCartCount");
     if (mobileCartCountElement) {
@@ -660,7 +660,7 @@ document.addEventListener('DOMContentLoaded', function () {
         cartItems = JSON.parse(savedCart);
         cartCount = cartItems.reduce((total, item) => total + item.quantity, 0);
     }
-    
+
     // Initialize authentication
     initializeAuth()
     initializeLoginSystem()

@@ -1,0 +1,250 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Checkout - Near & Now</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.7.2/css/all.min.css">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        :root {
+            --primary-color: #3B82F6;
+            --secondary-color: #1E40AF;
+        }
+        .text-primary { color: var(--primary-color); }
+        .bg-primary { background-color: var(--primary-color); }
+        .border-primary { border-color: var(--primary-color); }
+        .hover\:bg-secondary:hover { background-color: var(--secondary-color); }
+        .focus\:border-primary:focus { border-color: var(--primary-color); }
+    </style>
+</head>
+<body class="bg-gray-50 min-h-screen flex flex-col">
+    <!-- Header -->
+    <div class="w-full bg-white shadow-sm py-4 px-6 flex items-center justify-between">
+        <a href="index.html" class="text-primary font-semibold hover:underline flex items-center">
+            <i class="fas fa-arrow-left mr-2"></i>Back To Cart
+        </a>
+        <img src="Logo.png" alt="Near & Now" class="h-10">
+        <div class="text-right">
+            <p class="text-sm text-gray-600">Secure Checkout</p>
+            <i class="fas fa-lock text-green-600"></i>
+        </div>
+    </div>
+
+    <!-- Welcome Rewards Banner -->
+    <div class="w-full bg-blue-50 text-blue-700 text-sm py-2 px-4 text-center border-b border-blue-100">
+        <span class="font-semibold">🎉 Wait!</span> Earn 10 points for every ₹1 you spend & get FREE shipping for the first 7 days with Welcome Rewards. <a href="#" class="text-blue-600 font-semibold hover:underline">Sign In or Join Now</a>
+    </div>
+
+    <!-- Order Status Message -->
+    <div id="orderStatus" class="hidden w-full text-center py-3 px-4 font-semibold"></div>
+
+    <div class="max-w-6xl mx-auto mt-8 flex flex-col lg:flex-row gap-8 px-4">
+        <div class="flex-1 min-w-0">
+            <!-- Progress Bar -->
+            <!-- <div class="flex items-center justify-center mb-8">
+                <div class="flex flex-col items-center flex-1">
+                    <div class="w-8 h-8 rounded-full bg-primary text-white flex items-center justify-center font-bold">1</div>
+                    <span class="mt-2 font-semibold text-primary text-sm text-center">Shipping & Gift Options</span>
+                </div>
+                <div class="flex-1 h-1 bg-gray-200 mx-2"></div>
+                <div class="flex flex-col items-center flex-1">
+                    <div class="w-8 h-8 rounded-full bg-gray-200 text-gray-500 flex items-center justify-center font-bold">2</div>
+                    <span class="mt-2 font-semibold text-gray-400 text-sm text-center">Savings & Payment</span>
+                </div>
+                <div class="flex-1 h-1 bg-gray-200 mx-2"></div>
+                <div class="flex flex-col items-center flex-1">
+                    <div class="w-8 h-8 rounded-full bg-gray-200 text-gray-500 flex items-center justify-center font-bold">3</div>
+                    <span class="mt-2 font-semibold text-gray-400 text-sm text-center">Order Review</span>
+                </div>
+            </div> -->
+
+            <!-- Gift Options -->
+            <div class="bg-white rounded-lg shadow-md p-6 mb-6">
+                <label class="flex items-center cursor-pointer">
+                    <input type="checkbox" class="mr-3 h-4 w-4 text-primary focus:ring-primary border-gray-300 rounded">
+                    <div>
+                        <span class="font-semibold">🎁 Order includes gift(s)</span>
+                        <p class="text-sm text-gray-500 mt-1">The packing slip included with your order will not display prices.</p>
+                    </div>
+                </label>
+            </div>
+
+            <!-- Delivery Address -->
+            <form id="addressForm" class="bg-white rounded-lg shadow-md p-6 mb-6">
+                <h2 class="text-xl font-bold mb-6 flex items-center">
+                    <i class="fas fa-map-marker-alt text-primary mr-2"></i>
+                    Delivery Address
+                </h2>
+
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+                    <div class="relative">
+                        <input type="text" id="firstName" placeholder="First Name*" required class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary">
+                        <span class="absolute top-3 right-3 text-red-500">*</span>
+                    </div>
+                    <div class="relative">
+                        <input type="text" id="lastName" placeholder="Last Name*" required class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary">
+                        <span class="absolute top-3 right-3 text-red-500">*</span>
+                    </div>
+                </div>
+
+                <input type="text" id="companyName" placeholder="Add Your Company Name (Optional)" class="w-full mb-4 px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary">
+
+                <div class="relative mb-4">
+                    <input type="text" id="streetAddress" placeholder="Street Address*" required class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary">
+                    <span class="absolute top-3 right-3 text-red-500">*</span>
+                </div>
+
+                <input type="text" id="aptSuite" placeholder="Apt/Suite/Floor (Optional)" class="w-full mb-4 px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary">
+
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
+                    <div class="relative">
+                        <select id="state" required class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary">
+                            <option value="">State*</option>
+                            <option value="Andhra Pradesh">Andhra Pradesh</option>
+                            <option value="Arunachal Pradesh">Arunachal Pradesh</option>
+                            <option value="Assam">Assam</option>
+                            <option value="Bihar">Bihar</option>
+                            <option value="Chhattisgarh">Chhattisgarh</option>
+                            <option value="Delhi">Delhi</option>
+                            <option value="Goa">Goa</option>
+                            <option value="Gujarat">Gujarat</option>
+                            <option value="Haryana">Haryana</option>
+                            <option value="Himachal Pradesh">Himachal Pradesh</option>
+                            <option value="Jharkhand">Jharkhand</option>
+                            <option value="Karnataka">Karnataka</option>
+                            <option value="Kerala">Kerala</option>
+                            <option value="Madhya Pradesh">Madhya Pradesh</option>
+                            <option value="Maharashtra">Maharashtra</option>
+                            <option value="Manipur">Manipur</option>
+                            <option value="Meghalaya">Meghalaya</option>
+                            <option value="Mizoram">Mizoram</option>
+                            <option value="Nagaland">Nagaland</option>
+                            <option value="Odisha">Odisha</option>
+                            <option value="Punjab">Punjab</option>
+                            <option value="Rajasthan">Rajasthan</option>
+                            <option value="Sikkim">Sikkim</option>
+                            <option value="Tamil Nadu">Tamil Nadu</option>
+                            <option value="Telangana">Telangana</option>
+                            <option value="Tripura">Tripura</option>
+                            <option value="Uttar Pradesh">Uttar Pradesh</option>
+                            <option value="Uttarakhand">Uttarakhand</option>
+                            <option value="West Bengal">West Bengal</option>
+                        </select>
+                        <span class="absolute top-3 right-8 text-red-500">*</span>
+                    </div>
+                    <div class="relative">
+                        <input type="text" id="city" placeholder="City*" required class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary">
+                        <span class="absolute top-3 right-3 text-red-500">*</span>
+                    </div>
+                    <div class="relative">
+                        <input type="text" id="zipCode" placeholder="Zip Code*" required class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary">
+                        <span class="absolute top-3 right-3 text-red-500">*</span>
+                    </div>
+                </div>
+
+                <label class="flex items-center mb-6 cursor-pointer">
+                    <input type="checkbox" id="useAsBilling" class="mr-3 h-4 w-4 text-primary focus:ring-primary border-gray-300 rounded">
+                    <span>Use as billing address</span>
+                </label>
+
+                <!-- Contact Info -->
+                <div class="bg-gray-50 rounded-lg p-6 mb-6">
+                    <h3 class="font-bold mb-4 flex items-center">
+                        <i class="fas fa-phone text-primary mr-2"></i>
+                        Contact Info
+                    </h3>
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+                        <div class="relative">
+                            <input type="email" id="orderEmail" placeholder="Email for Order Tracking*" required class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary">
+                            <span class="absolute top-3 right-3 text-red-500">*</span>
+                        </div>
+                        <div class="relative">
+                            <input type="tel" id="orderPhone" placeholder="Phone for Delivery Contact*" required class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary">
+                            <span class="absolute top-3 right-3 text-red-500">*</span>
+                        </div>
+                    </div>
+                    <label class="flex items-center mt-4 cursor-pointer">
+                        <input type="checkbox" id="textAlerts" class="mr-3 h-4 w-4 text-primary focus:ring-primary border-gray-300 rounded">
+                        <span>📱 Get text alerts for your order on your mobile</span>
+                    </label>
+                    <p class="text-xs text-gray-500 mt-3">
+                        <i class="fas fa-info-circle mr-1"></i>
+                        We'll also look for coupons associated with your email and phone number. We only contact you if there's an issue with your order.
+                    </p>
+                </div>
+
+                <!-- Payment Method Selection -->
+                <div class="bg-gray-50 rounded-lg p-6 mb-6">
+                    <h3 class="font-bold mb-4 flex items-center">
+                        <i class="fas fa-credit-card text-primary mr-2"></i>
+                        Payment Method
+                    </h3>
+                    <div class="space-y-3">
+                        <label class="flex items-center cursor-pointer">
+                            <input type="radio" name="paymentMethod" id="paymentMethod" value="cod" class="mr-3 h-4 w-4 text-primary focus:ring-primary border-gray-300" checked>
+                            <span>💵 Cash on Delivery</span>
+                        </label>
+                        <label class="flex items-center cursor-pointer">
+                            <input type="radio" name="paymentMethod" value="razorpay" class="mr-3 h-4 w-4 text-primary focus:ring-primary border-gray-300">
+                            <span>💳 RazorPay (Credit/Debit Card, UPI, Net Banking)</span>
+                        </label>
+                        <label class="flex items-center cursor-pointer">
+                            <input type="radio" name="paymentMethod" value="other" class="mr-3 h-4 w-4 text-primary focus:ring-primary border-gray-300">
+                            <span>🏦 Other Payment Gateway</span>
+                        </label>
+                    </div>
+                </div>
+
+                <button type="submit" class="w-full bg-primary text-white py-4 rounded-lg font-bold hover:bg-secondary transition duration-300 text-lg shadow-md">
+                    <i class="fas fa-shopping-cart mr-2"></i>
+                    Place Order
+                </button>
+            </form>
+        </div>
+
+        <!-- Order Summary -->
+        <div class="w-full lg:w-96 bg-white rounded-2xl shadow-xl p-8 h-fit self-start sticky top-8">
+            <div class="flex items-center mb-6">
+                <i class="fa-solid fa-basket-shopping text-primary text-2xl mr-3"></i>
+                <h2 class="text-2xl font-bold text-gray-800">Order Summary</h2>
+            </div>
+
+            <div id="orderSummary" class="mb-6 text-gray-700">
+                <!-- Order items will be populated here by JS -->
+                <div class="flex items-center justify-center py-8">
+                    <div class="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
+                    <span class="ml-3 text-gray-500">Loading cart items...</span>
+                </div>
+            </div>
+
+            <div class="flex items-center justify-between border-t pt-6 mt-6">
+                <span class="font-bold text-xl">Total</span>
+                <span id="orderTotal" class="text-3xl font-bold text-primary">₹0</span>
+            </div>
+
+            <div class="mt-6 p-4 bg-green-50 rounded-lg">
+                <div class="flex items-center text-green-700">
+                    <i class="fas fa-truck mr-2"></i>
+                    <span class="text-sm font-semibold">Free delivery on orders above ₹500</span>
+                </div>
+            </div>
+
+            <!-- Quick Actions -->
+            <div class="mt-6 space-y-3">
+                <button onclick="window.location.href='index.html'" class="w-full bg-gray-100 text-gray-700 py-2 rounded-lg font-semibold hover:bg-gray-200 transition duration-300">
+                    <i class="fas fa-arrow-left mr-2"></i>
+                    Continue Shopping
+                </button>
+                <button onclick="clearCart()" class="w-full bg-red-100 text-red-700 py-2 rounded-lg font-semibold hover:bg-red-200 transition duration-300">
+                    <i class="fas fa-trash mr-2"></i>
+                    Clear Cart
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Include the external checkout.js file -->
+    <script src="checkout.js"></script>
+</body>
+</html>
