@@ -121,6 +121,181 @@
                 transform: translateY(0);
             }
         }
+
+        /* Enhanced Filter Styles */
+        .price-slider-container {
+            position: relative;
+            height: 20px;
+            margin: 10px 0;
+        }
+
+        .price-slider {
+            -webkit-appearance: none;
+            appearance: none;
+            background: transparent;
+            cursor: pointer;
+            position: absolute;
+            width: 100%;
+            height: 8px;
+            outline: none;
+            pointer-events: none;
+        }
+
+        .price-slider::-webkit-slider-track {
+            background: #e5e7eb;
+            height: 8px;
+            border-radius: 4px;
+        }
+
+        .price-slider::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            appearance: none;
+            background: #059669;
+            height: 18px;
+            width: 18px;
+            border-radius: 50%;
+            cursor: pointer;
+            box-shadow: 0 2px 6px rgba(0, 0, 0, 0.2);
+            transition: all 0.2s ease;
+            pointer-events: all;
+            position: relative;
+            z-index: 2;
+        }
+
+        .price-slider::-webkit-slider-thumb:hover {
+            background: #047857;
+            transform: scale(1.1);
+        }
+
+        .price-slider::-moz-range-track {
+            background: #e5e7eb;
+            height: 8px;
+            border-radius: 4px;
+            border: none;
+        }
+
+        .price-slider::-moz-range-thumb {
+            background: #059669;
+            height: 18px;
+            width: 18px;
+            border-radius: 50%;
+            cursor: pointer;
+            border: none;
+            box-shadow: 0 2px 6px rgba(0, 0, 0, 0.2);
+            transition: all 0.2s ease;
+            pointer-events: all;
+        }
+
+        .price-slider::-moz-range-thumb:hover {
+            background: #047857;
+            transform: scale(1.1);
+        }
+
+        .price-slider:first-child {
+            z-index: 1;
+        }
+
+        .price-slider:last-child {
+            z-index: 2;
+        }
+
+        /* Mobile filter sidebar */
+        @media (max-width: 1023px) {
+            .filter-sidebar-mobile {
+                position: fixed;
+                top: 0;
+                left: -100%;
+                width: 80%;
+                max-width: 400px;
+                height: 100vh;
+                background: white;
+                z-index: 60;
+                transition: left 0.3s ease-in-out;
+                overflow-y: auto;
+            }
+
+            .filter-sidebar-mobile.open {
+                left: 0;
+            }
+
+            .filter-overlay {
+                position: fixed;
+                top: 0;
+                left: 0;
+                width: 100%;
+                height: 100%;
+                background: rgba(0, 0, 0, 0.5);
+                z-index: 50;
+                opacity: 0;
+                visibility: hidden;
+                transition: all 0.3s ease;
+            }
+
+            .filter-overlay.active {
+                opacity: 1;
+                visibility: visible;
+            }
+        }
+
+        /* Active filter badge styles */
+        .active-filter-badge {
+            background: linear-gradient(135deg, #059669, #047857);
+            color: white;
+            padding: 0.375rem 0.75rem;
+            border-radius: 1rem;
+            font-size: 0.875rem;
+            font-weight: 500;
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+            transition: all 0.2s ease;
+        }
+
+        .active-filter-badge:hover {
+            background: linear-gradient(135deg, #047857, #065f46);
+            transform: translateY(-1px);
+        }
+
+        .active-filter-badge button {
+            background: rgba(255, 255, 255, 0.2);
+            border: none;
+            border-radius: 50%;
+            width: 1.25rem;
+            height: 1.25rem;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            transition: background 0.2s ease;
+        }
+
+        .active-filter-badge button:hover {
+            background: rgba(255, 255, 255, 0.3);
+        }
+
+        /* Smooth animations */
+        .filter-animation {
+            animation: filterSlideIn 0.3s ease-out;
+        }
+
+        @keyframes filterSlideIn {
+            from {
+                opacity: 0;
+                transform: translateX(-20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateX(0);
+            }
+        }
+
+        /* Text truncation utilities */
+        .line-clamp-2 {
+            display: -webkit-box;
+            -webkit-line-clamp: 2;
+            -webkit-box-orient: vertical;
+            overflow: hidden;
+        }
     </style>
     <script src="products-data.js"></script>
     <script src="cart-utils.js"></script>
@@ -483,73 +658,227 @@
         </div>
     </div>
 
-    <!-- Filter/Sort Bar -->
-    <section class="bg-white shadow-sm py-4 sticky top-20 z-30">
-        <div class="container mx-auto px-4 flex flex-col md:flex-row md:items-center md:justify-between gap-4">
-            <div class="flex flex-wrap gap-4 items-center">
-                <select id="categoryFilter"
-                    class="px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:border-primary">
-                    <option value="all">All Categories</option>
-                </select>
-                <input type="text" id="searchInput" placeholder="Search products..."
-                    class="px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:border-primary" />
-            </div>
-            <div class="flex flex-wrap gap-4 items-center">
-                <select id="sortProducts"
-                    class="px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:border-primary">
-                    <option value="default">Sort by</option>
-                    <option value="price-low">Price: Low to High</option>
-                    <option value="price-high">Price: High to Low</option>
-                    <option value="name">Name: A to Z</option>
-                    <option value="rating">Rating</option>
-                </select>
-            </div>
-        </div>
-    </section>
+
     <!-- Product Grid with Sidebar Filter -->
     <main class="container mx-auto px-4 py-10">
         <div class="flex flex-col lg:flex-row gap-8">
-            <!-- Sidebar Filter -->
-            <aside class="w-full lg:w-1/4 bg-white rounded-2xl shadow-lg p-6 mb-8 lg:mb-0">
-                <h2 class="text-xl font-bold mb-6 flex items-center"><i class="fas fa-filter mr-2"></i>Filter</h2>
-                <!-- Category Filter -->
-                <div class="mb-8">
-                    <h3 class="font-semibold text-gray-800 mb-3">Category</h3>
-                    <ul id="sidebarCategoryList" class="space-y-2">
-                        <!-- Categories will be rendered here -->
-                    </ul>
+            <!-- Enhanced Filter Sidebar -->
+            <aside class="w-full lg:w-1/4 bg-white rounded-2xl shadow-xl p-6 mb-8 lg:mb-0 h-fit sticky top-24">
+                <!-- Filter Header -->
+                <div class="flex items-center justify-between mb-6 pb-4 border-b border-gray-200">
+                    <h2 class="text-2xl font-bold text-gray-800 flex items-center">
+                        <i class="fas fa-filter mr-3 text-primary"></i>Filters
+                    </h2>
+                    <button id="clearAllFilters" class="text-sm text-gray-500 hover:text-primary transition duration-300 font-medium">
+                        <i class="fas fa-refresh mr-1"></i>Clear All
+                    </button>
                 </div>
+
+                <!-- Search within Filters -->
+                <div class="mb-6">
+                    <div class="relative">
+                        <input type="text" id="filterSearchInput" placeholder="Search in filters..." 
+                               class="w-full px-4 py-3 pl-10 border border-gray-300 rounded-lg focus:outline-none focus:border-primary focus:ring-2 focus:ring-primary/20 transition duration-300">
+                        <i class="fas fa-search absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400"></i>
+                    </div>
+                </div>
+
+                <!-- Categories Filter -->
+                <div class="mb-8">
+                    <h3 class="font-bold text-gray-800 mb-4 flex items-center">
+                        <i class="fas fa-tags mr-2 text-primary"></i>Categories
+                    </h3>
+                    <div class="space-y-3 max-h-48 overflow-y-auto" id="categoryFilterContainer">
+                        <!-- Categories will be populated dynamically -->
+                    </div>
+                </div>
+
+                <!-- Price Range Filter -->
+                <div class="mb-8">
+                    <h3 class="font-bold text-gray-800 mb-4 flex items-center">
+                        <span class="mr-2 text-primary font-bold">₹</span>Price Range
+                    </h3>
+                    <div class="space-y-4">
+                        <!-- Price Range Slider -->
+                        <div class="px-2">
+                            <div class="price-slider-container">
+                                <input type="range" id="priceRangeMin" min="0" max="1000" value="0" 
+                                       class="price-slider">
+                                <input type="range" id="priceRangeMax" min="0" max="1000" value="1000" 
+                                       class="price-slider">
+                            </div>
+                            <div class="flex justify-between text-sm text-gray-500 mt-2">
+                                <span>₹<span id="minPriceDisplay">0</span></span>
+                                <span>₹<span id="maxPriceDisplay">1000</span></span>
+                            </div>
+                        </div>
+                        <!-- Price Input Fields -->
+                        <div class="flex items-center space-x-3">
+                            <div class="flex-1">
+                                <label class="block text-xs text-gray-600 mb-1">Min Price</label>
+                                <input type="number" id="minPriceInput" placeholder="0" 
+                                       class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:border-primary text-sm">
+                            </div>
+                            <div class="text-gray-400 mt-5">-</div>
+                            <div class="flex-1">
+                                <label class="block text-xs text-gray-600 mb-1">Max Price</label>
+                                <input type="number" id="maxPriceInput" placeholder="1000" 
+                                       class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:border-primary text-sm">
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Rating Filter -->
+                <div class="mb-8">
+                    <h3 class="font-bold text-gray-800 mb-4 flex items-center">
+                        <i class="fas fa-star mr-2 text-primary"></i>Customer Rating
+                    </h3>
+                    <div class="space-y-3" id="ratingFilterContainer">
+                        <label class="flex items-center space-x-3 cursor-pointer group">
+                            <input type="checkbox" value="5" class="rating-filter rounded border-gray-300 text-primary focus:ring-primary">
+                            <div class="flex text-yellow-400 text-sm">
+                                <i class="fas fa-star"></i><i class="fas fa-star"></i><i class="fas fa-star"></i><i class="fas fa-star"></i><i class="fas fa-star"></i>
+                            </div>
+                            <span class="text-sm text-gray-600 group-hover:text-gray-800">5 Stars Only</span>
+                        </label>
+                        <label class="flex items-center space-x-3 cursor-pointer group">
+                            <input type="checkbox" value="4" class="rating-filter rounded border-gray-300 text-primary focus:ring-primary">
+                            <div class="flex text-yellow-400 text-sm">
+                                <i class="fas fa-star"></i><i class="fas fa-star"></i><i class="fas fa-star"></i><i class="fas fa-star"></i><i class="far fa-star"></i>
+                            </div>
+                            <span class="text-sm text-gray-600 group-hover:text-gray-800">4+ Stars</span>
+                        </label>
+                        <label class="flex items-center space-x-3 cursor-pointer group">
+                            <input type="checkbox" value="3" class="rating-filter rounded border-gray-300 text-primary focus:ring-primary">
+                            <div class="flex text-yellow-400 text-sm">
+                                <i class="fas fa-star"></i><i class="fas fa-star"></i><i class="fas fa-star"></i><i class="far fa-star"></i><i class="far fa-star"></i>
+                            </div>
+                            <span class="text-sm text-gray-600 group-hover:text-gray-800">3+ Stars</span>
+                        </label>
+                        <label class="flex items-center space-x-3 cursor-pointer group">
+                            <input type="checkbox" value="2" class="rating-filter rounded border-gray-300 text-primary focus:ring-primary">
+                            <div class="flex text-yellow-400 text-sm">
+                                <i class="fas fa-star"></i><i class="fas fa-star"></i><i class="far fa-star"></i><i class="far fa-star"></i><i class="far fa-star"></i>
+                            </div>
+                            <span class="text-sm text-gray-600 group-hover:text-gray-800">2+ Stars</span>
+                        </label>
+                    </div>
+                </div>
+
+                <!-- Availability Filter -->
+                <div class="mb-8">
+                    <h3 class="font-bold text-gray-800 mb-4 flex items-center">
+                        <i class="fas fa-box mr-2 text-primary"></i>Availability
+                    </h3>
+                    <div class="space-y-3" id="availabilityFilterContainer">
+                        <label class="flex items-center space-x-3 cursor-pointer group">
+                            <input type="checkbox" value="inStock" class="availability-filter rounded border-gray-300 text-primary focus:ring-primary">
+                            <i class="fas fa-check-circle text-green-500"></i>
+                            <span class="text-sm text-gray-600 group-hover:text-gray-800">In Stock</span>
+                        </label>
+                        <label class="flex items-center space-x-3 cursor-pointer group">
+                            <input type="checkbox" value="discount" class="availability-filter rounded border-gray-300 text-primary focus:ring-primary">
+                            <i class="fas fa-percentage text-red-500"></i>
+                            <span class="text-sm text-gray-600 group-hover:text-gray-800">On Sale</span>
+                        </label>
+                        <label class="flex items-center space-x-3 cursor-pointer group">
+                            <input type="checkbox" value="new" class="availability-filter rounded border-gray-300 text-primary focus:ring-primary">
+                            <i class="fas fa-sparkles text-blue-500"></i>
+                            <span class="text-sm text-gray-600 group-hover:text-gray-800">New Arrivals</span>
+                        </label>
+                    </div>
+                </div>
+
                 <!-- Brand Filter -->
                 <div class="mb-8">
-                    <h3 class="font-semibold text-gray-800 mb-3">Brands</h3>
-                    <ul id="sidebarBrandList" class="space-y-2">
-                        <!-- Brands will be rendered here -->
-                    </ul>
+                    <h3 class="font-bold text-gray-800 mb-4 flex items-center">
+                        <i class="fas fa-award mr-2 text-primary"></i>Brands
+                    </h3>
+                    <div class="space-y-3 max-h-48 overflow-y-auto" id="brandFilterContainer">
+                        <!-- Brands will be populated dynamically -->
+                    </div>
                 </div>
-                <!-- Price Range Filter -->
-                <div class="mb-4">
-                    <h3 class="font-semibold text-gray-800 mb-3">Price Range</h3>
-                    <div class="flex items-center space-x-2">
-                        <input type="number" id="minPrice" placeholder="Min"
-                            class="w-20 px-2 py-1 border border-gray-300 rounded focus:outline-none focus:border-primary" />
-                        <span class="text-gray-500">-</span>
-                        <input type="number" id="maxPrice" placeholder="Max"
-                            class="w-20 px-2 py-1 border border-gray-300 rounded focus:outline-none focus:border-primary" />
-                        <button id="applyPriceFilter"
-                            class="bg-primary text-white px-3 py-1 rounded hover:bg-secondary transition">Go</button>
+
+                <!-- Filter Actions -->
+                <div class="pt-6 border-t border-gray-200">
+                    <div class="flex space-x-3">
+                        <button id="applyAllFilters" 
+                                class="flex-1 bg-gradient-to-r from-primary to-secondary text-white px-4 py-3 rounded-lg hover:from-secondary hover:to-primary transition duration-300 font-semibold shadow-md">
+                            <i class="fas fa-check mr-2"></i>Apply Filters
+                        </button>
+                        <button id="hideFiltersBtn" 
+                                class="lg:hidden px-4 py-3 border border-gray-300 rounded-lg hover:border-primary hover:text-primary transition duration-300">
+                            <i class="fas fa-times"></i>
+                        </button>
                     </div>
                 </div>
             </aside>
+
             <!-- Product Grid -->
             <div class="flex-1">
-                <div id="productsGrid" class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-3 gap-8">
+                <!-- Products Header with Sort and View Options -->
+                <div class="flex flex-col md:flex-row md:items-center md:justify-between mb-8 bg-white rounded-xl p-6 shadow-md">
+                    <div class="mb-4 md:mb-0">
+                        <h1 class="text-2xl font-bold text-gray-800 mb-2">All Products</h1>
+                        <p class="text-gray-600" id="productsCount">Showing <span class="font-semibold text-primary">0</span> products</p>
+                    </div>
+                    <div class="flex flex-col sm:flex-row gap-4 items-start sm:items-center">
+                        <!-- Mobile Filter Toggle -->
+                        <button id="showFiltersBtn" class="lg:hidden bg-primary text-white px-4 py-2 rounded-lg hover:bg-secondary transition duration-300">
+                            <i class="fas fa-filter mr-2"></i>Show Filters
+                        </button>
+                        <!-- Sort Options -->
+                        <div class="flex items-center space-x-2">
+                            <label class="text-sm font-medium text-gray-600">Sort by:</label>
+                            <select id="sortProducts" 
+                                    class="px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:border-primary bg-white">
+                                <option value="default">Featured</option>
+                                <option value="price-low">Price: Low to High</option>
+                                <option value="price-high">Price: High to Low</option>
+                                <option value="name">Name: A to Z</option>
+                                <option value="rating">Highest Rated</option>
+                                <option value="newest">Newest First</option>
+                            </select>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Active Filters Display -->
+                <div id="activeFiltersContainer" class="mb-6 hidden">
+                    <div class="bg-gray-50 rounded-lg p-4">
+                        <div class="flex flex-wrap items-center gap-2">
+                            <span class="text-sm font-medium text-gray-700 mr-2">Active Filters:</span>
+                            <div id="activeFiltersList" class="flex flex-wrap gap-2">
+                                <!-- Active filters will be displayed here -->
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Products Grid -->
+                <div id="productsGrid" class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
                     <!-- Products will be rendered here -->
                 </div>
+
+                <!-- Load More Button -->
                 <div class="text-center mt-12">
-                    <button id="loadMoreBtn"
-                        class="bg-primary text-white px-8 py-3 rounded-lg font-semibold hover:bg-secondary transition duration-300">
-                        Load More Products
+                    <button id="loadMoreBtn" 
+                            class="bg-primary text-white px-8 py-3 rounded-lg font-semibold hover:bg-secondary transition duration-300 shadow-md">
+                        <i class="fas fa-plus mr-2"></i>Load More Products
                     </button>
+                </div>
+
+                <!-- No Results Message -->
+                <div id="noResultsMessage" class="hidden text-center py-16">
+                    <div class="bg-gray-50 rounded-2xl p-12">
+                        <i class="fas fa-search text-6xl text-gray-300 mb-6"></i>
+                        <h3 class="text-2xl font-bold text-gray-600 mb-4">No Products Found</h3>
+                        <p class="text-gray-500 mb-6">Try adjusting your filters or search terms</p>
+                        <button id="clearFiltersFromNoResults" class="bg-primary text-white px-6 py-3 rounded-lg hover:bg-secondary transition duration-300">
+                            Clear All Filters
+                        </button>
+                    </div>
                 </div>
             </div>
         </div>
@@ -630,6 +959,42 @@
             </div>
         </div>
     </footer>
+
+    <script>
+        // Intercept Proceed to Checkout - Fix for checkout functionality
+        window.addEventListener('DOMContentLoaded', function () {
+            var checkoutBtn = document.getElementById('checkoutBtn');
+            if (checkoutBtn) {
+                checkoutBtn.addEventListener('click', function (e) {
+                    var currentUser = JSON.parse(localStorage.getItem('nearNowCurrentUser'));
+                    if (!currentUser) {
+                        e.preventDefault();
+                        // Show login modal
+                        var loginModal = document.getElementById('loginModal');
+                        var modalOverlay = document.getElementById('modalOverlay');
+                        if (loginModal && modalOverlay) {
+                            loginModal.classList.remove('hidden');
+                            loginModal.classList.add('flex');
+                            modalOverlay.classList.remove('hidden');
+                        }
+                        // After successful login, redirect to checkout.html
+                        var continueBtn = document.getElementById('continueShoppingBtn');
+                        if (continueBtn) {
+                            continueBtn.onclick = function () {
+                                loginModal.classList.add('hidden');
+                                loginModal.classList.remove('flex');
+                                modalOverlay.classList.add('hidden');
+                                window.location.href = 'checkout.html';
+                            };
+                        }
+                    } else {
+                        // User is logged in, proceed to checkout
+                        window.location.href = 'checkout.html';
+                    }
+                });
+            }
+        });
+    </script>
 </body>
 
 </html>

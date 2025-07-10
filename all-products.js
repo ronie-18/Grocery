@@ -13,11 +13,15 @@ let currentFilters = {
     priceRange: { min: 0, max: 1000 },
     categories: [],
     ratings: [],
-    availability: []
+    availability: [],
+    brands: [],
+    searchTerm: ''
 };
 let searchSuggestions = [];
 let quickViewProduct = null;
 let mobileNavOpen = false;
+let availableBrands = [];
+let maxPrice = 1000;
 
 // Authentication Variables
 let currentStep = 1;
@@ -66,38 +70,33 @@ function createProductCard(product) {
     return `
         <div class="product-card bg-white rounded-2xl shadow-lg hover:shadow-xl transition duration-300 overflow-hidden group" data-product-id="${product.id}">
             <div class="relative overflow-hidden">
-                <img src="${product.image}" alt="${product.name}" class="w-full h-64 object-cover group-hover:scale-110 transition duration-500">
-                ${product.discount > 0 ? `<div class="absolute top-4 left-4"><span class="bg-red-500 text-white px-3 py-1 rounded-full text-sm font-semibold">-${product.discount}%</span></div>` : ''}
-                <div class="absolute top-4 right-4 flex flex-col space-y-2">
-                    <button class="quick-view-btn bg-white bg-opacity-90 hover:bg-opacity-100 p-2 rounded-full shadow-md transition duration-300 transform scale-0 group-hover:scale-100" title="Quick View">
-                        <i class="fas fa-eye text-gray-600 hover:text-primary"></i>
+                <img src="${product.image}" alt="${product.name}" class="w-full h-48 object-cover group-hover:scale-110 transition duration-500">
+                ${product.discount > 0 ? `<div class="absolute top-3 left-3"><span class="bg-red-500 text-white px-2 py-1 rounded-full text-xs font-semibold">-${product.discount}%</span></div>` : ''}
+                <div class="absolute top-3 right-3 flex flex-col space-y-2">
+                    <button class="quick-view-btn bg-white bg-opacity-90 hover:bg-opacity-100 p-1.5 rounded-full shadow-md transition duration-300 transform scale-0 group-hover:scale-100" title="Quick View">
+                        <i class="fas fa-eye text-gray-600 hover:text-primary text-sm"></i>
                     </button>
                 </div>
             </div>
-            <div class="p-6">
-                <div class="flex items-center justify-between mb-2">
-                    <div class="flex text-yellow-400 text-sm">
+            <div class="p-4">
+                <div class="flex items-center justify-between mb-1.5">
+                    <div class="flex text-yellow-400 text-xs">
                         ${generateStarRating(product.rating)}
                     </div>
-                    <span class="text-gray-500 text-sm">(${product.rating})</span>
+                    <span class="text-gray-500 text-xs">(${product.rating})</span>
                 </div>
-                <h3 class="font-bold text-gray-800 text-lg mb-2 cursor-pointer hover:text-primary transition duration-300 product-name">${product.name}</h3>
-                <div class="flex items-center justify-between">
-                    <div class="flex items-center space-x-2">
-                        <span class="text-primary font-bold text-xl">₹${price}</span>
-                        ${originalPrice ? `<span class="text-gray-400 line-through text-sm">₹${originalPrice}</span>` : ''}
+                <h3 class="font-bold text-gray-800 text-base mb-2 cursor-pointer hover:text-primary transition duration-300 product-name line-clamp-2">${product.name}</h3>
+                <div class="flex items-center justify-between mb-2">
+                    <div class="flex items-center space-x-1.5">
+                        <span class="text-primary font-bold text-base">₹${price}</span>
+                        ${originalPrice ? `<span class="text-gray-400 line-through text-xs">₹${originalPrice}</span>` : ''}
                     </div>
-                    <div class="flex items-center space-x-2">
-                        <button class="quick-view-btn-mobile md:hidden bg-gray-100 hover:bg-gray-200 p-2 rounded-full transition duration-300" title="Quick View">
-                            <i class="fas fa-eye text-gray-600"></i>
-                        </button>
-                        <button class="add-to-cart-btn-mobile bg-primary text-white px-4 py-2 rounded-full hover:bg-secondary transition duration-300 flex items-center space-x-2">
-                            <i class="fas fa-plus"></i>
-                            <span>Add</span>
+                    <button class="add-to-cart-btn-mobile bg-primary text-white px-3 py-1.5 rounded-full hover:bg-secondary transition duration-300 flex items-center space-x-1">
+                        <i class="fas fa-plus text-xs"></i>
+                        <span class="text-sm">Add</span>
                         </button>
                     </div>
-                </div>
-                ${product.inStock ? '<div class="mt-2"><span class="text-green-600 text-sm font-semibold"><i class="fas fa-check-circle mr-1"></i>In Stock</span></div>' : '<div class="mt-2"><span class="text-red-600 text-sm font-semibold"><i class="fas fa-times-circle mr-1"></i>Out of Stock</span></div>'}
+                ${product.inStock ? '<div><span class="text-green-600 text-xs font-semibold"><i class="fas fa-check-circle mr-1"></i>In Stock</span></div>' : '<div><span class="text-red-600 text-xs font-semibold"><i class="fas fa-times-circle mr-1"></i>Out of Stock</span></div>'}
             </div>
         </div>
     `;
@@ -116,39 +115,449 @@ function generateStarRating(rating) {
     return stars;
 }
 
-// --- Filter, Sort, Search ---
-function filterAndSortProducts() {
+// --- Enhanced Filter System ---
+function initializeEnhancedFilters() {
+    // Calculate max price from all products
+    maxPrice = Math.ceil(Math.max(...allProducts.map(p => parseFloat((typeof p.price === 'string' ? p.price.replace(/^₹/, '') : p.price)))));
+    
+    // Set price range sliders
+    document.getElementById('priceRangeMin').max = maxPrice;
+    document.getElementById('priceRangeMax').max = maxPrice;
+    document.getElementById('priceRangeMax').value = maxPrice;
+    document.getElementById('maxPriceDisplay').textContent = maxPrice;
+    document.getElementById('maxPriceInput').placeholder = maxPrice;
+    currentFilters.priceRange.max = maxPrice;
+
+    // Get available brands
+    availableBrands = [...new Set(allProducts.map(p => p.brand || 'Unknown').filter(Boolean))].sort();
+    
+    // Populate filter sections
+    populateCategoryFilters();
+    populateBrandFilters();
+    
+    // Initialize event listeners
+    initializeFilterEventListeners();
+    
+    // Initialize mobile filter functionality
+    initializeMobileFilters();
+}
+
+function populateCategoryFilters() {
+    const categories = getAvailableCategories();
+    const container = document.getElementById('categoryFilterContainer');
+    
+    container.innerHTML = categories.map(category => `
+        <label class="flex items-center space-x-3 cursor-pointer group">
+            <input type="checkbox" value="${category}" class="category-filter rounded border-gray-300 text-primary focus:ring-primary">
+            <i class="fas fa-tag text-primary"></i>
+            <span class="text-sm text-gray-600 group-hover:text-gray-800 capitalize">${category}</span>
+            <span class="text-xs text-gray-400 ml-auto">${allProducts.filter(p => p.category === category).length}</span>
+        </label>
+    `).join('');
+}
+
+function populateBrandFilters() {
+    const container = document.getElementById('brandFilterContainer');
+    
+    container.innerHTML = availableBrands.map(brand => `
+        <label class="flex items-center space-x-3 cursor-pointer group">
+            <input type="checkbox" value="${brand}" class="brand-filter rounded border-gray-300 text-primary focus:ring-primary">
+            <i class="fas fa-certificate text-primary"></i>
+            <span class="text-sm text-gray-600 group-hover:text-gray-800">${brand}</span>
+            <span class="text-xs text-gray-400 ml-auto">${allProducts.filter(p => (p.brand || 'Unknown') === brand).length}</span>
+        </label>
+    `).join('');
+}
+
+function initializeFilterEventListeners() {
+    // Price Range Sliders
+    const minSlider = document.getElementById('priceRangeMin');
+    const maxSlider = document.getElementById('priceRangeMax');
+    const minInput = document.getElementById('minPriceInput');
+    const maxInput = document.getElementById('maxPriceInput');
+    const minDisplay = document.getElementById('minPriceDisplay');
+    const maxDisplay = document.getElementById('maxPriceDisplay');
+
+    function updatePriceRange() {
+        let minVal = parseInt(minSlider.value);
+        let maxVal = parseInt(maxSlider.value);
+        
+        if (minVal >= maxVal) {
+            minVal = maxVal - 1;
+            minSlider.value = minVal;
+        }
+        
+        minDisplay.textContent = minVal;
+        maxDisplay.textContent = maxVal;
+        minInput.value = minVal;
+        maxInput.value = maxVal;
+        
+        currentFilters.priceRange = { min: minVal, max: maxVal };
+    }
+
+    minSlider.addEventListener('input', updatePriceRange);
+    maxSlider.addEventListener('input', updatePriceRange);
+    
+    minInput.addEventListener('change', function() {
+        const val = parseInt(this.value) || 0;
+        minSlider.value = Math.min(val, maxPrice - 1);
+        updatePriceRange();
+    });
+    
+    maxInput.addEventListener('change', function() {
+        const val = parseInt(this.value) || maxPrice;
+        maxSlider.value = Math.max(val, 1);
+        updatePriceRange();
+    });
+
+    // Category Filters
+    document.addEventListener('change', function(e) {
+        if (e.target.classList.contains('category-filter')) {
+            updateCategoryFilters();
+        } else if (e.target.classList.contains('rating-filter')) {
+            updateRatingFilters();
+        } else if (e.target.classList.contains('availability-filter')) {
+            updateAvailabilityFilters();
+        } else if (e.target.classList.contains('brand-filter')) {
+            updateBrandFilters();
+        }
+    });
+
+    // Filter Search
+    document.getElementById('filterSearchInput').addEventListener('input', function(e) {
+        currentFilters.searchTerm = e.target.value.toLowerCase();
+        applyAllFilters();
+    });
+
+    // Clear All Filters
+    document.getElementById('clearAllFilters').addEventListener('click', clearAllFilters);
+    document.getElementById('clearFiltersFromNoResults').addEventListener('click', clearAllFilters);
+
+    // Apply Filters Button
+    document.getElementById('applyAllFilters').addEventListener('click', applyAllFilters);
+}
+
+function updateCategoryFilters() {
+    const checkedCategories = Array.from(document.querySelectorAll('.category-filter:checked')).map(cb => cb.value);
+    currentFilters.categories = checkedCategories;
+    applyAllFilters();
+}
+
+function updateRatingFilters() {
+    const checkedRatings = Array.from(document.querySelectorAll('.rating-filter:checked')).map(cb => parseInt(cb.value));
+    currentFilters.ratings = checkedRatings;
+    applyAllFilters();
+}
+
+function updateAvailabilityFilters() {
+    const checkedAvailability = Array.from(document.querySelectorAll('.availability-filter:checked')).map(cb => cb.value);
+    currentFilters.availability = checkedAvailability;
+    applyAllFilters();
+}
+
+function updateBrandFilters() {
+    const checkedBrands = Array.from(document.querySelectorAll('.brand-filter:checked')).map(cb => cb.value);
+    currentFilters.brands = checkedBrands;
+    applyAllFilters();
+}
+
+function applyAllFilters() {
     let filtered = [...allProducts];
-    // Filter by category
+
+    // Apply category filter
+    if (currentFilters.categories.length > 0) {
+        filtered = filtered.filter(p => currentFilters.categories.includes(p.category));
+    }
+
+    // Apply legacy category filter
     if (currentCategory !== 'all') {
         filtered = filtered.filter(p => p.category === currentCategory);
     }
-    // Search
-    const query = searchInput.value.trim().toLowerCase();
-    if (query) {
+
+    // Apply price range filter
+    filtered = filtered.filter(p => {
+        const price = parseFloat((typeof p.price === 'string' ? p.price.replace(/^₹/, '') : p.price));
+        return price >= currentFilters.priceRange.min && price <= currentFilters.priceRange.max;
+    });
+
+    // Apply rating filter
+    if (currentFilters.ratings.length > 0) {
+        filtered = filtered.filter(p => {
+            return currentFilters.ratings.some(rating => {
+                if (rating === 5) return p.rating === 5;
+                return p.rating >= rating && p.rating < rating + 1;
+            });
+        });
+    }
+
+    // Apply availability filter
+    if (currentFilters.availability.length > 0) {
+        filtered = filtered.filter(p => {
+            return currentFilters.availability.some(filter => {
+                switch (filter) {
+                    case 'inStock': return p.inStock;
+                    case 'discount': return p.discount > 0;
+                    case 'new': return p.isNew; // Assuming there's an isNew property
+                    default: return true;
+                }
+            });
+        });
+    }
+
+    // Apply brand filter
+    if (currentFilters.brands.length > 0) {
+        filtered = filtered.filter(p => currentFilters.brands.includes(p.brand || 'Unknown'));
+    }
+
+    // Apply search filter
+    const searchQuery = currentFilters.searchTerm || searchInput.value.trim().toLowerCase();
+    if (searchQuery) {
         filtered = filtered.filter(p =>
-            p.name.toLowerCase().includes(query) ||
-            p.description.toLowerCase().includes(query)
+            p.name.toLowerCase().includes(searchQuery) ||
+            p.description.toLowerCase().includes(searchQuery) ||
+            (p.brand && p.brand.toLowerCase().includes(searchQuery))
         );
     }
-    // Sort
-    switch (currentSort) {
-        case 'price-low':
-            filtered.sort((a, b) => parseFloat((typeof a.price === 'string' ? a.price.replace(/^₹/, '') : a.price)) - parseFloat((typeof b.price === 'string' ? b.price.replace(/^₹/, '') : b.price)));
-            break;
-        case 'price-high':
-            filtered.sort((a, b) => parseFloat((typeof b.price === 'string' ? b.price.replace(/^₹/, '') : b.price)) - parseFloat((typeof a.price === 'string' ? a.price.replace(/^₹/, '') : a.price)));
-            break;
-        case 'name':
-            filtered.sort((a, b) => a.name.localeCompare(b.name));
-            break;
-        case 'rating':
-            filtered.sort((a, b) => b.rating - a.rating);
-            break;
-    }
+
+    // Apply sorting
+    sortFilteredProducts(filtered);
+    
+    // Update display
     displayedProducts = filtered;
     currentPage = 1;
     renderProducts();
+    updateProductsCount();
+    updateActiveFiltersDisplay();
+    showNoResultsIfEmpty();
+}
+
+function sortFilteredProducts(products) {
+    switch (currentSort) {
+        case 'price-low':
+            products.sort((a, b) => parseFloat((typeof a.price === 'string' ? a.price.replace(/^₹/, '') : a.price)) - parseFloat((typeof b.price === 'string' ? b.price.replace(/^₹/, '') : b.price)));
+            break;
+        case 'price-high':
+            products.sort((a, b) => parseFloat((typeof b.price === 'string' ? b.price.replace(/^₹/, '') : b.price)) - parseFloat((typeof a.price === 'string' ? a.price.replace(/^₹/, '') : a.price)));
+            break;
+        case 'name':
+            products.sort((a, b) => a.name.localeCompare(b.name));
+            break;
+        case 'rating':
+            products.sort((a, b) => b.rating - a.rating);
+            break;
+        case 'newest':
+            products.sort((a, b) => new Date(b.dateAdded || '2024-01-01') - new Date(a.dateAdded || '2024-01-01'));
+            break;
+        default:
+            // Keep original order for 'featured'
+            break;
+    }
+}
+
+function clearAllFilters() {
+    // Reset all filter states
+    currentFilters = {
+        priceRange: { min: 0, max: maxPrice },
+        categories: [],
+        ratings: [],
+        availability: [],
+        brands: [],
+        searchTerm: ''
+    };
+    
+    // Reset UI elements
+    document.getElementById('priceRangeMin').value = 0;
+    document.getElementById('priceRangeMax').value = maxPrice;
+    document.getElementById('minPriceDisplay').textContent = 0;
+    document.getElementById('maxPriceDisplay').textContent = maxPrice;
+    document.getElementById('minPriceInput').value = '';
+    document.getElementById('maxPriceInput').value = '';
+    document.getElementById('filterSearchInput').value = '';
+    
+    // Uncheck all checkboxes
+    document.querySelectorAll('.category-filter, .rating-filter, .availability-filter, .brand-filter').forEach(cb => cb.checked = false);
+    
+    // Reset legacy filters
+    currentCategory = 'all';
+    document.getElementById('categoryFilter').value = 'all';
+    searchInput.value = '';
+    
+    // Apply filters
+    applyAllFilters();
+}
+
+function updateProductsCount() {
+    const count = displayedProducts.length;
+    const countElement = document.getElementById('productsCount');
+    if (countElement) {
+        const countSpan = countElement.querySelector('span');
+        if (countSpan) {
+            countSpan.textContent = count;
+        }
+    }
+}
+
+function updateActiveFiltersDisplay() {
+    const container = document.getElementById('activeFiltersContainer');
+    const list = document.getElementById('activeFiltersList');
+    const activeFilters = [];
+
+    // Check for active filters
+    if (currentFilters.categories.length > 0) {
+        currentFilters.categories.forEach(cat => {
+            activeFilters.push({ type: 'category', value: cat, label: `Category: ${cat}` });
+        });
+    }
+
+    if (currentFilters.priceRange.min > 0 || currentFilters.priceRange.max < maxPrice) {
+        activeFilters.push({ 
+            type: 'price', 
+            value: 'price', 
+            label: `₹${currentFilters.priceRange.min} - ₹${currentFilters.priceRange.max}` 
+        });
+    }
+
+    if (currentFilters.ratings.length > 0) {
+        currentFilters.ratings.forEach(rating => {
+            activeFilters.push({ type: 'rating', value: rating, label: `${rating}+ Stars` });
+        });
+    }
+
+    if (currentFilters.availability.length > 0) {
+        currentFilters.availability.forEach(avail => {
+            const labels = { inStock: 'In Stock', discount: 'On Sale', new: 'New Arrivals' };
+            activeFilters.push({ type: 'availability', value: avail, label: labels[avail] });
+        });
+    }
+
+    if (currentFilters.brands.length > 0) {
+        currentFilters.brands.forEach(brand => {
+            activeFilters.push({ type: 'brand', value: brand, label: `Brand: ${brand}` });
+        });
+    }
+
+    if (currentFilters.searchTerm) {
+        activeFilters.push({ type: 'search', value: 'search', label: `Search: "${currentFilters.searchTerm}"` });
+    }
+
+    if (activeFilters.length > 0) {
+        container.classList.remove('hidden');
+        list.innerHTML = activeFilters.map(filter => `
+            <div class="active-filter-badge">
+                ${filter.label}
+                <button onclick="removeActiveFilter('${filter.type}', '${filter.value}')">
+                    <i class="fas fa-times text-xs"></i>
+                </button>
+            </div>
+        `).join('');
+    } else {
+        container.classList.add('hidden');
+    }
+}
+
+function removeActiveFilter(type, value) {
+    switch (type) {
+        case 'category':
+            currentFilters.categories = currentFilters.categories.filter(c => c !== value);
+            const categoryCheckbox = document.querySelector(`.category-filter[value="${value}"]`);
+            if (categoryCheckbox) categoryCheckbox.checked = false;
+            break;
+        case 'rating':
+            currentFilters.ratings = currentFilters.ratings.filter(r => r !== parseInt(value));
+            const ratingCheckbox = document.querySelector(`.rating-filter[value="${value}"]`);
+            if (ratingCheckbox) ratingCheckbox.checked = false;
+            break;
+        case 'availability':
+            currentFilters.availability = currentFilters.availability.filter(a => a !== value);
+            const availabilityCheckbox = document.querySelector(`.availability-filter[value="${value}"]`);
+            if (availabilityCheckbox) availabilityCheckbox.checked = false;
+            break;
+        case 'brand':
+            currentFilters.brands = currentFilters.brands.filter(b => b !== value);
+            const brandCheckbox = document.querySelector(`.brand-filter[value="${value}"]`);
+            if (brandCheckbox) brandCheckbox.checked = false;
+            break;
+        case 'price':
+            currentFilters.priceRange = { min: 0, max: maxPrice };
+            document.getElementById('priceRangeMin').value = 0;
+            document.getElementById('priceRangeMax').value = maxPrice;
+            document.getElementById('minPriceDisplay').textContent = 0;
+            document.getElementById('maxPriceDisplay').textContent = maxPrice;
+            document.getElementById('minPriceInput').value = '';
+            document.getElementById('maxPriceInput').value = '';
+            break;
+        case 'search':
+            currentFilters.searchTerm = '';
+            document.getElementById('filterSearchInput').value = '';
+            break;
+    }
+    applyAllFilters();
+}
+
+// Make removeActiveFilter globally accessible
+window.removeActiveFilter = removeActiveFilter;
+
+function showNoResultsIfEmpty() {
+    const noResultsMessage = document.getElementById('noResultsMessage');
+    const productsGrid = document.getElementById('productsGrid');
+    const loadMoreBtn = document.getElementById('loadMoreBtn');
+    
+    if (displayedProducts.length === 0) {
+        noResultsMessage.classList.remove('hidden');
+        productsGrid.classList.add('hidden');
+        loadMoreBtn.style.display = 'none';
+    } else {
+        noResultsMessage.classList.add('hidden');
+        productsGrid.classList.remove('hidden');
+    }
+}
+
+function initializeMobileFilters() {
+    const showFiltersBtn = document.getElementById('showFiltersBtn');
+    const hideFiltersBtn = document.getElementById('hideFiltersBtn');
+    const filterSidebar = document.querySelector('aside');
+
+    if (showFiltersBtn) {
+        showFiltersBtn.addEventListener('click', function() {
+            // Create mobile overlay
+            let overlay = document.querySelector('.filter-overlay');
+            if (!overlay) {
+                overlay = document.createElement('div');
+                overlay.className = 'filter-overlay';
+                document.body.appendChild(overlay);
+            }
+            
+            // Show mobile filters
+            filterSidebar.classList.add('filter-sidebar-mobile', 'open');
+            overlay.classList.add('active');
+            document.body.style.overflow = 'hidden';
+            
+            // Close when clicking overlay
+            overlay.addEventListener('click', closeMobileFilters);
+        });
+    }
+
+    if (hideFiltersBtn) {
+        hideFiltersBtn.addEventListener('click', closeMobileFilters);
+    }
+}
+
+function closeMobileFilters() {
+    const filterSidebar = document.querySelector('aside');
+    const overlay = document.querySelector('.filter-overlay');
+    
+    if (filterSidebar) {
+        filterSidebar.classList.remove('open');
+    }
+    if (overlay) {
+        overlay.classList.remove('active');
+    }
+    document.body.style.overflow = '';
+}
+
+// --- Legacy Filter Functions (Updated) ---
+function filterAndSortProducts() {
+    applyAllFilters();
 }
 
 // --- Event Listeners ---
@@ -171,6 +580,7 @@ loadMoreBtn.addEventListener('click', function () {
 // --- Init ---
 renderCategoryOptions();
 renderFooterCategories();
+initializeEnhancedFilters();
 filterAndSortProducts();
 
 // Initialize enhanced features
@@ -900,46 +1310,226 @@ function hideLoginModal() {
     }
 }
 
-// Placeholder functions for login system (redirected to main page for full functionality)
+// Full login system functionality
+function generateOTP() {
+    return Math.floor(100000 + Math.random() * 900000).toString();
+}
+
+function generateUserId() {
+    return 'USER_' + Date.now() + '_' + Math.floor(Math.random() * 1000);
+}
+
 function handleMobileSubmit(e) {
-    e.preventDefault()
-    showNotification("Please use the main page for login functionality", "info")
-    setTimeout(() => {
-        window.location.href = 'index.html'
-    }, 1500)
+    e.preventDefault();
+    
+    const userName = document.getElementById('userName').value.trim();
+    const userMobile = document.getElementById('userMobile').value.trim();
+    
+    if (!userName || !userMobile) {
+        showNotification('Please fill in all fields', 'error');
+        return;
+    }
+    
+    if (userMobile.length !== 10) {
+        showNotification('Please enter a valid 10-digit mobile number', 'error');
+        return;
+    }
+    
+    // Store user details
+    userDetails = {
+        name: userName,
+        mobile: userMobile,
+        otp: generateOTP(),
+        userId: generateUserId()
+    };
+    
+    // Show the generated OTP (for demo purposes)
+    console.log('Generated OTP:', userDetails.otp);
+    showNotification(`Demo OTP generated: ${userDetails.otp}`, 'info');
+    
+    // Update display mobile
+    document.getElementById('displayMobile').textContent = `+91 ${userMobile}`;
+    
+    // Move to step 2
+    showStep(2);
+    
+    // Start resend timer
+    startResendTimer();
 }
 
 function handleOtpSubmit(e) {
-    e.preventDefault()
-    showNotification("Please use the main page for login functionality", "info")
-    setTimeout(() => {
-        window.location.href = 'index.html'
-    }, 1500)
+    e.preventDefault();
+    
+    const enteredOtp = getEnteredOtp();
+    
+    if (!enteredOtp) {
+        showNotification('Please enter the OTP', 'error');
+        return;
+    }
+    
+    if (enteredOtp.length !== 6) {
+        showNotification('Please enter a valid 6-digit OTP', 'error');
+        return;
+    }
+    
+    if (enteredOtp === userDetails.otp) {
+        // OTP is correct
+        currentUser = {
+            id: userDetails.userId,
+            name: userDetails.name,
+            mobile: userDetails.mobile,
+            loginTime: new Date().toISOString()
+        };
+        
+        // Store in localStorage
+        localStorage.setItem('nearNowCurrentUser', JSON.stringify(currentUser));
+        
+        // Move to success step
+        showStep(3);
+        
+        // Update user display
+        updateUserDisplay();
+        
+        showNotification('Login successful!', 'success');
+        
+        // Auto-continue after 2 seconds
+        setTimeout(() => {
+            continueAfterLogin();
+        }, 2000);
+    } else {
+        showNotification('Invalid OTP. Please try again.', 'error');
+        clearOtpInputs();
+    }
 }
 
-function resendOtp() {
-    showNotification("Please use the main page for login functionality", "info")
-    setTimeout(() => {
-        window.location.href = 'index.html'
-    }, 1500)
+function getEnteredOtp() {
+    const otpInputs = document.querySelectorAll('.otp-input');
+    return Array.from(otpInputs).map(input => input.value).join('');
 }
 
-function changeNumber() {
-    showNotification("Please use the main page for login functionality", "info")
-    setTimeout(() => {
-        window.location.href = 'index.html'
-    }, 1500)
-}
-
-function continueAfterLogin() {
-    showNotification("Please use the main page for login functionality", "info")
-    setTimeout(() => {
-        window.location.href = 'index.html'
-    }, 1500)
+function clearOtpInputs() {
+    const otpInputs = document.querySelectorAll('.otp-input');
+    otpInputs.forEach(input => {
+        input.value = '';
+    });
+    // Focus on first input
+    if (otpInputs.length > 0) {
+        otpInputs[0].focus();
+    }
 }
 
 function initializeOtpInputs() {
-    // Placeholder - full functionality available on main page
+    const otpInputs = document.querySelectorAll('.otp-input');
+    
+    otpInputs.forEach((input, index) => {
+        input.addEventListener('input', function(e) {
+            // Only allow numbers
+            this.value = this.value.replace(/[^0-9]/g, '');
+            
+            // Move to next input if current is filled
+            if (this.value.length === 1 && index < otpInputs.length - 1) {
+                otpInputs[index + 1].focus();
+            }
+        });
+        
+        input.addEventListener('keydown', function(e) {
+            // Move to previous input on backspace if current is empty
+            if (e.key === 'Backspace' && this.value === '' && index > 0) {
+                otpInputs[index - 1].focus();
+            }
+        });
+        
+        input.addEventListener('paste', function(e) {
+            e.preventDefault();
+            const pastedData = e.clipboardData.getData('text').replace(/[^0-9]/g, '');
+            
+            // Fill inputs with pasted data
+            for (let i = 0; i < Math.min(pastedData.length, otpInputs.length - index); i++) {
+                if (otpInputs[index + i]) {
+                    otpInputs[index + i].value = pastedData[i];
+                }
+            }
+            
+            // Focus on next empty input or last input
+            const nextIndex = Math.min(index + pastedData.length, otpInputs.length - 1);
+            otpInputs[nextIndex].focus();
+        });
+    });
+}
+
+function showStep(step) {
+    // Hide all steps
+    document.querySelectorAll('.login-step').forEach(el => el.classList.add('hidden'));
+    
+    // Show current step
+    const currentStepEl = document.getElementById(`step${step}`);
+    if (currentStepEl) {
+        currentStepEl.classList.remove('hidden');
+        currentStep = step;
+    }
+}
+
+function startResendTimer() {
+    resendTimer = 30;
+    const resendBtn = document.getElementById('resendOtpBtn');
+    const timerSpan = document.getElementById('resendTimer');
+    
+    if (resendBtn) resendBtn.disabled = true;
+    
+    otpTimer = setInterval(() => {
+        resendTimer--;
+        if (timerSpan) timerSpan.textContent = resendTimer;
+        
+        if (resendTimer <= 0) {
+            clearInterval(otpTimer);
+            if (resendBtn) {
+                resendBtn.disabled = false;
+                resendBtn.innerHTML = 'Resend OTP';
+            }
+        }
+    }, 1000);
+}
+
+function resendOtp() {
+    // Generate new OTP
+    userDetails.otp = generateOTP();
+    console.log('New OTP:', userDetails.otp);
+    showNotification(`New demo OTP: ${userDetails.otp}`, 'info');
+    
+    // Clear current OTP inputs
+    clearOtpInputs();
+    
+    // Restart timer
+    startResendTimer();
+}
+
+function changeNumber() {
+    // Clear form and go back to step 1
+    document.getElementById('userName').value = '';
+    document.getElementById('userMobile').value = '';
+    clearOtpInputs();
+    
+    // Clear timer
+    if (otpTimer) {
+        clearInterval(otpTimer);
+    }
+    
+    // Reset user details
+    userDetails = {};
+    
+    showStep(1);
+}
+
+function continueAfterLogin() {
+    hideLoginModal();
+    
+    // Check if user was trying to checkout
+    if (window.pendingCheckout) {
+        window.pendingCheckout = false;
+        window.location.href = 'checkout.html';
+    } else {
+        showNotification('Welcome back!', 'success');
+    }
 }
 
 // Initialize authentication
@@ -1046,6 +1636,8 @@ function proceedToCheckout() {
     }
 
     if (!currentUser) {
+        // Set flag to indicate user was trying to checkout
+        window.pendingCheckout = true;
         showNotification("Please login to proceed to checkout", "info")
         showLoginModal()
         return

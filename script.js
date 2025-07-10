@@ -7,7 +7,7 @@ let allProducts = []
 let displayedProducts = []
 let currentCategory = "all"
 let currentSort = "default"
-const productsPerPage = 8
+const productsPerPage = 10
 let currentPage = 1
 
 // New Global Variables for Enhanced Features
@@ -825,30 +825,30 @@ function createProductCard(product) {
     return `
         <div class="product-card bg-white rounded-2xl shadow-lg hover:shadow-xl transition duration-300 overflow-hidden group" data-product-id="${product.id}">
             <div class="relative overflow-hidden">
-                <img src="${product.image}" alt="${product.name}" class="w-full h-64 object-cover group-hover:scale-110 transition duration-500">
-                ${product.discount > 0 ? `<div class="absolute top-4 left-4"><span class="bg-red-500 text-white px-3 py-1 rounded-full text-sm font-semibold">-${product.discount}%</span></div>` : ''}
-                <div class="absolute top-4 right-4 flex flex-col space-y-2">
-                    <button class="quick-view-btn bg-white bg-opacity-90 hover:bg-opacity-100 p-2 rounded-full shadow-md transition duration-300 transform scale-0 group-hover:scale-100" title="Quick View">
-                        <i class="fas fa-eye text-gray-600 hover:text-primary"></i>
+                <img src="${product.image}" alt="${product.name}" class="w-full h-48 object-cover group-hover:scale-110 transition duration-500">
+                ${product.discount > 0 ? `<div class="absolute top-3 left-3"><span class="bg-red-500 text-white px-2 py-1 rounded-full text-xs font-semibold">-${product.discount}%</span></div>` : ''}
+                <div class="absolute top-3 right-3 flex flex-col space-y-2">
+                    <button class="quick-view-btn bg-white bg-opacity-90 hover:bg-opacity-100 p-1.5 rounded-full shadow-md transition duration-300 transform scale-0 group-hover:scale-100" title="Quick View">
+                        <i class="fas fa-eye text-gray-600 hover:text-primary text-sm"></i>
                     </button>
                 </div>
             </div>
-            <div class="p-6">
-                <div class="flex items-center justify-between mb-2">
-                    <div class="flex text-yellow-400 text-sm">
+            <div class="p-4">
+                <div class="flex items-center justify-between mb-1.5">
+                    <div class="flex text-yellow-400 text-xs">
                         ${generateStarRating(product.rating)}
                     </div>
-                    <span class="text-gray-500 text-sm">(${product.rating})</span>
+                    <span class="text-gray-500 text-xs">(${product.rating})</span>
                 </div>
-                <h3 class="font-bold text-gray-800 text-lg mb-2 cursor-pointer hover:text-primary transition duration-300 product-name">${product.name}</h3>
+                <h3 class="font-bold text-gray-800 text-base mb-2 cursor-pointer hover:text-primary transition duration-300 product-name line-clamp-2">${product.name}</h3>
                 <div class="flex items-center justify-between">
-                    <div class="flex items-center space-x-2">
-                        <span class="text-primary font-bold text-lg">₹${price}</span>
-                        ${originalPrice ? `<span class="text-gray-400 line-through text-sm">₹${originalPrice}</span>` : ''}
+                    <div class="flex items-center space-x-1.5">
+                        <span class="text-primary font-bold text-base">₹${price}</span>
+                        ${originalPrice ? `<span class="text-gray-400 line-through text-xs">₹${originalPrice}</span>` : ''}
                     </div>
-                    <button class="add-to-cart-btn bg-primary text-white px-4 py-2 rounded-full hover:bg-secondary transition duration-300 flex items-center space-x-2">
-                        <i class="fas fa-plus"></i>
-                        <span>Add</span>
+                    <button class="add-to-cart-btn bg-primary text-white px-3 py-1.5 rounded-full hover:bg-secondary transition duration-300 flex items-center space-x-1">
+                        <i class="fas fa-plus text-xs"></i>
+                        <span class="text-sm">Add</span>
                     </button>
                 </div>
             </div>
