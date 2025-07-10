@@ -184,14 +184,21 @@ function handleMobileSubmit(e) {
         fullMobile: `+91${mobile}`,
         otp: generateOTP() // Generate OTP for demo
     }
+    window._lastOtp = userDetails.otp; // For debugging
 
     // Show loading state
     const sendBtn = document.getElementById("sendOtpBtn")
+
+    // **FIX: Clear any existing send OTP timeout**
+    if (window.sendOtpTimeout) {
+        clearTimeout(window.sendOtpTimeout)
+    }
+
     sendBtn.innerHTML = '<i class="fas fa-spinner fa-spin mr-2"></i>Sending OTP...'
     sendBtn.disabled = true
 
-    // Simulate OTP sending delay
-    setTimeout(() => {
+    // Simulate OTP sending delay with stored timeout ID
+    window.sendOtpTimeout = setTimeout(() => {
         console.log('Demo OTP generated:', userDetails.otp)
 
         // Update display mobile number
@@ -204,10 +211,12 @@ function handleMobileSubmit(e) {
         startResendTimer()
 
         // Reset button
-        sendBtn.innerHTML = "Send OTP"
-        sendBtn.disabled = false
+        resetSendOtpButton()
 
         showNotification(`Demo OTP sent to ${userDetails.fullMobile}. Demo OTP: ${userDetails.otp}`, "success")
+
+        // Clear timeout reference
+        window.sendOtpTimeout = null
     }, 1500)
 }
 
@@ -216,6 +225,12 @@ function handleOtpSubmit(e) {
     e.preventDefault()
 
     const enteredOtp = getEnteredOtp()
+    console.log('Entered OTP:', enteredOtp, 'Expected OTP:', userDetails.otp)
+
+    if (!userDetails.otp) {
+        showNotification("OTP session expired. Please resend OTP.", "error")
+        return
+    }
 
     if (enteredOtp.length !== 6) {
         showNotification("Please enter complete 6-digit OTP", "error")
@@ -224,11 +239,17 @@ function handleOtpSubmit(e) {
 
     // Show loading state
     const verifyBtn = document.getElementById("verifyOtpBtn")
+
+    // **FIX: Clear any existing verification timeout first**
+    if (window.verificationTimeout) {
+        clearTimeout(window.verificationTimeout)
+    }
+
     verifyBtn.innerHTML = '<i class="fas fa-spinner fa-spin mr-2"></i>Verifying...'
     verifyBtn.disabled = true
 
-    // Simulate verification delay
-    setTimeout(() => {
+    // Simulate verification delay with stored timeout ID
+    window.verificationTimeout = setTimeout(() => {
         // Verify OTP with generated one
         if (enteredOtp === userDetails.otp) {
             // OTP is correct
@@ -249,26 +270,32 @@ function handleOtpSubmit(e) {
             currentUser = userData
             localStorage.setItem("nearNowCurrentUser", JSON.stringify(userData))
 
+            // **CHANGE 2: Restore user's cart after login**
+            restoreUserCart(userData.id)
+
             showNotification("Mobile number verified successfully!", "success")
 
             // Auto close after 2 seconds
             setTimeout(() => {
                 hideLoginModal()
                 updateUserDisplay()
+                resetVerifyButton() // Reset button after successful login
             }, 2000)
         } else {
             // OTP is incorrect
             console.error('Invalid OTP entered')
 
             // Reset button
-            verifyBtn.innerHTML = "Verify & Continue"
-            verifyBtn.disabled = false
+            resetVerifyButton()
 
             showNotification("Invalid OTP. Please check and try again.", "error")
 
             // Clear OTP inputs on error
             clearOtpInputs()
         }
+
+        // Clear the timeout reference
+        window.verificationTimeout = null
     }, 1000)
 }
 
@@ -295,21 +322,31 @@ function clearOtpInputs() {
 function initializeOtpInputs() {
     const otpInputs = document.querySelectorAll(".otp-input")
 
-    otpInputs.forEach((input, index) => {
+    // **FIX: Remove existing event listeners first to prevent duplicates**
+    otpInputs.forEach((input) => {
+        // Clone the input to remove all event listeners
+        const newInput = input.cloneNode(true)
+        input.parentNode.replaceChild(newInput, input)
+    })
+
+    // Get the fresh inputs after cloning
+    const freshOtpInputs = document.querySelectorAll(".otp-input")
+
+    freshOtpInputs.forEach((input, index) => {
         input.addEventListener("input", function (e) {
             // Only allow numbers
             this.value = this.value.replace(/[^0-9]/g, "")
 
             // Move to next input if current is filled
-            if (this.value.length === 1 && index < otpInputs.length - 1) {
-                otpInputs[index + 1].focus()
+            if (this.value.length === 1 && index < freshOtpInputs.length - 1) {
+                freshOtpInputs[index + 1].focus()
             }
         })
 
         input.addEventListener("keydown", function (e) {
             // Move to previous input on backspace
             if (e.key === "Backspace" && this.value === "" && index > 0) {
-                otpInputs[index - 1].focus()
+                freshOtpInputs[index - 1].focus()
             }
         })
 
@@ -318,7 +355,7 @@ function initializeOtpInputs() {
             const pastedData = e.clipboardData.getData("text").replace(/[^0-9]/g, "")
 
             if (pastedData.length === 6) {
-                otpInputs.forEach((inp, i) => {
+                freshOtpInputs.forEach((inp, i) => {
                     inp.value = pastedData[i] || ""
                 })
             }
@@ -341,7 +378,11 @@ function showStep(step) {
     if (step === 1) {
         document.getElementById("userName").focus()
     } else if (step === 2) {
-        document.querySelector(".otp-input").focus()
+        // **FIX: Reinitialize OTP inputs properly for step 2**
+        setTimeout(() => {
+            initializeOtpInputs()
+            document.querySelector(".otp-input").focus()
+        }, 100)
     }
 }
 
@@ -408,6 +449,107 @@ function changeNumber() {
 function continueAfterLogin() {
     hideLoginModal()
     showNotification(`Welcome ${currentUser.name}! Happy shopping with Near & Now! 🛒`, "success")
+}
+
+// **FIX: NEW FUNCTION - Reset verify button state**
+function resetVerifyButton() {
+    const verifyBtn = document.getElementById("verifyOtpBtn")
+    if (verifyBtn) {
+        verifyBtn.innerHTML = "Verify & Continue"
+        verifyBtn.disabled = false
+    }
+}
+
+// **FIX: NEW FUNCTION - Reset send OTP button state**
+function resetSendOtpButton() {
+    const sendBtn = document.getElementById("sendOtpBtn")
+    if (sendBtn) {
+        sendBtn.innerHTML = "Send OTP"
+        sendBtn.disabled = false
+    }
+}
+
+// **CHANGE 3: NEW FUNCTION - Save user cart before logout**
+function saveUserCart(userId) {
+    if (!userId || !cart || cart.length === 0) return
+
+    const cartKey = `nearNowUserCart_${userId}`
+    localStorage.setItem(cartKey, JSON.stringify(cart))
+    console.log('Cart saved for user:', userId)
+}
+
+// **CHANGE 4: NEW FUNCTION - Restore user cart after login**
+function restoreUserCart(userId) {
+    if (!userId) return
+
+    const cartKey = `nearNowUserCart_${userId}`
+    const savedCart = localStorage.getItem(cartKey)
+
+    if (savedCart) {
+        try {
+            cart = JSON.parse(savedCart)
+            updateCartDisplay() // Update cart UI
+            updateCartCounter() // Update cart counter
+            console.log('Cart restored for user:', userId)
+        } catch (error) {
+            console.error('Error restoring cart:', error)
+        }
+    }
+}
+
+// **CHANGE 5: NEW FUNCTION - Clear current cart (call this on logout)**
+function clearCurrentCart() {
+    cart = []
+    updateCartDisplay()
+    updateCartCounter()
+}
+
+// **CHANGE 6: MODIFY LOGOUT FUNCTION - Add this to your existing logout function**
+function logoutUser() {
+    if (currentUser && currentUser.id) {
+        // Save current cart before logout
+        saveUserCart(currentUser.id)
+    }
+
+    // Clear current user and cart
+    currentUser = null
+    clearCurrentCart()
+
+    // Remove current user from localStorage
+    localStorage.removeItem("nearNowCurrentUser")
+
+    // **FIX: Reset login system state after logout**
+    userDetails = {}
+    currentStep = 1
+
+    // Clear any existing timers
+    if (otpTimer) {
+        clearInterval(otpTimer)
+        otpTimer = null
+    }
+
+    // **FIX: Clear any pending verification timeout**
+    if (window.verificationTimeout) {
+        clearTimeout(window.verificationTimeout)
+        window.verificationTimeout = null
+    }
+
+    // **FIX: Reset all button states**
+    resetVerifyButton()
+    resetSendOtpButton()
+
+    // Reset login form
+    document.getElementById("userName").value = ""
+    document.getElementById("userMobile").value = ""
+    clearOtpInputs()
+
+    // Show step 1 for next login
+    showStep(1)
+
+    // Update UI
+    updateUserDisplay()
+
+    showNotification("Logged out successfully!", "success")
 }
 
 // Slider Functionality
@@ -2219,5 +2361,57 @@ function initializeProductReviews() {
 }
 
 // Enhanced event listeners for product cards (REMOVED DUPLICATE - using querySelectorAll version above to avoid double clicks)
+
+// --- Cart Persistence Per User ---
+function saveUserCart() {
+    if (currentUser && currentUser.mobile) {
+        localStorage.setItem(`nearNowCartItems_${currentUser.mobile}`, JSON.stringify(cartItems));
+    }
+}
+
+function loadUserCart() {
+    if (currentUser && currentUser.mobile) {
+        const userCart = localStorage.getItem(`nearNowCartItems_${currentUser.mobile}`);
+        if (userCart) {
+            cartItems = JSON.parse(userCart);
+            localStorage.setItem('nearNowCartItems', userCart);
+        } else {
+            cartItems = [];
+            localStorage.setItem('nearNowCartItems', '[]');
+        }
+        cartCount = cartItems.reduce((total, item) => total + item.quantity, 0);
+        updateCartCount && updateCartCount();
+        updateCartDisplay && updateCartDisplay();
+    }
+}
+
+// Patch logout to save cart before clearing
+const originalLogout = logout;
+logout = function() {
+    saveUserCart();
+    // Clear global cart
+    localStorage.removeItem('nearNowCartItems');
+    cartItems = [];
+    cartCount = 0;
+    updateCartCount && updateCartCount();
+    updateCartDisplay && updateCartDisplay();
+    originalLogout();
+};
+
+// Patch login to load user cart after login
+const originalContinueAfterLogin = continueAfterLogin;
+continueAfterLogin = function() {
+    originalContinueAfterLogin();
+    setTimeout(() => {
+        loadUserCart();
+    }, 100);
+};
+
+// On page load, if user is logged in, load their cart
+window.addEventListener('DOMContentLoaded', function() {
+    if (currentUser && currentUser.mobile) {
+        loadUserCart();
+    }
+});
 
 // ===== END OF ENHANCED FEATURES =====
