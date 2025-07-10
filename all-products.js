@@ -55,6 +55,8 @@ function renderProducts() {
     const productsToShow = displayedProducts.slice(startIndex, endIndex);
     productsGrid.innerHTML = productsToShow.map(createProductCard).join('');
     loadMoreBtn.style.display = endIndex >= displayedProducts.length ? 'none' : 'block';
+    
+
 }
 
 function createProductCard(product) {
@@ -172,11 +174,12 @@ renderFooterCategories();
 filterAndSortProducts();
 
 // Initialize enhanced features
-initializeQuickView();
 initializeAdvancedFilters();
 initializeEnhancedSearch();
 initializeProductReviews();
 addProductEventListeners();
+
+
 
 // ===== ENHANCED FEATURES =====
 
@@ -185,121 +188,208 @@ function initializeQuickView() {
     // Event listeners for quick view buttons
     document.addEventListener('click', (e) => {
         if (e.target.closest('.quick-view-btn') || e.target.closest('.quick-view-btn-mobile') || e.target.closest('.product-name')) {
-            const productCard = e.target.closest('.product-card');
-            const { productId } = productCard.dataset;
-            showQuickView(productId);
+            const productCard = e.target.closest('.product-card')
+            if (productCard && productCard.dataset.productId) {
+                const productId = productCard.dataset.productId
+                showQuickView(productId)
+            }
         }
-    });
+    })
 
     // Close quick view modal
-    document.getElementById('closeQuickView').addEventListener('click', closeQuickView);
-    document.getElementById('quickViewModal').addEventListener('click', (e) => {
-        if (e.target.id === 'quickViewModal') {
-            closeQuickView();
-        }
-    });
+    const closeBtn = document.getElementById('closeQuickView')
+    if (closeBtn) {
+        closeBtn.addEventListener('click', closeQuickView)
+    }
+
+    const modal = document.getElementById('quickViewModal')
+    if (modal) {
+        modal.addEventListener('click', (e) => {
+            if (e.target.id === 'quickViewModal') {
+                closeQuickView()
+            }
+        })
+    }
 
     // Quick view quantity controls
-    document.getElementById('decreaseQuantity').addEventListener('click', () => {
-        const quantitySpan = document.getElementById('quickViewQuantity');
-        let quantity = parseInt(quantitySpan.textContent);
-        if (quantity > 1) {
-            quantitySpan.textContent = quantity - 1;
-        }
-    });
+    const decreaseBtn = document.getElementById('decreaseQuantity')
+    if (decreaseBtn) {
+        decreaseBtn.addEventListener('click', () => {
+            const quantitySpan = document.getElementById('quickViewQuantity')
+            if (quantitySpan) {
+                let quantity = parseInt(quantitySpan.textContent)
+                if (quantity > 1) {
+                    quantitySpan.textContent = quantity - 1
+                }
+            }
+        })
+    }
 
-    document.getElementById('increaseQuantity').addEventListener('click', () => {
-        const quantitySpan = document.getElementById('quickViewQuantity');
-        let quantity = parseInt(quantitySpan.textContent);
-        quantitySpan.textContent = quantity + 1;
-    });
+    const increaseBtn = document.getElementById('increaseQuantity')
+    if (increaseBtn) {
+        increaseBtn.addEventListener('click', () => {
+            const quantitySpan = document.getElementById('quickViewQuantity')
+            if (quantitySpan) {
+                let quantity = parseInt(quantitySpan.textContent)
+                quantitySpan.textContent = quantity + 1
+            }
+        })
+    }
 
     // Quick view add to cart
-    document.getElementById('quickViewAddToCart').addEventListener('click', () => {
-        if (quickViewProduct) {
-            const quantity = parseInt(document.getElementById('quickViewQuantity').textContent);
-            addToCart(quickViewProduct.id, quantity);
-            closeQuickView();
-            // showNotification(`${quickViewProduct.name} added to cart!`, 'success');
-        }
-    });
-
-    // Quick view wishlist
-    document.getElementById('quickViewWishlist').addEventListener('click', () => {
-        if (quickViewProduct) {
-            toggleWishlist(quickViewProduct.id);
-            updateQuickViewWishlistButton();
-        }
-    });
+    const addToCartBtn = document.getElementById('quickViewAddToCart')
+    if (addToCartBtn) {
+        addToCartBtn.addEventListener('click', () => {
+            if (quickViewProduct) {
+                const quantitySpan = document.getElementById('quickViewQuantity')
+                const quantity = quantitySpan ? parseInt(quantitySpan.textContent) : 1
+                // Add the product multiple times based on quantity since addToCart only accepts productId
+                for (let i = 0; i < quantity; i++) {
+                    addToCart(quickViewProduct.id)
+                }
+                closeQuickView()
+                showNotification(`${quickViewProduct.name} added to cart!`, 'success')
+            }
+        })
+    }
 }
 
 function showQuickView(productId) {
-    const product = allProducts.find(p => p.id === productId);
-    if (!product) {
-        return;
-    }
+    const product = allProducts.find(p => p.id === productId)
+    if (!product) return
 
-    quickViewProduct = product;
-    const modal = document.getElementById('quickViewModal');
+    quickViewProduct = product
+    const modal = document.getElementById('quickViewModal')
+    if (!modal) return
 
     // Populate quick view content
-    document.getElementById('quickViewImage').src = product.image;
-    document.getElementById('quickViewImage').alt = product.name;
-    document.getElementById('quickViewName').textContent = product.name;
+    const imageEl = document.getElementById('quickViewImage')
+    const nameEl = document.getElementById('quickViewName')
+
+    if (imageEl) {
+        imageEl.src = product.image
+        imageEl.alt = product.name
+    }
+    if (nameEl) {
+        nameEl.textContent = product.name
+    }
 
     // Price and discount
-    const price = typeof product.price === 'string' ? product.price.replace(/^₹/, '') : product.price;
-    const originalPrice = product.originalPrice ? (typeof product.originalPrice === 'string' ? product.originalPrice.replace(/^₹/, '') : product.originalPrice) : null;
+    const price = typeof product.price === 'string' ? product.price.replace(/^₹/, '') : product.price
+    const originalPrice = product.originalPrice ? (typeof product.originalPrice === 'string' ? product.originalPrice.replace(/^₹/, '') : product.originalPrice) : null
 
-    document.getElementById('quickViewPrice').textContent = `₹${price}`;
-    if (originalPrice) {
-        document.getElementById('quickViewOriginalPrice').textContent = `₹${originalPrice}`;
-        document.getElementById('quickViewOriginalPrice').classList.remove('hidden');
-        document.getElementById('quickViewDiscountText').textContent = `Save ₹${originalPrice - price}`;
-        document.getElementById('quickViewDiscountText').classList.remove('hidden');
-    } else {
-        document.getElementById('quickViewOriginalPrice').classList.add('hidden');
-        document.getElementById('quickViewDiscountText').classList.add('hidden');
+    const priceEl = document.getElementById('quickViewPrice')
+    const originalPriceEl = document.getElementById('quickViewOriginalPrice')
+    const discountTextEl = document.getElementById('quickViewDiscountText')
+
+    if (priceEl) {
+        priceEl.textContent = `₹${price}`
+    }
+
+    if (originalPriceEl && discountTextEl) {
+        if (originalPrice) {
+            originalPriceEl.textContent = `₹${originalPrice}`
+            originalPriceEl.classList.remove('hidden')
+            discountTextEl.textContent = `Save ₹${originalPrice - price}`
+            discountTextEl.classList.remove('hidden')
+        } else {
+            originalPriceEl.classList.add('hidden')
+            discountTextEl.classList.add('hidden')
+        }
     }
 
     // Discount badge
-    if (product.discount > 0) {
-        document.getElementById('quickViewDiscount').textContent = `-${product.discount}%`;
-        document.getElementById('quickViewDiscount').classList.remove('hidden');
-    } else {
-        document.getElementById('quickViewDiscount').classList.add('hidden');
+    const discountEl = document.getElementById('quickViewDiscount')
+    if (discountEl) {
+        if (product.discount > 0) {
+            discountEl.textContent = `-${product.discount}%`
+            discountEl.classList.remove('hidden')
+        } else {
+            discountEl.classList.add('hidden')
+        }
     }
 
     // Rating and reviews
-    document.getElementById('quickViewRating').innerHTML = generateStarRating(product.rating);
-    document.getElementById('quickViewRatingText').textContent = product.rating;
-    document.getElementById('quickViewReviews').textContent = `${product.reviews} reviews`;
+    const ratingEl = document.getElementById('quickViewRating')
+    const ratingTextEl = document.getElementById('quickViewRatingText')
+    const reviewsEl = document.getElementById('quickViewReviews')
+
+    if (ratingEl) {
+        ratingEl.innerHTML = generateStarRating(product.rating)
+    }
+    if (ratingTextEl) {
+        ratingTextEl.textContent = product.rating
+    }
+    if (reviewsEl) {
+        reviewsEl.textContent = `${product.reviews} reviews`
+    }
 
     // Stock status
-    document.getElementById('quickViewStock').textContent = product.inStock ? 'In Stock' : 'Out of Stock';
-    document.getElementById('quickViewStock').className = product.inStock ? 'text-sm text-green-600 font-semibold' : 'text-sm text-red-600 font-semibold';
+    const stockEl = document.getElementById('quickViewStock')
+    if (stockEl) {
+        stockEl.textContent = product.inStock ? 'In Stock' : 'Out of Stock'
+        stockEl.className = product.inStock ? 'text-sm text-green-600 font-semibold' : 'text-sm text-red-600 font-semibold'
+    }
 
     // Reset quantity
-    document.getElementById('quickViewQuantity').textContent = '1';
-
-    // Update wishlist button
-    updateQuickViewWishlistButton();
+    const quantityEl = document.getElementById('quickViewQuantity')
+    if (quantityEl) {
+        quantityEl.textContent = '1'
+    }
 
     // Load reviews
-    loadQuickViewReviews(product);
+    loadQuickViewReviews(product)
 
     // Show modal
-    modal.classList.remove('hidden');
-    modal.classList.add('flex');
-    document.getElementById('modalOverlay').classList.remove('hidden');
+    modal.classList.remove('hidden')
+    modal.classList.add('flex')
+
+    const overlay = document.getElementById('modalOverlay')
+    if (overlay) {
+        overlay.classList.remove('hidden')
+    }
 }
 
 function closeQuickView() {
-    const modal = document.getElementById('quickViewModal');
-    modal.classList.add('hidden');
-    modal.classList.remove('flex');
-    document.getElementById('modalOverlay').classList.add('hidden');
-    quickViewProduct = null;
+    const modal = document.getElementById('quickViewModal')
+    if (modal) {
+        modal.classList.add('hidden')
+        modal.classList.remove('flex')
+    }
+
+    const overlay = document.getElementById('modalOverlay')
+    if (overlay) {
+        overlay.classList.add('hidden')
+    }
+
+    quickViewProduct = null
+}
+
+function loadQuickViewReviews(product) {
+    const reviewsContainer = document.getElementById('quickViewReviewsList')
+    if (!reviewsContainer) return
+
+    if (product.reviewsList && product.reviewsList.length > 0) {
+        const reviewsHTML = product.reviewsList.slice(0, 3).map(review => `
+            <div class="border-b border-gray-200 pb-3 last:border-b-0">
+                <div class="flex items-center justify-between mb-2">
+                    <div class="flex items-center space-x-2">
+                        <span class="font-semibold text-gray-800">${review.userName}</span>
+                        ${review.verified ? '<span class="text-blue-500 text-xs"><i class="fas fa-check-circle"></i> Verified</span>' : ''}
+                    </div>
+                    <div class="flex text-yellow-400 text-sm">
+                        ${generateStarRating(review.rating)}
+                    </div>
+                </div>
+                <p class="text-gray-600 text-sm">${review.comment}</p>
+                <span class="text-gray-400 text-xs">${new Date(review.date).toLocaleDateString()}</span>
+            </div>
+        `).join('')
+
+        reviewsContainer.innerHTML = reviewsHTML
+    } else {
+        reviewsContainer.innerHTML = '<p class="text-gray-500 text-center py-4">No reviews yet. Be the first to review this product!</p>'
+    }
 }
 
 function updateQuickViewWishlistButton() {
@@ -438,6 +528,8 @@ function addProductEventListeners() {
         }
     });
 }
+
+
 
 // Enhanced add to cart function
 function addToCart(productId, quantity = 1) {
@@ -900,7 +992,65 @@ document.addEventListener('DOMContentLoaded', function () {
     initializeAuth()
     initializeLoginSystem()
 
+    // Initialize cart functionality
+    initializeCart()
+
+    // Initialize quick view functionality
+    initializeQuickView()
+
     // Update cart and wishlist counts after loading from localStorage
     updateCartCount();
     updateWishlistCount();
 });
+
+// Cart Functionality
+function initializeCart() {
+    // Sync with CartManager if available
+    if (window.cartManager) {
+        cartItems = window.cartManager.getItems();
+        cartCount = window.cartManager.getCount();
+    }
+
+    // Update cart count and display immediately
+    updateCartCount()
+    updateCartDisplay()
+
+    document.getElementById("cartBtn").addEventListener("click", toggleCartSidebar)
+    document.getElementById("closeCart").addEventListener("click", closeCartSidebar)
+    document.getElementById("checkoutBtn").addEventListener("click", proceedToCheckout)
+
+    // Close cart when clicking overlay
+    document.getElementById("modalOverlay").addEventListener("click", closeCartSidebar)
+}
+
+function toggleCartSidebar() {
+    const cartSidebar = document.getElementById("cartSidebar")
+    const modalOverlay = document.getElementById("modalOverlay")
+
+    cartSidebar.classList.toggle("open")
+    modalOverlay.classList.toggle("hidden")
+}
+
+function closeCartSidebar() {
+    const cartSidebar = document.getElementById("cartSidebar")
+    const modalOverlay = document.getElementById("modalOverlay")
+
+    cartSidebar.classList.remove("open")
+    modalOverlay.classList.add("hidden")
+}
+
+function proceedToCheckout() {
+    if (cartItems.length === 0) {
+        showNotification("Your cart is empty!", "error")
+        return
+    }
+
+    if (!currentUser) {
+        showNotification("Please login to proceed to checkout", "info")
+        showLoginModal()
+        return
+    }
+
+    // Redirect to checkout page
+    window.location.href = 'checkout.html'
+}

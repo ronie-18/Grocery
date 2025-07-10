@@ -1,3 +1,4 @@
-1. In all products page the cart menu is not working
+1. ✅ In all products page the cart menu is not working - FIXED
+1.1. ✅ Quickview button not working in all-products.html - FIXED (Made identical to index.html)
 2. The dimentions of the cards have to make small
 3. All-products.html page should be redesigned
