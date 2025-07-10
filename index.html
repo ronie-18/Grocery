@@ -974,8 +974,8 @@
                                 </div>
                             </div>
                             <div class="text-center">
-                                <img src="https://imgmedia.lbb.in/media/2020/05/5eafca57d213323de061cf9b_1588578903903.jpg" alt="Fresh Groceries"
-                                    class="rounded-2xl shadow-2xl" loading="lazy">
+                                <img src="https://imgmedia.lbb.in/media/2020/05/5eafca57d213323de061cf9b_1588578903903.jpg"
+                                    alt="Fresh Groceries" class="rounded-2xl shadow-2xl" loading="lazy">
                             </div>
                         </div>
                     </div>
@@ -995,8 +995,8 @@
                                 </button>
                             </div>
                             <div class="text-center">
-                                <img src="https://www.shutterstock.com/image-vector/sale-banner-template-design-this-600nw-2511673505.jpg" alt="Special Offers"
-                                    class="rounded-2xl shadow-2xl" loading="lazy">
+                                <img src="https://www.shutterstock.com/image-vector/sale-banner-template-design-this-600nw-2511673505.jpg"
+                                    alt="Special Offers" class="rounded-2xl shadow-2xl" loading="lazy">
                             </div>
                         </div>
                     </div>
@@ -1249,7 +1249,8 @@
                 </div>
             </div>
             <div class="border-t border-gray-800 pt-6 text-center text-gray-400">
-                <p>&copy; <span id="footerYear"></span> Near & Now. All rights reserved. | Designed with ❤️ for fresh grocery shopping</p>
+                <p>&copy; <span id="footerYear"></span> Near & Now. All rights reserved. | Designed with ❤️ for fresh
+                    grocery shopping</p>
             </div>
         </div>
     </footer>
@@ -1262,40 +1263,40 @@
 
     <script src="script.js"></script>
     <script>
-    document.getElementById('footerYear').textContent = new Date().getFullYear();
+        document.getElementById('footerYear').textContent = new Date().getFullYear();
     </script>
     <script>
-// Intercept Proceed to Checkout
-window.addEventListener('DOMContentLoaded', function() {
-  var checkoutBtn = document.getElementById('checkoutBtn');
-  if (checkoutBtn) {
-    checkoutBtn.addEventListener('click', function(e) {
-      var currentUser = JSON.parse(localStorage.getItem('nearNowCurrentUser'));
-      if (!currentUser) {
-        e.preventDefault();
-        // Show login modal
-        var loginModal = document.getElementById('loginModal');
-        var modalOverlay = document.getElementById('modalOverlay');
-        if (loginModal && modalOverlay) {
-          loginModal.classList.remove('hidden');
-          loginModal.classList.add('flex');
-          modalOverlay.classList.remove('hidden');
-        }
-        // After successful login, redirect to checkout.html
-        var continueBtn = document.getElementById('continueShoppingBtn');
-        if (continueBtn) {
-          continueBtn.onclick = function() {
-            loginModal.classList.add('hidden');
-            loginModal.classList.remove('flex');
-            modalOverlay.classList.add('hidden');
-            window.location.href = 'checkout.html';
-          };
-        }
-      }
-    });
-  }
-});
-</script>
+        // Intercept Proceed to Checkout
+        window.addEventListener('DOMContentLoaded', function () {
+            var checkoutBtn = document.getElementById('checkoutBtn');
+            if (checkoutBtn) {
+                checkoutBtn.addEventListener('click', function (e) {
+                    var currentUser = JSON.parse(localStorage.getItem('nearNowCurrentUser'));
+                    if (!currentUser) {
+                        e.preventDefault();
+                        // Show login modal
+                        var loginModal = document.getElementById('loginModal');
+                        var modalOverlay = document.getElementById('modalOverlay');
+                        if (loginModal && modalOverlay) {
+                            loginModal.classList.remove('hidden');
+                            loginModal.classList.add('flex');
+                            modalOverlay.classList.remove('hidden');
+                        }
+                        // After successful login, redirect to checkout.html
+                        var continueBtn = document.getElementById('continueShoppingBtn');
+                        if (continueBtn) {
+                            continueBtn.onclick = function () {
+                                loginModal.classList.add('hidden');
+                                loginModal.classList.remove('flex');
+                                modalOverlay.classList.add('hidden');
+                                window.location.href = 'checkout.html';
+                            };
+                        }
+                    }
+                });
+            }
+        });
+    </script>
 </body>
 
 </html>
