@@ -144,20 +144,6 @@ const productsByCategory = {
     },
 
     {
-      "id": "chana-dal-staples-22acfdd7",
-      "name": "Chana dal",
-      "image": "https://gonefarmers.com/cdn/shop/products/image_7aa2f492-0b3b-45b6-b048-a89301c7ab80_2048x.jpg?v=1602329770",
-      "price": "₹120",
-      "originalPrice": "₹132",
-      "rating": 4.9,
-      "reviews": 181,
-      "inStock": true,
-      "discount": 9,
-      "category": "staples",
-      "reviewsList": []
-    },
-
-    {
       "id": "tarka-dal-staples-69f37e44",
       "name": "Tarka dal",
       "image": "https://www.bongmela.com/product_image/21685811509.jpg",
@@ -258,7 +244,7 @@ const productsByCategory = {
     {
       "id": "arhar-staples-dfb44be1",
       "name": "Arhar",
-      "image": "https://gonefarmers.com/cdn/shop/products/image_09da0cb2-0322-4220-ba90-dfb1da774c62_compact.jpg?v=1583506991",
+      "image": "https://www.greendna.in/cdn/shop/files/toor-dal2.jpg?v=1747065927",
       "price": "₹190",
       "originalPrice": "₹210",
       "rating": 4.3,
@@ -272,7 +258,7 @@ const productsByCategory = {
     {
       "id": "urad-staples-777d493b",
       "name": "Urad",
-      "image": "https://gonefarmers.com/cdn/shop/products/image_401617b2-c70c-4c76-b0b0-629a3d93a4a7_compact.jpg?v=1583506997",
+      "image": "https://c.ndtvimg.com/2023-09/a9ubmmd8_urad-dal_625x300_06_September_23.jpg?im=FaceCrop,algorithm=dnn,width=1200,height=886",
       "price": "₹150",
       "originalPrice": "₹186",
       "rating": 4.0,
@@ -286,7 +272,7 @@ const productsByCategory = {
     {
       "id": "banskati-staples-db6bd63c",
       "name": "Banskati",
-      "image": "",
+      "image": "https://www.amoliinternational.com/images/basmati/1121-steem-basmati-rice.jpeg",
       "price": "₹68",
       "originalPrice": "₹77",
       "rating": 4.0,
@@ -299,8 +285,8 @@ const productsByCategory = {
 
     {
       "id": "dubheswar-staples-b4a637f0",
-      "name": "Dubheswar",
-      "image": "",
+      "name": "Doodhweshwar",
+      "image": "https://5.imimg.com/data5/SELLER/Default/2023/12/366952291/EN/TY/KW/53803992/dudheshwar-rice-500x500.png",
       "price": "₹60",
       "originalPrice": "₹73",
       "rating": 4.9,
@@ -314,7 +300,7 @@ const productsByCategory = {
     {
       "id": "ratna-staples-f8536760",
       "name": "Ratna",
-      "image": "",
+      "image": "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcTJ6lm2hDy17W65AxIyJMV8kXboeLQWmmrAUw&s",
       "price": "₹45",
       "originalPrice": "₹52",
       "rating": 4.4,
@@ -328,7 +314,7 @@ const productsByCategory = {
     {
       "id": "basmati-staples-835849cd",
       "name": "Basmati",
-      "image": "",
+      "image": "https://www.amoliinternational.com/images/basmati/1121-steem-basmati-rice.jpeg",
       "price": "₹125",
       "originalPrice": "₹151",
       "rating": 3.8,
@@ -340,9 +326,9 @@ const productsByCategory = {
     },
 
     {
-      "id": "aatbo-staples-8f078f71",
-      "name": "Aatbo",
-      "image": "",
+      "id": "atop-staples-8f078f71",
+      "name": "Atop",
+      "image": "https://i.chaldn.com/_mpimage/katari-atop-rice-50-gm-5-kg?src=https%3A%2F%2Feggyolk.chaldal.com%2Fapi%2FPicture%2FRaw%3FpictureId%3D74589&q=best&v=1",
       "price": "₹45",
       "originalPrice": "₹52",
       "rating": 4.0,
@@ -355,8 +341,8 @@ const productsByCategory = {
 
     {
       "id": "mouuri-staples-270602fe",
-      "name": "Mouuri",
-      "image": "",
+      "name": "Mouri (Sounf)",
+      "image": "https://d3kgrlupo77sg7.cloudfront.net/media/chococoorgspice.com/images/products/fennel-seeds-250gm-sounf-sompu-coorg-spices.20220909012739.webp",
       "price": "₹30",
       "originalPrice": "₹37",
       "rating": 4.1,
@@ -370,7 +356,7 @@ const productsByCategory = {
     {
       "id": "gobindo-bhog-staples-ff657a1a",
       "name": "Gobindo Bhog",
-      "image": "",
+      "image": "https://www.goodfoodbar.com/cdn/shop/files/Pachai-Arisi-1-KG.jpg?v=1694577637",
       "price": "₹120",
       "originalPrice": "₹139",
       "rating": 3.9,
@@ -384,7 +370,7 @@ const productsByCategory = {
     {
       "id": "miniket-staples-c5d360ac",
       "name": "Miniket",
-      "image": "",
+      "image": "https://cdn.shopify.com/s/files/1/0679/8340/9435/products/IMGS8244edited_59854350-c59b-4d11-a136-bb9d31bed8dd.jpg?v=1670670844",
       "price": "₹58",
       "originalPrice": "₹70",
       "rating": 4.0,
@@ -398,7 +384,7 @@ const productsByCategory = {
     {
       "id": "aashirvaad-5kg-staples-8fb17578",
       "name": "Aashirvaad (5kg)",
-      "image": "",
+      "image": "https://desigros.com/cdn/shop/files/00a6e42c-b48a-4eaa-af1b-e810f7d1fb97.webp?v=1746884619",
       "price": "₹258",
       "originalPrice": "₹286",
       "rating": 4.0,
@@ -426,7 +412,7 @@ const productsByCategory = {
     {
       "id": "maida-1kg-ganesh-staples-dab8754d",
       "name": "Maida (1kg - Ganesh)",
-      "image": "",
+      "image": "https://static.toiimg.com/photo/102473580.cms",
       "price": "₹55",
       "originalPrice": "₹66",
       "rating": 4.7,
@@ -440,7 +426,7 @@ const productsByCategory = {
     {
       "id": "loose-maida-staples-e2dce8f9",
       "name": "Loose maida",
-      "image": "",
+      "image": "https://static.toiimg.com/photo/102473580.cms",
       "price": "₹38",
       "originalPrice": "₹42",
       "rating": 3.8,
@@ -840,7 +826,7 @@ const productsByCategory = {
     {
       "id": "shukto-spices-1f735c49",
       "name": "Shukto",
-      "image": "",
+      "image": "https://m.media-amazon.com/images/I/71GaLeeQDLL.jpg",
       "price": "₹5",
       "originalPrice": "₹6",
       "rating": 4.5,
@@ -854,7 +840,7 @@ const productsByCategory = {
     {
       "id": "maggi-magic-masala-spices-be031986",
       "name": "Maggi magic masala",
-      "image": "",
+      "image": "https://m.media-amazon.com/images/I/81P-io7a03L.jpg",
       "price": "₹5",
       "originalPrice": "₹6",
       "rating": 4.0,
@@ -868,7 +854,7 @@ const productsByCategory = {
     {
       "id": "chat-masala-spices-7b14a46c",
       "name": "Chat masala",
-      "image": "",
+      "image": "https://www.bbassets.com/media/uploads/p/l/268937_3-everest-chaat-masala.jpg",
       "price": "₹5",
       "originalPrice": "₹5",
       "rating": 3.9,
@@ -882,7 +868,7 @@ const productsByCategory = {
     {
       "id": "biryani-masala-spices-e85af606",
       "name": "Biryani masala",
-      "image": "",
+      "image": "https://www.loccalshop.com/cdn/shop/files/images--_2024-09-21T223659.536.jpg?v=1726938479",
       "price": "₹10",
       "originalPrice": "₹11",
       "rating": 4.2,
@@ -910,7 +896,7 @@ const productsByCategory = {
     {
       "id": "meat-spices-17318b09",
       "name": "Meat",
-      "image": "",
+      "image": "https://m.media-amazon.com/images/I/81aN-UDQL2L.jpg",
       "price": "₹5",
       "originalPrice": "₹6",
       "rating": 4.6,
@@ -924,7 +910,7 @@ const productsByCategory = {
     {
       "id": "chat-masala-black-paper-spices-8648f4ad",
       "name": "Chat masala (black paper)",
-      "image": "",
+      "image": "https://assets.hyperpure.com/data/images/products/f21bad09b3afcd502f75a0fd4d503cba.png",
       "price": "₹10",
       "originalPrice": "₹11",
       "rating": 4.5,
