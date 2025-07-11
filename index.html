@@ -1239,21 +1239,62 @@
     </section>
 
     <!-- Footer -->
-    <footer class="bg-gray-900 text-white py-8">
+    <footer class="footer-gradient footer-border text-gray-800 py-12">
         <div class="container mx-auto px-4">
-            <div class="flex items-center mb-4 justify-center">
-                <img src="Logo.png" alt="Near & Now Logo" class="w-12 h-12 md:w-16 md:h-16 mr-3 rounded-xl shadow-md" />
-                <div>
-                    <h3 class="text-2xl font-bold">Near & Now</h3>
-                    <p class="text-sm text-gray-400">Online Grocery Store</p>
+            <!-- Logo and Brand Section -->
+            <div class="container mx-auto px-4">
+                <!-- Logo and Brand Section -->
+                <div class="flex items-center mb-8 justify-center">
+                    <div class="bg-white p-1 rounded-2xl logo-shadow mr-4">
+                        <img src="Logo.png" alt="Near & Now Logo" class="w-20 h-20 md:w-24 md:h-24 rounded-xl" />
+                    </div>
+                    <div class="text-center md:text-left">
+                        <h3 class="text-3xl md:text-4xl font-bold text-gray-800 mb-1">Near & Now</h3>
+                        <p class="text-lg text-emerald-600 font-medium">Online Grocery Store</p>
+                        <p class="text-sm text-gray-600 mt-1">Fresh • Fast • Convenient</p>
+                    </div>
+                </div>
+                <!-- Social Media Icons -->
+                <div class="flex justify-center space-x-6 mb-8">
+                    <a href="https://facebook.com" target="_blank" rel="noopener" aria-label="Facebook"
+                        class="bg-white p-3 rounded-full shadow-md social-hover text-blue-600 hover:text-blue-700 text-xl">
+                        <i class="fab fa-facebook-f"></i>
+                    </a>
+                    <a href="https://instagram.com" target="_blank" rel="noopener" aria-label="Instagram"
+                        class="bg-white p-3 rounded-full shadow-md social-hover text-pink-600 hover:text-pink-700 text-xl">
+                        <i class="fab fa-instagram"></i>
+                    </a>
+                    <a href="https://twitter.com" target="_blank" rel="noopener" aria-label="Twitter/X"
+                        class="bg-white p-3 rounded-full shadow-md social-hover text-blue-500 hover:text-blue-600 text-xl">
+                        <i class="fab fa-x-twitter"></i>
+                    </a>
+                    <a href="https://linkedin.com" target="_blank" rel="noopener" aria-label="LinkedIn"
+                        class="bg-white p-3 rounded-full shadow-md social-hover text-blue-700 hover:text-blue-800 text-xl">
+                        <i class="fab fa-linkedin-in"></i>
+                    </a>
+                </div>
+                <!-- Copyright Section -->
+                <div class="border-t border-gray-300 pt-6 text-center">
+                    <p class="text-gray-600 text-sm mb-2">
+                        &copy; <span id="footerYear"></span> Near & Now. All rights reserved. | Designed with ❤️ for
+                        fresh
+                        grocery shopping
+                    </p>
+                    <div class="flex justify-center space-x-4 text-xs text-gray-500">
+                        <a href="#" class="hover:text-emerald-600 transition-colors">Terms of Service</a>
+                        <span>•</span>
+                        <a href="#" class="hover:text-emerald-600 transition-colors">Privacy Policy</a>
+                        <span>•</span>
+                        <a href="#" class="hover:text-emerald-600 transition-colors">Cookie Policy</a>
+                    </div>
                 </div>
             </div>
-            <div class="border-t border-gray-800 pt-6 text-center text-gray-400">
-                <p>&copy; <span id="footerYear"></span> Near & Now. All rights reserved. | Designed with ❤️ for fresh
-                    grocery shopping</p>
-            </div>
-        </div>
     </footer>
+
+    <script>
+        // Set current year
+        document.getElementById('footerYear').textContent = new Date().getFullYear();
+    </script>
 
     <!-- Back to Top Button -->
     <button id="backToTop"
@@ -1262,9 +1303,6 @@
     </button>
 
     <script src="script.js"></script>
-    <script>
-        document.getElementById('footerYear').textContent = new Date().getFullYear();
-    </script>
     <script>
         // Intercept Proceed to Checkout
         window.addEventListener('DOMContentLoaded', function () {

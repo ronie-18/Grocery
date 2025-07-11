@@ -32,17 +32,20 @@
         .focus\:border-primary:focus {
             border-color: var(--primary-color);
         }
+        body {
+            background: linear-gradient(135deg, #e0f7fa 0%, #e6ffe6 100%);
+        }
     </style>
 </head>
 
 <body class="bg-gray-50 min-h-screen flex flex-col">
     <!-- Header -->
-    <div class="w-full bg-white shadow-sm py-4 px-6 flex items-center justify-between">
-        <a href="index.html" class="text-primary font-semibold hover:underline flex items-center">
+    <div class="w-full bg-white shadow-sm py-2 px-4 flex items-center justify-between">
+        <a href="index.html" class="text-primary font-semibold hover:underline flex items-center text-xl">
             <i class="fas fa-arrow-left mr-2"></i>Back To Cart
         </a>
         <div class="flex items-center justify-center flex-1">
-            <img src="Logo.png" alt="Near & Now" class="h-16 w-16 object-contain">
+            <img src="Logo.png" alt="Near & Now" class="h-36 w-36 object-contain m-0 p-0">
         </div>
         <div class="w-32"></div>
     </div>
@@ -258,6 +261,14 @@
                 <span class="font-bold text-xl">Total</span>
                 <span id="orderTotal" class="text-3xl font-bold text-primary">₹0</span>
             </div>
+
+            <!-- Handling Charges fallback row for non-JS environments (hidden by JS) -->
+            <!--
+            <div class="flex justify-between text-sm mt-2">
+                <span>Handling Charges</span>
+                <span>₹18.00</span>
+            </div>
+            -->
 
             <div class="mt-6 p-4 bg-green-50 rounded-lg">
                 <div class="flex items-center text-green-700">

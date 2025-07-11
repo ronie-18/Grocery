@@ -47,7 +47,7 @@ const categories = [
         id: "dairy",
         name: "Dairy Products",
         description: "Milk, Paneer & More",
-        image: "https://pngimg.com/d/milk_PNG12717.png",
+        image: "https://media.istockphoto.com/id/544807136/photo/various-fresh-dairy-products.jpg?s=612x612&w=0&k=20&c=U5T70bi24itoTDive1CVonJbJ97ChyL2Pz1I2kOoSRo=",
         color: "from-blue-100 to-blue-200",
     },
     {
@@ -61,14 +61,14 @@ const categories = [
         id: "snacks",
         name: "Snacks",
         description: "Healthy & Tasty",
-        image: "https://pngimg.com/d/chips_PNG10125.png",
+        image: "https://t4.ftcdn.net/jpg/01/73/41/63/360_F_173416361_2YCaYyXrVk6nhNoIkg21515HUWseyqyr.jpg",
         color: "from-pink-100 to-pink-200",
     },
     {
         id: "beverages",
         name: "Beverages",
         description: "Tea & Drinks",
-        image: "https://pngimg.com/d/orange_juice_PNG35.png",
+        image: "https://www.indiabusinesstrade.in/wp-content/uploads/2024/03/beverage-2.jpg",
         color: "from-purple-100 to-purple-200",
     },
 ]
@@ -741,10 +741,10 @@ function renderCategories() {
         .map(
             (category) => `
         <div class="category-item text-center group cursor-pointer" data-category="${category.id}">
-            <div class="bg-gradient-to-br ${category.color} rounded-full p-8 mb-4 group-hover:shadow-lg transition duration-300 transform group-hover:scale-105">
-                <img src="${category.image}" alt="${category.name}" class="w-20 h-20 mx-auto rounded-full">
+            <div class="bg-gradient-to-br ${category.color} rounded-2xl flex items-center justify-center mb-4 group-hover:shadow-lg transition duration-300 transform group-hover:scale-105" style="padding: 1.5rem 0; min-height: 140px;">
+                <img src="${category.image}" alt="${category.name}" class="w-28 h-28 mx-auto rounded-2xl object-cover shadow-md" style="object-fit: cover;" loading="lazy">
             </div>
-            <h3 class="font-semibold text-gray-800 text-lg">${category.name}</h3>
+            <h3 class="font-semibold text-gray-800 text-lg mt-2">${category.name}</h3>
             <p class="text-sm text-gray-500 mt-1">${category.description}</p>
         </div>
     `,
@@ -963,12 +963,12 @@ function addToCart(productId) {
             // Update local variables for UI consistency
             cartItems = window.cartManager.getItems();
             cartCount = window.cartManager.getCount();
-            
+
             // Update UI
             updateCartCount();
             updateCartDisplay();
         }
-        
+
         // Update button state
         const button = document.querySelector(`[data-product-id="${productId}"].add-to-cart`)
         if (button) {
@@ -1034,7 +1034,7 @@ function removeFromCart(productId) {
             // Update local variables for UI consistency
             cartItems = window.cartManager.getItems();
             cartCount = window.cartManager.getCount();
-            
+
             // Update UI
             updateCartCount();
             updateCartDisplay();
@@ -1059,7 +1059,7 @@ function updateCartQuantity(productId, newQuantity) {
             // Update local variables for UI consistency
             cartItems = window.cartManager.getItems();
             cartCount = window.cartManager.getCount();
-            
+
             // Update UI
             updateCartCount();
             updateCartDisplay();

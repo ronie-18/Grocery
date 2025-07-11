@@ -291,9 +291,11 @@ function renderOrderSummary() {
 
     // Calculate delivery fee (free for orders above ₹500)
     const deliveryFee = subtotal >= 500 ? 0 : 30;
-    const total = subtotal + deliveryFee;
+    // Add fixed handling charge
+    const handlingCharge = 18;
+    const total = subtotal + deliveryFee + handlingCharge;
 
-    // Add subtotal, delivery fee, and savings info
+    // Add subtotal, delivery fee, handling charge, and savings info
     summaryHTML += `
         <div class="py-4 space-y-3">
             <div class="flex justify-between text-sm">
@@ -303,6 +305,10 @@ function renderOrderSummary() {
             <div class="flex justify-between text-sm">
                 <span>Delivery Fee</span>
                 <span class="${deliveryFee === 0 ? 'text-green-600 font-semibold' : ''}">${deliveryFee === 0 ? 'FREE' : '₹' + deliveryFee}</span>
+            </div>
+            <div class="flex justify-between text-sm">
+                <span>Handling Charges</span>
+                <span>₹${handlingCharge.toFixed(2)}</span>
             </div>
             ${deliveryFee === 0 ? '<div class="flex items-center text-xs text-green-600"><i class="fas fa-check-circle mr-1"></i> Free delivery on orders above ₹500!</div>' : `<div class="text-xs text-gray-500">Add ₹${(500 - subtotal).toFixed(2)} more for free delivery</div>`}
             <div class="flex justify-between text-sm text-gray-500">

@@ -59,7 +59,7 @@ function renderProducts() {
     const productsToShow = displayedProducts.slice(startIndex, endIndex);
     productsGrid.innerHTML = productsToShow.map(createProductCard).join('');
     loadMoreBtn.style.display = endIndex >= displayedProducts.length ? 'none' : 'block';
-    
+
 
 }
 
@@ -119,7 +119,7 @@ function generateStarRating(rating) {
 function initializeEnhancedFilters() {
     // Calculate max price from all products
     maxPrice = Math.ceil(Math.max(...allProducts.map(p => parseFloat((typeof p.price === 'string' ? p.price.replace(/^₹/, '') : p.price)))));
-    
+
     // Set price range sliders
     document.getElementById('priceRangeMin').max = maxPrice;
     document.getElementById('priceRangeMax').max = maxPrice;
@@ -130,14 +130,14 @@ function initializeEnhancedFilters() {
 
     // Get available brands
     availableBrands = [...new Set(allProducts.map(p => p.brand || 'Unknown').filter(Boolean))].sort();
-    
+
     // Populate filter sections
     populateCategoryFilters();
     populateBrandFilters();
-    
+
     // Initialize event listeners
     initializeFilterEventListeners();
-    
+
     // Initialize mobile filter functionality
     initializeMobileFilters();
 }
@@ -145,7 +145,7 @@ function initializeEnhancedFilters() {
 function populateCategoryFilters() {
     const categories = getAvailableCategories();
     const container = document.getElementById('categoryFilterContainer');
-    
+
     container.innerHTML = categories.map(category => `
         <label class="flex items-center space-x-3 cursor-pointer group">
             <input type="checkbox" value="${category}" class="category-filter rounded border-gray-300 text-primary focus:ring-primary">
@@ -158,7 +158,7 @@ function populateCategoryFilters() {
 
 function populateBrandFilters() {
     const container = document.getElementById('brandFilterContainer');
-    
+
     container.innerHTML = availableBrands.map(brand => `
         <label class="flex items-center space-x-3 cursor-pointer group">
             <input type="checkbox" value="${brand}" class="brand-filter rounded border-gray-300 text-primary focus:ring-primary">
@@ -181,29 +181,29 @@ function initializeFilterEventListeners() {
     function updatePriceRange() {
         let minVal = parseInt(minSlider.value);
         let maxVal = parseInt(maxSlider.value);
-        
+
         if (minVal >= maxVal) {
             minVal = maxVal - 1;
             minSlider.value = minVal;
         }
-        
+
         minDisplay.textContent = minVal;
         maxDisplay.textContent = maxVal;
         minInput.value = minVal;
         maxInput.value = maxVal;
-        
+
         currentFilters.priceRange = { min: minVal, max: maxVal };
     }
 
     minSlider.addEventListener('input', updatePriceRange);
     maxSlider.addEventListener('input', updatePriceRange);
-    
+
     minInput.addEventListener('change', function() {
         const val = parseInt(this.value) || 0;
         minSlider.value = Math.min(val, maxPrice - 1);
         updatePriceRange();
     });
-    
+
     maxInput.addEventListener('change', function() {
         const val = parseInt(this.value) || maxPrice;
         maxSlider.value = Math.max(val, 1);
@@ -321,7 +321,7 @@ function applyAllFilters() {
 
     // Apply sorting
     sortFilteredProducts(filtered);
-    
+
     // Update display
     displayedProducts = filtered;
     currentPage = 1;
@@ -364,7 +364,7 @@ function clearAllFilters() {
         brands: [],
         searchTerm: ''
     };
-    
+
     // Reset UI elements
     document.getElementById('priceRangeMin').value = 0;
     document.getElementById('priceRangeMax').value = maxPrice;
@@ -373,15 +373,15 @@ function clearAllFilters() {
     document.getElementById('minPriceInput').value = '';
     document.getElementById('maxPriceInput').value = '';
     document.getElementById('filterSearchInput').value = '';
-    
+
     // Uncheck all checkboxes
     document.querySelectorAll('.category-filter, .rating-filter, .availability-filter, .brand-filter').forEach(cb => cb.checked = false);
-    
+
     // Reset legacy filters
     currentCategory = 'all';
     document.getElementById('categoryFilter').value = 'all';
     searchInput.value = '';
-    
+
     // Apply filters
     applyAllFilters();
 }
@@ -410,10 +410,10 @@ function updateActiveFiltersDisplay() {
     }
 
     if (currentFilters.priceRange.min > 0 || currentFilters.priceRange.max < maxPrice) {
-        activeFilters.push({ 
-            type: 'price', 
-            value: 'price', 
-            label: `₹${currentFilters.priceRange.min} - ₹${currentFilters.priceRange.max}` 
+        activeFilters.push({
+            type: 'price',
+            value: 'price',
+            label: `₹${currentFilters.priceRange.min} - ₹${currentFilters.priceRange.max}`
         });
     }
 
@@ -501,7 +501,7 @@ function showNoResultsIfEmpty() {
     const noResultsMessage = document.getElementById('noResultsMessage');
     const productsGrid = document.getElementById('productsGrid');
     const loadMoreBtn = document.getElementById('loadMoreBtn');
-    
+
     if (displayedProducts.length === 0) {
         noResultsMessage.classList.remove('hidden');
         productsGrid.classList.add('hidden');
@@ -526,12 +526,12 @@ function initializeMobileFilters() {
                 overlay.className = 'filter-overlay';
                 document.body.appendChild(overlay);
             }
-            
+
             // Show mobile filters
             filterSidebar.classList.add('filter-sidebar-mobile', 'open');
             overlay.classList.add('active');
             document.body.style.overflow = 'hidden';
-            
+
             // Close when clicking overlay
             overlay.addEventListener('click', closeMobileFilters);
         });
@@ -545,7 +545,7 @@ function initializeMobileFilters() {
 function closeMobileFilters() {
     const filterSidebar = document.querySelector('aside');
     const overlay = document.querySelector('.filter-overlay');
-    
+
     if (filterSidebar) {
         filterSidebar.classList.remove('open');
     }
@@ -1321,20 +1321,20 @@ function generateUserId() {
 
 function handleMobileSubmit(e) {
     e.preventDefault();
-    
+
     const userName = document.getElementById('userName').value.trim();
     const userMobile = document.getElementById('userMobile').value.trim();
-    
+
     if (!userName || !userMobile) {
         showNotification('Please fill in all fields', 'error');
         return;
     }
-    
+
     if (userMobile.length !== 10) {
         showNotification('Please enter a valid 10-digit mobile number', 'error');
         return;
     }
-    
+
     // Store user details
     userDetails = {
         name: userName,
@@ -1342,36 +1342,36 @@ function handleMobileSubmit(e) {
         otp: generateOTP(),
         userId: generateUserId()
     };
-    
+
     // Show the generated OTP (for demo purposes)
     console.log('Generated OTP:', userDetails.otp);
     showNotification(`Demo OTP generated: ${userDetails.otp}`, 'info');
-    
+
     // Update display mobile
     document.getElementById('displayMobile').textContent = `+91 ${userMobile}`;
-    
+
     // Move to step 2
     showStep(2);
-    
+
     // Start resend timer
     startResendTimer();
 }
 
 function handleOtpSubmit(e) {
     e.preventDefault();
-    
+
     const enteredOtp = getEnteredOtp();
-    
+
     if (!enteredOtp) {
         showNotification('Please enter the OTP', 'error');
         return;
     }
-    
+
     if (enteredOtp.length !== 6) {
         showNotification('Please enter a valid 6-digit OTP', 'error');
         return;
     }
-    
+
     if (enteredOtp === userDetails.otp) {
         // OTP is correct
         currentUser = {
@@ -1380,18 +1380,18 @@ function handleOtpSubmit(e) {
             mobile: userDetails.mobile,
             loginTime: new Date().toISOString()
         };
-        
+
         // Store in localStorage
         localStorage.setItem('nearNowCurrentUser', JSON.stringify(currentUser));
-        
+
         // Move to success step
         showStep(3);
-        
+
         // Update user display
         updateUserDisplay();
-        
+
         showNotification('Login successful!', 'success');
-        
+
         // Auto-continue after 2 seconds
         setTimeout(() => {
             continueAfterLogin();
@@ -1420,36 +1420,36 @@ function clearOtpInputs() {
 
 function initializeOtpInputs() {
     const otpInputs = document.querySelectorAll('.otp-input');
-    
+
     otpInputs.forEach((input, index) => {
         input.addEventListener('input', function(e) {
             // Only allow numbers
             this.value = this.value.replace(/[^0-9]/g, '');
-            
+
             // Move to next input if current is filled
             if (this.value.length === 1 && index < otpInputs.length - 1) {
                 otpInputs[index + 1].focus();
             }
         });
-        
+
         input.addEventListener('keydown', function(e) {
             // Move to previous input on backspace if current is empty
             if (e.key === 'Backspace' && this.value === '' && index > 0) {
                 otpInputs[index - 1].focus();
             }
         });
-        
+
         input.addEventListener('paste', function(e) {
             e.preventDefault();
             const pastedData = e.clipboardData.getData('text').replace(/[^0-9]/g, '');
-            
+
             // Fill inputs with pasted data
             for (let i = 0; i < Math.min(pastedData.length, otpInputs.length - index); i++) {
                 if (otpInputs[index + i]) {
                     otpInputs[index + i].value = pastedData[i];
                 }
             }
-            
+
             // Focus on next empty input or last input
             const nextIndex = Math.min(index + pastedData.length, otpInputs.length - 1);
             otpInputs[nextIndex].focus();
@@ -1460,7 +1460,7 @@ function initializeOtpInputs() {
 function showStep(step) {
     // Hide all steps
     document.querySelectorAll('.login-step').forEach(el => el.classList.add('hidden'));
-    
+
     // Show current step
     const currentStepEl = document.getElementById(`step${step}`);
     if (currentStepEl) {
@@ -1473,13 +1473,13 @@ function startResendTimer() {
     resendTimer = 30;
     const resendBtn = document.getElementById('resendOtpBtn');
     const timerSpan = document.getElementById('resendTimer');
-    
+
     if (resendBtn) resendBtn.disabled = true;
-    
+
     otpTimer = setInterval(() => {
         resendTimer--;
         if (timerSpan) timerSpan.textContent = resendTimer;
-        
+
         if (resendTimer <= 0) {
             clearInterval(otpTimer);
             if (resendBtn) {
@@ -1495,10 +1495,10 @@ function resendOtp() {
     userDetails.otp = generateOTP();
     console.log('New OTP:', userDetails.otp);
     showNotification(`New demo OTP: ${userDetails.otp}`, 'info');
-    
+
     // Clear current OTP inputs
     clearOtpInputs();
-    
+
     // Restart timer
     startResendTimer();
 }
@@ -1508,21 +1508,21 @@ function changeNumber() {
     document.getElementById('userName').value = '';
     document.getElementById('userMobile').value = '';
     clearOtpInputs();
-    
+
     // Clear timer
     if (otpTimer) {
         clearInterval(otpTimer);
     }
-    
+
     // Reset user details
     userDetails = {};
-    
+
     showStep(1);
 }
 
 function continueAfterLogin() {
     hideLoginModal();
-    
+
     // Check if user was trying to checkout
     if (window.pendingCheckout) {
         window.pendingCheckout = false;
