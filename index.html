@@ -403,7 +403,17 @@
             background: #047857;
         }
     </style>
+    
+    <!-- Firebase SDK (only load if not already loaded) -->
+    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-firestore.js"></script>
+    
+    <!-- Load products-data.js as fallback -->
     <script src="products-data.js"></script>
+    
+    <!-- Firebase Store Integration -->
+    <script src="firebase-store-integration.js"></script>
+    
     <script src="cart-utils.js"></script>
 </head>
 
