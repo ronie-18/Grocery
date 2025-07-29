@@ -407,6 +407,7 @@
     <!-- Firebase SDK (only load if not already loaded) -->
     <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
     <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-firestore.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-database.js"></script> <!-- Added for Realtime Database -->
     
     <!-- Load products-data.js as fallback -->
     <script src="products-data.js"></script>
@@ -755,6 +756,10 @@
                     <div class="space-y-6">
                         <div>
                             <h2 id="quickViewName" class="text-3xl font-bold text-gray-800 mb-2"></h2>
+                            <div id="quickViewSize" class="flex items-center mb-3 hidden">
+                                <i class="fas fa-weight-hanging text-gray-500 mr-2"></i>
+                                <span class="text-gray-600 font-medium"></span>
+                            </div>
                             <div class="flex items-center mb-4">
                                 <div id="quickViewRating" class="flex text-yellow-400 text-sm mr-2"></div>
                                 <span id="quickViewRatingText" class="text-gray-500 text-sm"></span>

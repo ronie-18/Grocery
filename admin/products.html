@@ -12,6 +12,7 @@
     <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-firestore.js"></script>
     <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-auth.js"></script>
     <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-storage.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-database.js"></script> <!-- Added for Realtime Database -->
 </head>
 <body>
     <div class="admin-container">
@@ -173,6 +174,7 @@
                                         <th>Image</th>
                                         <th>Name</th>
                                         <th>Category</th>
+                                        <th>Size</th>
                                         <th>Price</th>
                                         <th>Stock</th>
                                         <th>Rating</th>
@@ -239,7 +241,7 @@
                         </div>
                     </div>
                     
-                    <div class="row" style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem;">
+                    <div class="row" style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 1rem;">
                         <div class="form-group">
                             <label class="form-label required">Price (₹)</label>
                             <input type="number" class="form-control" id="productPrice" step="0.01" required>
@@ -248,6 +250,18 @@
                             <label class="form-label">Original Price (₹)</label>
                             <input type="number" class="form-control" id="productOriginalPrice" step="0.01">
                         </div>
+                        <div class="form-group">
+                            <label class="form-label required">Size/Weight</label>
+                            <select class="form-control" id="productSize" required>
+                                <option value="">Select Size</option>
+                                <!-- Options will be populated dynamically from products-data.js -->
+                            </select>
+                        </div>
+                    </div>
+                    
+                    <div class="form-group" id="customSizeGroup" style="display: none;">
+                        <label class="form-label">Custom Size/Weight</label>
+                        <input type="text" class="form-control" id="productCustomSize" placeholder="Enter custom size (e.g., 750g, 1.5L)">
                     </div>
                     
                     <div class="form-group">
@@ -306,8 +320,11 @@
 
     <!-- Scripts -->
     <script src="firebase-config.js"></script>
+    <script src="js/port-config.js"></script>
     <script src="js/admin-auth.js"></script>
     <script src="js/crud-operations.js"></script>
+    <script src="js/products-data-updater.js"></script>
+    <script src="js/temp-firebase-fix.js"></script>
     <script src="../products-data.js"></script>
     
     <script>
@@ -438,6 +455,9 @@
                             <span class="badge badge-info">${this.formatCategory(product.category)}</span>
                         </td>
                         <td>
+                            <span class="badge badge-secondary">${product.size || 'N/A'}</span>
+                        </td>
+                        <td>
                             <div class="font-weight-600">${product.price}</div>
                             ${product.originalPrice ? `<div class="text-secondary" style="font-size: 0.75rem; text-decoration: line-through;">${product.originalPrice}</div>` : ''}
                         </td>
@@ -478,51 +498,130 @@
             }
 
             async editProduct(productId) {
-                const product = this.products.find(p => p.id === productId);
-                if (!product) return;
-                
-                this.editingProduct = product;
-                this.populateProductForm(product);
-                document.getElementById('productModalTitle').textContent = 'Edit Product';
-                document.getElementById('saveButtonText').textContent = 'Update Product';
-                document.getElementById('productModal').classList.add('active');
+                try {
+                    console.log('🔄 Editing product:', productId);
+                    const product = this.products.find(p => p.id === productId);
+                    if (!product) {
+                        throw new Error('Product not found');
+                    }
+                    
+                    this.editingProduct = product;
+                    this.populateProductForm(product);
+                    document.getElementById('productModalTitle').textContent = 'Edit Product';
+                    document.getElementById('saveButtonText').textContent = 'Update Product';
+                    document.getElementById('productModal').classList.add('active');
+                    
+                    console.log('✅ Product form populated for editing');
+                } catch (error) {
+                    console.error('❌ Error editing product:', error);
+                    this.showError('Failed to edit product: ' + error.message);
+                }
             }
 
             populateProductForm(product) {
-                document.getElementById('productId').value = product.id || '';
-                document.getElementById('productName').value = product.name || '';
-                document.getElementById('productCategory').value = product.category || '';
-                document.getElementById('productPrice').value = product.price ? parseFloat(product.price.replace('₹', '')) : '';
-                document.getElementById('productOriginalPrice').value = product.originalPrice ? parseFloat(product.originalPrice.replace('₹', '')) : '';
-                document.getElementById('productImage').value = product.image || '';
-                document.getElementById('productRating').value = product.rating || 4.0;
-                document.getElementById('productReviews').value = product.reviews || 0;
-                document.getElementById('productDiscount').value = product.discount || 0;
-                document.getElementById('productInStock').checked = product.inStock !== false;
+                try {
+                    console.log('📝 Populating form with product data:', product);
+                    
+                    document.getElementById('productId').value = product.id || '';
+                    document.getElementById('productName').value = product.name || '';
+                    document.getElementById('productCategory').value = product.category || '';
+                    
+                    // Handle price - remove ₹ symbol if present
+                    const price = product.price ? product.price.toString().replace(/₹/g, '') : '';
+                    document.getElementById('productPrice').value = price;
+                    
+                    const originalPrice = product.originalPrice ? product.originalPrice.toString().replace(/₹/g, '') : '';
+                    document.getElementById('productOriginalPrice').value = originalPrice;
+                    
+                    document.getElementById('productImage').value = product.image || '';
+                    document.getElementById('productRating').value = product.rating || 4.0;
+                    document.getElementById('productReviews').value = product.reviews || 0;
+                    document.getElementById('productDiscount').value = product.discount || 0;
+                    document.getElementById('productInStock').checked = product.inStock !== false;
+                    
+                    // Handle size field
+                    const sizeSelect = document.getElementById('productSize');
+                    const customSizeGroup = document.getElementById('customSizeGroup');
+                    const customSizeInput = document.getElementById('productCustomSize');
+                    
+                    // First check if the product size matches any predefined options
+                    let sizeFound = false;
+                    for (let option of sizeSelect.options) {
+                        if (option.value === product.size) {
+                            sizeSelect.value = product.size;
+                            sizeFound = true;
+                            break;
+                        }
+                    }
+                    
+                    // If not found in predefined sizes, set as custom
+                    if (!sizeFound && product.size) {
+                        sizeSelect.value = 'custom';
+                        customSizeGroup.style.display = 'block';
+                        customSizeInput.value = product.size;
+                        customSizeInput.required = true;
+                    } else if (!sizeFound) {
+                        sizeSelect.value = '';
+                        customSizeGroup.style.display = 'none';
+                        customSizeInput.required = false;
+                    }
+                    
+                    console.log('✅ Form populated successfully');
+                } catch (error) {
+                    console.error('❌ Error populating form:', error);
+                    this.showError('Failed to populate form: ' + error.message);
+                }
             }
 
             async deleteProduct(productId) {
-                if (!confirm('Are you sure you want to delete this product?')) return;
-                
                 try {
+                    console.log('🗑️ Attempting to delete product:', productId);
+                    
+                    const product = this.products.find(p => p.id === productId);
+                    if (!product) {
+                        throw new Error('Product not found');
+                    }
+                    
+                    // Enhanced confirmation dialog
+                    const confirmMessage = `Are you sure you want to delete "${product.name}"?\n\nThis action will:\n- Remove the product from your store\n- Update the products file automatically\n- Cannot be undone\n\nClick OK to delete or Cancel to abort.`;
+                    
+                    if (!confirm(confirmMessage)) {
+                        console.log('🚫 Product deletion cancelled by user');
+                        return;
+                    }
+                    
                     this.showLoading('Deleting product...');
                     
+                    // Try to delete from Firebase first
                     if (window.adminCRUD && window.adminCRUD.initialized) {
+                        console.log('🔄 Deleting from Firebase...');
                         const result = await window.adminCRUD.deleteProduct(productId);
                         if (!result.success) {
                             throw new Error(result.error);
                         }
+                        console.log('✅ Product deleted from Firebase');
+                    } else {
+                        console.warn('⚠️ Firebase not available, removing from local data only');
                     }
                     
-                    // Remove from local array
+                    // Remove from local arrays
+                    const originalLength = this.products.length;
                     this.products = this.products.filter(p => p.id !== productId);
                     this.filteredProducts = this.filteredProducts.filter(p => p.id !== productId);
                     
+                    console.log(`📊 Removed from local arrays. Products: ${originalLength} → ${this.products.length}`);
+                    
+                    // Update display
                     this.updateDisplay();
                     this.hideLoading();
-                    this.showSuccess('Product deleted successfully');
+                    
+                    // Show success message with product name
+                    this.showSuccess(`Product "${product.name}" deleted successfully`);
+                    
+                    console.log('✅ Product deletion completed successfully');
                     
                 } catch (error) {
+                    console.error('❌ Failed to delete product:', error);
                     this.hideLoading();
                     this.showError('Failed to delete product: ' + error.message);
                 }
@@ -608,10 +707,59 @@
             }
         }
 
+        // Populate size dropdown from products-data.js
+        function populateSizeDropdown() {
+            const sizeSelect = document.getElementById('productSize');
+            if (sizeSelect) {
+                // Clear existing options except the first one
+                while (sizeSelect.children.length > 1) {
+                    sizeSelect.removeChild(sizeSelect.lastChild);
+                }
+                
+                // Add common sizes
+                const commonSizes = [
+                    { value: '50g', label: '50g' },
+                    { value: '100g', label: '100g' },
+                    { value: '250g', label: '250g' },
+                    { value: '500g', label: '500g' },
+                    { value: '750g', label: '750g' },
+                    { value: '1kg', label: '1kg' },
+                    { value: '2kg', label: '2kg' },
+                    { value: '250ml', label: '250ml' },
+                    { value: '500ml', label: '500ml' },
+                    { value: '750ml', label: '750ml' },
+                    { value: '1L', label: '1L' },
+                    { value: '2L', label: '2L' },
+                    { value: '1 piece', label: '1 piece' },
+                    { value: '6 pieces', label: '6 pieces' },
+                    { value: '12 pieces', label: '12 pieces' },
+                    { value: 'custom', label: 'Custom Size' }
+                ];
+                
+                // Add predefined sizes
+                commonSizes.forEach(size => {
+                    const option = document.createElement('option');
+                    option.value = size.value;
+                    option.textContent = size.label;
+                    sizeSelect.appendChild(option);
+                });
+                
+                console.log('✅ Size dropdown populated with', commonSizes.length, 'options');
+            }
+        }
+
         // Initialize product manager
         let productManager;
         document.addEventListener('DOMContentLoaded', function() {
             productManager = new ProductManager();
+            
+            // Populate size dropdown
+            populateSizeDropdown();
+            
+            // Initialize products data updater
+            if (window.productsDataUpdater) {
+                window.productsDataUpdater.init();
+            }
         });
 
         // UI Functions
@@ -621,13 +769,30 @@
 
         function refreshProducts() {
             if (productManager) {
-                productManager.loadProducts();
+                productManager.showLoading('Refreshing products...');
+                productManager.loadProducts().then(() => {
+                    productManager.hideLoading();
+                    productManager.showSuccess('Products refreshed successfully!');
+                }).catch(error => {
+                    productManager.hideLoading();
+                    productManager.showError('Failed to refresh products: ' + error.message);
+                });
             }
         }
 
         function openAddProductModal() {
             productManager.editingProduct = null;
             document.getElementById('productForm').reset();
+            
+            // Clear the hidden product ID field
+            document.getElementById('productId').value = '';
+            
+            // Reset size dropdown
+            document.getElementById('productSize').value = '';
+            document.getElementById('customSizeGroup').style.display = 'none';
+            document.getElementById('productCustomSize').required = false;
+            document.getElementById('productCustomSize').value = '';
+            
             document.getElementById('productModalTitle').textContent = 'Add New Product';
             document.getElementById('saveButtonText').textContent = 'Save Product';
             document.getElementById('productModal').classList.add('active');
@@ -638,34 +803,72 @@
         }
 
         async function saveProduct() {
-            const form = document.getElementById('productForm');
-            if (!form.checkValidity()) {
-                form.reportValidity();
-                return;
-            }
-            
-            const productData = {
-                name: document.getElementById('productName').value,
-                category: document.getElementById('productCategory').value,
-                price: '₹' + document.getElementById('productPrice').value,
-                originalPrice: document.getElementById('productOriginalPrice').value ? 
-                    '₹' + document.getElementById('productOriginalPrice').value : '',
-                image: document.getElementById('productImage').value,
-                rating: parseFloat(document.getElementById('productRating').value),
-                reviews: parseInt(document.getElementById('productReviews').value),
-                discount: parseInt(document.getElementById('productDiscount').value),
-                inStock: document.getElementById('productInStock').checked
-            };
-            
             try {
+                console.log('💾 Starting product save process...');
+                
+                const form = document.getElementById('productForm');
+                if (!form.checkValidity()) {
+                    console.log('❌ Form validation failed');
+                    form.reportValidity();
+                    return;
+                }
+                
+                // Get size value
+                const sizeSelect = document.getElementById('productSize');
+                const customSize = document.getElementById('productCustomSize');
+                const productSize = sizeSelect.value === 'custom' ? customSize.value : sizeSelect.value;
+                
+                if (!productSize) {
+                    alert('Please select a size or enter a custom size.');
+                    return;
+                }
+                
+                const productData = {
+                    name: document.getElementById('productName').value.trim(),
+                    category: document.getElementById('productCategory').value,
+                    size: productSize,
+                    price: '₹' + document.getElementById('productPrice').value,
+                    originalPrice: document.getElementById('productOriginalPrice').value ? 
+                        '₹' + document.getElementById('productOriginalPrice').value : '',
+                    image: document.getElementById('productImage').value.trim(),
+                    rating: parseFloat(document.getElementById('productRating').value),
+                    reviews: parseInt(document.getElementById('productReviews').value),
+                    discount: parseInt(document.getElementById('productDiscount').value),
+                    inStock: document.getElementById('productInStock').checked
+                };
+                
+                console.log('📝 Product data prepared:', productData);
+                
                 productManager.showLoading(productManager.editingProduct ? 'Updating product...' : 'Creating product...');
                 
                 if (productManager.editingProduct) {
-                    // Update existing product
+                    // Check if this is a local product or a Firestore product
+                    const isLocalProduct = productManager.editingProduct.id && 
+                        (productManager.editingProduct.id.startsWith('local-') || 
+                         productManager.editingProduct.id.includes('-') && !productManager.editingProduct.createdAt);
+                    
+                    let operationResult;
+                    
                     if (window.adminCRUD && window.adminCRUD.initialized) {
-                        const result = await window.adminCRUD.updateProduct(productManager.editingProduct.id, productData);
-                        if (!result.success) {
-                            throw new Error(result.error);
+                        if (isLocalProduct) {
+                            // For local products, create a new document in Firestore
+                            console.log('🔄 Converting local product to Firestore product');
+                            productData.id = undefined; // Let it generate a new ID
+                            operationResult = await window.adminCRUD.createProduct(productData);
+                        } else {
+                            // For existing Firestore products, update them
+                            operationResult = await window.adminCRUD.updateProduct(productManager.editingProduct.id, productData);
+                        }
+                        
+                        if (!operationResult.success) {
+                            throw new Error(operationResult.error);
+                        }
+                        
+                        // Use the returned product ID
+                        if (operationResult.product) {
+                            productData.id = operationResult.product.id;
+                        } else {
+                            productData.id = productManager.editingProduct.id;
                         }
                     }
                     
@@ -674,17 +877,33 @@
                     if (index !== -1) {
                         productManager.products[index] = { ...productManager.editingProduct, ...productData };
                     }
+                    
+                    // Update local products data for edited product
+                    if (window.productsDataUpdater) {
+                        await window.productsDataUpdater.addProductToLocalFile({ ...productManager.editingProduct, ...productData });
+                    }
                 } else {
                     // Create new product
+                    let productCreated = false;
+                    
                     if (window.adminCRUD && window.adminCRUD.initialized) {
                         const result = await window.adminCRUD.createProduct(productData);
-                        if (!result.success) {
-                            throw new Error(result.error);
+                        if (result.success) {
+                            productData.id = result.product.id;
+                            productCreated = true;
+                        } else {
+                            console.warn('Firebase creation failed, falling back to local:', result.error);
                         }
-                        productData.id = result.product.id;
-                    } else {
-                        // Generate local ID
-                        productData.id = 'local-' + Date.now();
+                    }
+                    
+                    if (!productCreated) {
+                        // Generate local ID if Firebase failed or not available
+                        productData.id = 'local-' + Date.now() + '-' + Math.random().toString(36).substr(2, 9);
+                        
+                        // Add to local products data immediately
+                        if (window.productsDataUpdater) {
+                            await window.productsDataUpdater.addProductToLocalFile(productData);
+                        }
                     }
                     
                     productManager.products.push(productData);
@@ -694,9 +913,23 @@
                 productManager.updateDisplay();
                 productManager.hideLoading();
                 closeProductModal();
-                productManager.showSuccess(productManager.editingProduct ? 'Product updated successfully' : 'Product created successfully');
+                
+                // More informative success message
+                let successMessage;
+                if (productManager.editingProduct) {
+                    if (productManager.editingProduct.id && productManager.editingProduct.id.startsWith('local-')) {
+                        successMessage = 'Local product successfully uploaded to Firestore!';
+                    } else {
+                        successMessage = 'Product updated successfully!';
+                    }
+                } else {
+                    successMessage = 'Product created successfully!';
+                }
+                
+                productManager.showSuccess(successMessage);
                 
             } catch (error) {
+                console.error('❌ Error saving product:', error);
                 productManager.hideLoading();
                 productManager.showError('Failed to save product: ' + error.message);
             }
@@ -731,7 +964,7 @@
             const checkboxes = document.querySelectorAll('#productsTableBody input[type="checkbox"]');
             checkboxes.forEach(cb => {
                 cb.checked = checkbox.checked;
-                const productId = cb.onchange.toString().match(/'([^']+)'/)[1];
+                const productId = cb.getAttribute('onchange').match(/'([^']+)'/)[1];
                 if (checkbox.checked) {
                     productManager.selectedProducts.add(productId);
                 } else {
@@ -740,32 +973,38 @@
             });
         }
 
-        async function importProductsFromLocal() {
-            if (!confirm('Import all local products to Firebase? This may take a while.')) return;
-            
-            try {
-                if (!window.adminCRUD || !window.adminCRUD.initialized) {
-                    throw new Error('Firebase not available');
+        function importProductsFromLocal() {
+            if (confirm('This will import products from the local products-data.js file. Continue?')) {
+                try {
+                    if (typeof getAllProducts === 'function') {
+                        const localProducts = getAllProducts();
+                        console.log(`📦 Found ${localProducts.length} products in local data`);
+                        
+                        // Add local products that don't exist in current list
+                        let addedCount = 0;
+                        localProducts.forEach(localProduct => {
+                            const exists = productManager.products.find(p => p.id === localProduct.id || p.name === localProduct.name);
+                            if (!exists) {
+                                productManager.products.push(localProduct);
+                                addedCount++;
+                            }
+                        });
+                        
+                        productManager.filteredProducts = [...productManager.products];
+                        productManager.updateDisplay();
+                        
+                        if (addedCount > 0) {
+                            productManager.showSuccess(`Imported ${addedCount} new products from local data`);
+                        } else {
+                            productManager.showSuccess('No new products to import');
+                        }
+                    } else {
+                        throw new Error('Local products data not available');
+                    }
+                } catch (error) {
+                    console.error('❌ Import failed:', error);
+                    productManager.showError('Failed to import products: ' + error.message);
                 }
-                
-                productManager.showLoading('Importing products...');
-                
-                const localProducts = getAllProducts();
-                const result = await window.adminCRUD.importProducts(localProducts);
-                
-                if (result.success) {
-                    const successCount = result.results.filter(r => r.success).length;
-                    productManager.showSuccess(`Successfully imported ${successCount} products`);
-                    await productManager.loadProducts();
-                } else {
-                    throw new Error(result.error);
-                }
-                
-                productManager.hideLoading();
-                
-            } catch (error) {
-                productManager.hideLoading();
-                productManager.showError('Import failed: ' + error.message);
             }
         }
 
@@ -776,6 +1015,25 @@
                 alert('Image upload feature will be implemented with Firebase Storage');
             }
         }
+
+        // Handle size dropdown change
+        document.addEventListener('DOMContentLoaded', function() {
+            const sizeSelect = document.getElementById('productSize');
+            const customSizeGroup = document.getElementById('customSizeGroup');
+            
+            if (sizeSelect) {
+                sizeSelect.addEventListener('change', function() {
+                    if (this.value === 'custom') {
+                        customSizeGroup.style.display = 'block';
+                        document.getElementById('productCustomSize').required = true;
+                    } else {
+                        customSizeGroup.style.display = 'none';
+                        document.getElementById('productCustomSize').required = false;
+                        document.getElementById('productCustomSize').value = '';
+                    }
+                });
+            }
+        });
 
         // Other UI functions
         function showUserMenu() {

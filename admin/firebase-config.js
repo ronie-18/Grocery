@@ -5,6 +5,7 @@
 const firebaseConfig = {
     apiKey: "AIzaSyACAL8qq0mNxlVvsd1fIF0v6Z67jrV4kvI",
     authDomain: "near-and-now.firebaseapp.com",
+    databaseURL: "https://near-and-now-default-rtdb.firebaseio.com/", // Added for Realtime Database
     projectId: "near-and-now",
     storageBucket: "near-and-now.firebasestorage.app",
     messagingSenderId: "529594163070",
@@ -17,6 +18,7 @@ class AdminFirebaseManager {
     constructor() {
         this.app = null;
         this.db = null;
+        this.realtimeDb = null; // Added for Realtime Database
         this.storage = null;
         this.auth = null;
         this.initialized = false;
@@ -42,6 +44,7 @@ class AdminFirebaseManager {
             
             // Initialize Firebase services
             this.db = firebase.firestore();
+            this.realtimeDb = firebase.database(); // Added Realtime Database initialization
             this.storage = firebase.storage();
             this.auth = firebase.auth();
             
@@ -56,6 +59,7 @@ class AdminFirebaseManager {
             
             this.initialized = true;
             console.log('✅ Admin Firebase initialized successfully');
+            console.log('✅ Realtime Database connected to:', firebaseConfig.databaseURL);
             
             return { success: true };
         } catch (error) {
@@ -73,6 +77,18 @@ class AdminFirebaseManager {
             categories: this.db.collection('categories'),
             admins: this.db.collection('admins'),
             analytics: this.db.collection('analytics')
+        };
+    }
+
+    // Realtime Database references for real-time operations
+    get realtimeRefs() {
+        return {
+            products: this.realtimeDb.ref('products'),
+            orders: this.realtimeDb.ref('orders'),
+            customers: this.realtimeDb.ref('customers'),
+            categories: this.realtimeDb.ref('categories'),
+            analytics: this.realtimeDb.ref('analytics'),
+            notifications: this.realtimeDb.ref('notifications')
         };
     }
 

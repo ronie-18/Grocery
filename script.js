@@ -622,12 +622,12 @@ function showSearchSuggestions(query) {
         searchSuggestions.innerHTML = suggestions
             .map(
                 (product) => `
-            <div class="p-3 hover:bg-gray-100 cursor-pointer border-b border-gray-100 last:border-b-0" onclick="selectSearchSuggestion('${product.name}')">
+            <div class="p-3 hover:bg-gray-100 cursor-pointer border-b border-gray-100 last:border-b-0" onclick="showQuickViewFromSearch('${product.id}')">
                 <div class="flex items-center space-x-3">
                     <img src="${product.image}" alt="${product.name}" class="w-10 h-10 rounded-full object-cover">
                     <div>
                         <p class="font-semibold text-gray-800">${product.name}</p>
-                        <p class="text-sm text-gray-600">₹${product.price}</p>
+                        <p class="text-sm text-gray-600">${product.price}</p>
                     </div>
                 </div>
             </div>
@@ -840,7 +840,8 @@ function createProductCard(product) {
                     </div>
                     <span class="text-gray-500 text-xs">(${product.rating})</span>
                 </div>
-                <h3 class="font-bold text-gray-800 text-base mb-2 cursor-pointer hover:text-primary transition duration-300 product-name line-clamp-2">${product.name}</h3>
+                <h3 class="font-bold text-gray-800 text-base mb-1 cursor-pointer hover:text-primary transition duration-300 product-name line-clamp-2">${product.name}</h3>
+                ${product.size ? `<p class="text-xs text-gray-500 mb-2 flex items-center"><i class="fas fa-weight-hanging mr-1"></i>${product.size}</p>` : ''}
                 <div class="flex items-center justify-between">
                     <div class="flex items-center space-x-1.5">
                         <span class="text-primary font-bold text-base">₹${price}</span>
@@ -1892,6 +1893,18 @@ function showQuickView(productId) {
         nameEl.textContent = product.name
     }
 
+    // Size information
+    const sizeEl = document.getElementById('quickViewSize')
+    if (sizeEl && product.size) {
+        const sizeSpan = sizeEl.querySelector('span')
+        if (sizeSpan) {
+            sizeSpan.textContent = product.size
+            sizeEl.classList.remove('hidden')
+        }
+    } else if (sizeEl) {
+        sizeEl.classList.add('hidden')
+    }
+
     // Price and discount
     const price = typeof product.price === 'string' ? product.price.replace(/^₹/, '') : product.price
     const originalPrice = product.originalPrice ? (typeof product.originalPrice === 'string' ? product.originalPrice.replace(/^₹/, '') : product.originalPrice) : null
@@ -2222,15 +2235,7 @@ function initializeEnhancedSearch() {
         clearSearchFilters()
     })
 
-    // Search suggestions
-    document.getElementById('searchSuggestions').addEventListener('click', (e) => {
-        if (e.target.classList.contains('search-suggestion-item')) {
-            const productName = e.target.dataset.productName
-            searchInput.value = productName
-            performEnhancedSearch(productName)
-            hideSearchSuggestions()
-        }
-    })
+    // Search suggestions - now handled by inline onclick handlers for quick view
 }
 
 function performEnhancedSearch(query) {
@@ -2265,11 +2270,11 @@ function updateSearchSuggestions(query) {
 
     if (suggestions.length > 0) {
         const suggestionsHTML = suggestions.map(product => `
-            <div class="search-suggestion-item flex items-center p-3 hover:bg-gray-100 cursor-pointer" data-product-name="${product.name}">
+            <div class="search-suggestion-item flex items-center p-3 hover:bg-gray-100 cursor-pointer" data-product-id="${product.id}" onclick="showQuickViewFromSearch('${product.id}')">
                 <img src="${product.image}" alt="${product.name}" class="w-10 h-10 object-cover rounded mr-3">
                 <div>
                     <div class="font-medium text-gray-800">${product.name}</div>
-                    <div class="text-sm text-gray-500">${product.category}</div>
+                    <div class="text-sm text-gray-500">${product.price}</div>
                 </div>
             </div>
         `).join('')
@@ -2434,3 +2439,9 @@ function initializeProductReviews() {
 // Enhanced event listeners for product cards (REMOVED DUPLICATE - using querySelectorAll version above to avoid double clicks)
 
 // ===== END OF ENHANCED FEATURES =====
+
+// New function to show quick view from search suggestions
+function showQuickViewFromSearch(productId) {
+    hideSearchSuggestions()
+    showQuickView(productId)
+}

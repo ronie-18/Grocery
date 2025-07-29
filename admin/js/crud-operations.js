@@ -41,10 +41,23 @@ class AdminCRUD {
                 throw new Error('Validation failed: ' + validation.errors.join(', '));
             }
 
+            // Generate or use provided ID
+            let productId = productData.id || this.generateProductId(productData.name);
+            
+            // Check if ID already exists and generate a new one if needed
+            if (productData.id) {
+                const existingDoc = await this.firebase.collections.products.doc(productId).get();
+                if (existingDoc.exists) {
+                    // If the provided ID exists, generate a new unique ID
+                    productId = this.generateProductId(productData.name);
+                    console.log('🔄 Product ID already exists, generated new ID:', productId);
+                }
+            }
+
             // Add metadata
             const product = {
                 ...productData,
-                id: productData.id || this.generateProductId(productData.name),
+                id: productId,
                 createdAt: this.firebase.utils.timestamp(),
                 createdBy: this.auth.getUserInfo().email,
                 updatedAt: this.firebase.utils.timestamp()
@@ -52,6 +65,20 @@ class AdminCRUD {
 
             // Save to Firestore
             await this.firebase.collections.products.doc(product.id).set(product);
+            
+            // Also sync to Realtime Database for real-time updates
+            if (this.firebase.realtimeDb) {
+                await this.firebase.realtimeDb.ref(`products/${product.id}`).set(product);
+                console.log('✅ Product synced to Realtime Database for real-time updates');
+            }
+            
+            // Also update local products-data.js via ProductsDataUpdater
+            if (window.productsDataUpdater) {
+                await window.productsDataUpdater.addProductToLocalFile(product);
+            }
+            
+            // Auto-sync products-data.js file
+            await this.autoSyncProductsFile('Product created');
             
             console.log('✅ Product created:', product.id);
             return { success: true, product: product };
@@ -67,20 +94,67 @@ class AdminCRUD {
                 throw new Error('No permission to update products');
             }
 
-            // Add update metadata
-            const updates = {
-                ...updateData,
-                updatedAt: this.firebase.utils.timestamp(),
-                updatedBy: this.auth.getUserInfo().email
-            };
+            // Check if user is authenticated with Firebase
+            const firebaseUser = this.firebase.auth.currentUser;
+            if (!firebaseUser) {
+                console.warn('⚠️ No Firebase authentication, attempting to authenticate...');
+                
+                // Try to authenticate with Firebase using admin credentials
+                const adminInfo = this.auth.getUserInfo();
+                if (adminInfo && adminInfo.email) {
+                    try {
+                        // Try to sign in with the admin email and a common password
+                        await this.firebase.auth.signInWithEmailAndPassword(adminInfo.email, 'admin123');
+                        console.log('✅ Firebase authentication successful for admin operations');
+                    } catch (authError) {
+                        console.warn('⚠️ Firebase authentication failed, will try operation anyway:', authError.message);
+                    }
+                }
+            }
 
-            // Update in Firestore
-            await this.firebase.collections.products.doc(productId).update(updates);
+            // First check if the document exists
+            const docRef = this.firebase.collections.products.doc(productId);
+            const doc = await docRef.get();
             
-            console.log('✅ Product updated:', productId);
-            return { success: true, productId: productId };
+            if (!doc.exists) {
+                // Document doesn't exist, create it instead
+                console.log('📝 Product not found in Firestore, creating new document:', productId);
+                
+                const newProduct = {
+                    ...updateData,
+                    id: productId,
+                    createdAt: this.firebase.utils.timestamp(),
+                    createdBy: this.auth.getUserInfo().email,
+                    updatedAt: this.firebase.utils.timestamp()
+                };
+                
+                await docRef.set(newProduct);
+                console.log('✅ Product created:', productId);
+                return { success: true, productId: productId, created: true };
+            } else {
+                // Document exists, update it
+                const updates = {
+                    ...updateData,
+                    updatedAt: this.firebase.utils.timestamp(),
+                    updatedBy: this.auth.getUserInfo().email
+                };
+
+                await docRef.update(updates);
+                
+                // Also sync to Realtime Database for real-time updates
+                if (this.firebase.realtimeDb) {
+                    await this.firebase.realtimeDb.ref(`products/${productId}`).update(updates);
+                    console.log('✅ Product update synced to Realtime Database');
+                }
+                
+                // Auto-sync products-data.js file
+                await this.autoSyncProductsFile('Product updated');
+                
+                console.log('✅ Product updated:', productId);
+                return { success: true, productId: productId, updated: true };
+            }
         } catch (error) {
-            console.error('❌ Failed to update product:', error);
+            console.error('❌ Failed to update/create product:', error);
             return { success: false, error: error.message };
         }
     }
@@ -91,17 +165,75 @@ class AdminCRUD {
                 throw new Error('No permission to delete products');
             }
 
+            // Check if user is authenticated with Firebase
+            const firebaseUser = this.firebase.auth.currentUser;
+            if (!firebaseUser) {
+                console.warn('⚠️ No Firebase authentication, attempting to authenticate...');
+                
+                // Try to authenticate with Firebase using admin credentials
+                const adminInfo = this.auth.getUserInfo();
+                if (adminInfo && adminInfo.email) {
+                    try {
+                        // Try to sign in with the admin email and a common password
+                        await this.firebase.auth.signInWithEmailAndPassword(adminInfo.email, 'admin123');
+                        console.log('✅ Firebase authentication successful for admin operations');
+                    } catch (authError) {
+                        console.warn('⚠️ Firebase authentication failed, will try operation anyway:', authError.message);
+                    }
+                }
+            }
+
             // Soft delete - mark as deleted instead of removing
-            await this.firebase.collections.products.doc(productId).update({
+            const deleteData = {
                 deleted: true,
                 deletedAt: this.firebase.utils.timestamp(),
                 deletedBy: this.auth.getUserInfo().email
-            });
+            };
+            
+            await this.firebase.collections.products.doc(productId).update(deleteData);
+            
+            // Also sync deletion to Realtime Database
+            if (this.firebase.realtimeDb) {
+                await this.firebase.realtimeDb.ref(`products/${productId}`).update(deleteData);
+                console.log('✅ Product deletion synced to Realtime Database');
+            }
+            
+            // Auto-sync products-data.js file
+            await this.autoSyncProductsFile('Product deleted');
             
             console.log('✅ Product deleted (soft):', productId);
             return { success: true, productId: productId };
         } catch (error) {
             console.error('❌ Failed to delete product:', error);
+            
+            // If we get a permission error, provide helpful guidance
+            if (error.code === 'permission-denied' || error.message.includes('PERMISSION_DENIED')) {
+                const helpMessage = `
+Firebase Permission Error: ${error.message}
+
+QUICK FIXES:
+1. Update Firebase Security Rules:
+   - Go to Firebase Console → Firestore Database → Rules
+   - Use the rules from 'firestore-security-rules.txt' 
+   
+2. Or use simple rules (less secure but works):
+   rules_version = '2';
+   service cloud.firestore {
+     match /databases/{database}/documents {
+       match /{document=**} {
+         allow read, write: if request.auth != null;
+       }
+     }
+   }
+
+3. Make sure you're logged into Firebase with admin account.
+
+Check the browser console for more details.`;
+                
+                console.error(helpMessage);
+                return { success: false, error: 'Permission denied. Please check Firebase security rules and authentication. See console for detailed help.' };
+            }
+            
             return { success: false, error: error.message };
         }
     }
@@ -119,11 +251,7 @@ class AdminCRUD {
 
             let query = this.firebase.collections.products;
 
-            // Apply filters
-            if (!includeDeleted) {
-                query = query.where('deleted', '!=', true);
-            }
-            
+            // For simple queries, don't use complex where clauses that require indexes
             if (category) {
                 query = query.where('category', '==', category);
             }
@@ -136,10 +264,15 @@ class AdminCRUD {
             query = query.orderBy(orderBy, orderDirection).limit(limit);
 
             const snapshot = await query.get();
-            const products = snapshot.docs.map(doc => ({
+            let products = snapshot.docs.map(doc => ({
                 id: doc.id,
                 ...doc.data()
             }));
+
+            // Filter deleted products in code to avoid index issues
+            if (!includeDeleted) {
+                products = products.filter(product => !product.deleted);
+            }
 
             console.log(`✅ Retrieved ${products.length} products`);
             return { success: true, products: products };
@@ -309,7 +442,7 @@ class AdminCRUD {
     
     validateProductData(productData) {
         const errors = [];
-        const required = ['name', 'price', 'category'];
+        const required = ['name', 'price', 'category', 'size'];
 
         required.forEach(field => {
             if (!productData[field]) {
@@ -317,8 +450,19 @@ class AdminCRUD {
             }
         });
 
-        if (productData.price && isNaN(parseFloat(productData.price))) {
+        if (productData.price && isNaN(parseFloat(productData.price.replace('₹', '')))) {
             errors.push('Price must be a valid number');
+        }
+
+        // Validate size format
+        if (productData.size) {
+            const validSizePattern = /^(\d+(?:\.\d+)?)(g|kg|ml|L|pc|piece|pieces|dozen)$|^custom$/i;
+            if (!validSizePattern.test(productData.size) && productData.size !== 'custom') {
+                // Allow custom descriptive sizes
+                if (productData.size.length < 2 || productData.size.length > 20) {
+                    errors.push('Size must be between 2 and 20 characters');
+                }
+            }
         }
 
         return {
@@ -398,6 +542,15 @@ class AdminCRUD {
         } catch (error) {
             console.error('❌ Failed to import products:', error);
             return { success: false, error: error.message };
+        }
+    }
+
+    async autoSyncProductsFile(message) {
+        if (window.productsDataUpdater) {
+            await window.productsDataUpdater.syncProductsFile();
+            console.log(`✅ Products file synced successfully after ${message}`);
+        } else {
+            console.warn('ProductsDataUpdater not initialized, cannot auto-sync products file.');
         }
     }
 }

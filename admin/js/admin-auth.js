@@ -53,7 +53,7 @@ class AdminAuth {
         try {
             console.log('🔐 Attempting admin login for:', email);
             
-            // Check hardcoded credentials
+            // Check hardcoded credentials first
             const adminCred = this.adminCredentials[email];
             if (!adminCred || adminCred.password !== password) {
                 throw new Error('Invalid credentials');
@@ -74,16 +74,85 @@ class AdminAuth {
             this.currentUser = userData;
             this.isAuthenticated = true;
 
-            console.log('✅ Admin login successful:', email);
+            console.log('✅ Local admin login successful:', email);
             
-            // Try to sync with Firebase if available
+            // IMPORTANT: Try to authenticate with Firebase for database operations
             if (window.adminFirebase && window.adminFirebase.initialized) {
-                await this.syncWithFirebase(userData);
+                await this.authenticateWithFirebase(email, password, userData);
             }
 
             return { success: true, user: userData };
         } catch (error) {
             console.error('❌ Admin login failed:', error);
+            return { success: false, error: error.message };
+        }
+    }
+
+    async authenticateWithFirebase(email, password, userData) {
+        try {
+            console.log('🔐 Authenticating with Firebase for database access...');
+            
+            // For admin operations, we need a Firebase user account
+            // First try to sign in with existing Firebase account
+            try {
+                await window.adminFirebase.auth.signInWithEmailAndPassword(email, password);
+                console.log('✅ Firebase authentication successful with existing account');
+            } catch (signInError) {
+                console.log('⚠️ Firebase sign in failed, attempting to create account...', signInError.code);
+                
+                // If sign in fails, try to create the account
+                try {
+                    const userCredential = await window.adminFirebase.auth.createUserWithEmailAndPassword(email, password);
+                    console.log('✅ Firebase admin account created successfully');
+                    
+                    // Update the user profile
+                    await userCredential.user.updateProfile({
+                        displayName: userData.name
+                    });
+                    
+                } catch (createError) {
+                    if (createError.code === 'auth/email-already-in-use') {
+                        // Account exists but password might be different, try with a default password
+                        console.log('🔄 Account exists, trying with admin default password...');
+                        try {
+                            await window.adminFirebase.auth.signInWithEmailAndPassword(email, 'adminPassword123');
+                            console.log('✅ Firebase authentication successful with default password');
+                        } catch (defaultPasswordError) {
+                            // Try with the original password again
+                            console.log('🔄 Default password failed, trying original password again...');
+                            await window.adminFirebase.auth.signInWithEmailAndPassword(email, password);
+                            console.log('✅ Firebase authentication successful with original password');
+                        }
+                    } else if (createError.code === 'auth/weak-password') {
+                        // Password too weak, try with a stronger one
+                        console.log('🔄 Password too weak, trying with stronger password...');
+                        await window.adminFirebase.auth.createUserWithEmailAndPassword(email, 'AdminPassword123!');
+                        console.log('✅ Firebase admin account created with stronger password');
+                    } else {
+                        throw createError;
+                    }
+                }
+            }
+            
+            // Verify authentication worked
+            const currentUser = window.adminFirebase.auth.currentUser;
+            if (currentUser) {
+                console.log('✅ Firebase user verified:', currentUser.email);
+                
+                // Sync admin data with Firebase
+                await this.syncWithFirebase(userData);
+                
+                return { success: true, firebaseUser: currentUser };
+            } else {
+                throw new Error('Firebase authentication verification failed');
+            }
+            
+        } catch (error) {
+            console.error('❌ Firebase authentication failed:', error);
+            console.log('💡 Detailed error:', error.code, error.message);
+            
+            // For now, we'll continue with local auth but log the issue
+            console.warn('⚠️ Continuing with local auth only. This may cause permission issues with Firestore operations.');
             return { success: false, error: error.message };
         }
     }

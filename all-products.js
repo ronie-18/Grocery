@@ -85,7 +85,8 @@ function createProductCard(product) {
                     </div>
                     <span class="text-gray-500 text-xs">(${product.rating})</span>
                 </div>
-                <h3 class="font-bold text-gray-800 text-base mb-2 cursor-pointer hover:text-primary transition duration-300 product-name line-clamp-2">${product.name}</h3>
+                <h3 class="font-bold text-gray-800 text-base mb-1 cursor-pointer hover:text-primary transition duration-300 product-name line-clamp-2">${product.name}</h3>
+                ${product.size ? `<p class="text-xs text-gray-500 mb-2 flex items-center"><i class="fas fa-weight-hanging mr-1"></i>${product.size}</p>` : ''}
                 <div class="flex items-center justify-between mb-2">
                     <div class="flex items-center space-x-1.5">
                         <span class="text-primary font-bold text-base">₹${price}</span>
@@ -682,6 +683,18 @@ function showQuickView(productId) {
     }
     if (nameEl) {
         nameEl.textContent = product.name
+    }
+
+    // Size information
+    const sizeEl = document.getElementById('quickViewSize')
+    if (sizeEl && product.size) {
+        const sizeSpan = sizeEl.querySelector('span')
+        if (sizeSpan) {
+            sizeSpan.textContent = product.size
+            sizeEl.classList.remove('hidden')
+        }
+    } else if (sizeEl) {
+        sizeEl.classList.add('hidden')
     }
 
     // Price and discount
