@@ -44,6 +44,34 @@ const categories = [
         color: "from-red-100 to-red-200",
     },
     {
+        id: "oils",
+        name: "Oils",
+        description: "Cooking & Essential Oils",
+        image: "https://images.unsplash.com/photo-1474979266404-7eaacbcd87c5?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=1000&q=80",
+        color: "from-amber-100 to-yellow-200",
+    },
+    {
+        id: "pasta-noodles-vermicelli",
+        name: "Pasta, Noodles & Vermicelli",
+        description: "Fresh & Instant Pasta, Noodles and Vermicelli",
+        image: "https://images.unsplash.com/photo-1551892374-ecf8754cf8b0?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=1000&q=80",
+        color: "from-orange-100 to-red-200",
+    },
+    {
+        id: "bakery",
+        name: "Bakery",
+        description: "Fresh Bread & Pastries",
+        image: "https://images.unsplash.com/photo-1509440159596-0249088772ff?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=1000&q=80",
+        color: "from-brown-100 to-amber-200",
+    },
+    {
+        id: "salt-sugar",
+        name: "Salt and Sugar",
+        description: "Essential Cooking Ingredients",
+        image: "https://images.unsplash.com/photo-1558642452-9d2a7deb7f62?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=1000&q=80",
+        color: "from-gray-100 to-white",
+    },
+    {
         id: "dairy",
         name: "Dairy Products",
         description: "Milk, Paneer & More",
@@ -74,7 +102,7 @@ const categories = [
 ]
 
 // Initialize the website
-document.addEventListener("DOMContentLoaded", () => {
+document.addEventListener("DOMContentLoaded", async () => {
     // TEMPORARILY COMMENTED OUT - Loading screen disabled
     // showLoadingScreen()
     // setTimeout(() => {
@@ -82,9 +110,39 @@ document.addEventListener("DOMContentLoaded", () => {
     //     initializeWebsite()
     // }, 3000) // 3 second loading screen
 
-    // Initialize website immediately without loading screen
-    initializeWebsite()
+    // Wait a bit for all scripts to load, then initialize
+    console.log('📄 DOM loaded, waiting for scripts...')
+    setTimeout(async () => {
+        await initializeWebsite()
+    }, 500) // Small delay to ensure scripts load
 })
+
+// Error message function
+function showErrorMessage(message) {
+    // Create or update error banner
+    let errorBanner = document.getElementById('error-banner')
+    if (!errorBanner) {
+        errorBanner = document.createElement('div')
+        errorBanner.id = 'error-banner'
+        errorBanner.className = 'fixed top-0 left-0 right-0 bg-red-500 text-white text-center py-3 px-4 z-50'
+        document.body.insertBefore(errorBanner, document.body.firstChild)
+    }
+    
+    errorBanner.innerHTML = `
+        <div class="container mx-auto flex items-center justify-between">
+            <span>${message}</span>
+            <button onclick="this.parentElement.parentElement.style.display='none'" class="ml-4 text-white hover:text-gray-200">
+                <i class="fas fa-times"></i>
+            </button>
+        </div>
+    `
+    errorBanner.style.display = 'block'
+    
+    // Auto-hide after 10 seconds
+    setTimeout(() => {
+        if (errorBanner) errorBanner.style.display = 'none'
+    }, 10000)
+}
 
 // TEMPORARILY COMMENTED OUT - Loading screen functions disabled
 /*
@@ -102,36 +160,70 @@ function hideLoadingScreen() {
 }
 */
 
-function initializeWebsite() {
-    allProducts = [...products]
-    displayedProducts = [...allProducts]
+async function initializeWebsite() {
+    try {
+        // Load products from Supabase
+        console.log('🔄 Starting website initialization...')
+        console.log('🔄 Checking if getAllProducts function exists:', typeof getAllProducts)
+        
+        if (typeof getAllProducts !== 'function') {
+            throw new Error('getAllProducts function not available. Supabase client may not be loaded.')
+        }
+        
+        console.log('🔄 Loading products from Supabase...')
+        allProducts = await getAllProducts()
+        displayedProducts = [...allProducts]
+        
+        console.log(`✅ Loaded ${allProducts.length} products`)
+        
+        // Debug: Log sample products to see their category values
+        if (allProducts.length > 0) {
+            console.log('🔍 Sample products and their categories:')
+            allProducts.slice(0, 5).forEach((product, index) => {
+                console.log(`${index + 1}. ${product.name} - category: "${product.category}"`)
+            })
+            
+            // Get unique categories from products
+            const productCategories = [...new Set(allProducts.map(p => p.category))]
+            console.log('📋 Unique categories in products:', productCategories)
+        }
 
-    // Ensure category starts with "all" on every page load
-    currentCategory = "all"
+        // Ensure category starts with "all" on every page load
+        currentCategory = "all"
 
-    initializeSlider()
-    initializeSearch()
-    initializeCart()
-    initializeAuth()
-    initializeNavigation()
-    initializeCategories()
-    initializeProducts()
-    initializeModals()
-    initializeScrollEffects()
-    initializeNewsletter()
-    initializeLoginSystem()
+        // Populate dropdown after products are loaded
+        populateHeaderCategoryDropdown()
 
-    // Initialize new enhanced features
-    initializeQuickView()
-    initializeAdvancedFilters()
-    initializeEnhancedSearch()
-    initializeMobileNavigation()
-    initializeProductReviews()
+        initializeSlider()
+        initializeSearch()
+        initializeCart()
+        initializeAuth()
+        initializeNavigation()
+        await initializeCategories() // Make this async too
+        initializeProducts()
+        initializeModals()
+        initializeScrollEffects()
+        
+        initializeNewsletter()
+        initializeLoginSystem()
 
-    // Update cart count after everything is initialized
-    updateCartCount()
+        // Initialize new enhanced features
+        initializeQuickView()
+        
+        await initializeAdvancedFilters()
+        initializeEnhancedSearch()
+        initializeMobileNavigation()
+        initializeProductReviews()
+        
+        // Update cart count after everything is initialized
+        updateCartCount()
 
-    console.log("Near & Now website fully initialized!")
+        console.log("✅ Near & Now website fully initialized!")
+    } catch (error) {
+        console.error('❌ Error initializing website:', error)
+        // Fallback: show error message to user
+        showErrorMessage('Failed to load products. Please refresh the page.')
+    }
 }
 
 // Login System Functions
@@ -665,15 +757,13 @@ function performSearch() {
         renderProducts()
 
         document.getElementById("productsSection").scrollIntoView({ behavior: "smooth" })
-        showNotification(`Found ${filteredProducts.length} products for "${query}"`, "info")
     }
     hideSearchSuggestions()
 }
 
 // Categories Functionality
-function initializeCategories() {
+async function initializeCategories() {
     renderCategories()
-    populateHeaderCategoryDropdown()
 
     // Header category filter dropdown functionality
     const categoryFilter = document.getElementById("categoryFilter")
@@ -684,6 +774,7 @@ function initializeCategories() {
         // Add event listener for category changes
         categoryFilter.addEventListener("change", function (e) {
             const category = e.target.value
+            console.log('🔄 Header dropdown changed to:', category)
             filterByCategory(category)
         })
     }
@@ -703,11 +794,16 @@ function initializeCategories() {
     })
 }
 
-// Function to populate header category dropdown from products-data.js
+// Function to populate header category dropdown from local categories array
 function populateHeaderCategoryDropdown() {
     const categoryFilter = document.getElementById("categoryFilter")
-    if (categoryFilter && typeof getAvailableCategories === 'function') {
-        const categories = getAvailableCategories()
+    if (categoryFilter) {
+        // Debug: Log all categories from local array
+        console.log('📋 Categories from local script.js:', categories.map(cat => cat.name))
+
+        // Store current selection before clearing
+        const currentSelection = categoryFilter.value
+        console.log(`💾 Preserving current selection: "${currentSelection}"`)
 
         // Clear existing options except "All Categories"
         const allCategoriesOption = categoryFilter.querySelector('option[value="all"]')
@@ -718,13 +814,53 @@ function populateHeaderCategoryDropdown() {
             categoryFilter.innerHTML = '<option value="all">All Categories</option>'
         }
 
-        // Add dynamic category options with proper formatting
+        // Get categories that actually have products
+        const productCategories = allProducts.length > 0 ? [...new Set(allProducts.map(p => p.category))] : []
+        console.log('🔍 Available product categories:', productCategories)
+
+        // Add dynamic category options with category IDs as values and names as display text
+        // Only add categories that have products or are in our script.js list
         categories.forEach(category => {
-            const option = document.createElement('option')
-            option.value = category
-            option.textContent = formatCategoryName(category)
-            categoryFilter.appendChild(option)
+            // Only add if category has products or is in our predefined list
+            if (productCategories.includes(category.id) || allProducts.length === 0) {
+                const option = document.createElement('option')
+                option.value = category.id // Use category ID for filtering
+                option.textContent = category.name // Use category name for display
+                categoryFilter.appendChild(option)
+                console.log(`📋 Added option: value="${category.id}", text="${category.name}"`)
+            } else {
+                console.log(`⚠️ Skipping category "${category.name}" (${category.id}) - no products found`)
+            }
         })
+        
+        // Restore the previous selection if it was valid
+        if (currentSelection && currentSelection !== 'all') {
+            const categoryExists = categories.some(cat => cat.id === currentSelection)
+            if (categoryExists) {
+                categoryFilter.value = currentSelection
+                console.log(`🔄 Restored selection to: "${currentSelection}"`)
+            }
+        }
+        
+        console.log('✅ Header dropdown populated with categories from local script.js')
+        
+        // Debug: Check for category mismatches
+        if (allProducts.length > 0) {
+            const scriptCategories = categories.map(cat => cat.id)
+            
+            console.log('🔍 Script.js category IDs:', scriptCategories)
+            console.log('🔍 Product categories:', productCategories)
+            
+            const missingInProducts = scriptCategories.filter(cat => !productCategories.includes(cat))
+            const missingInScript = productCategories.filter(cat => !scriptCategories.includes(cat))
+            
+            if (missingInProducts.length > 0) {
+                console.log('⚠️ Categories in script.js but not in products:', missingInProducts)
+            }
+            if (missingInScript.length > 0) {
+                console.log('⚠️ Categories in products but not in script.js:', missingInScript)
+            }
+        }
     }
 }
 
@@ -762,25 +898,40 @@ function renderCategories() {
 
 function filterByCategory(category) {
     currentCategory = category
+    console.log('🔍 filterByCategory called with:', category)
+    
     if (category === "all") {
         displayedProducts = [...allProducts]
+        console.log('📦 Showing all products:', displayedProducts.length)
     } else {
+        console.log(`🔍 Filtering for category: "${category}"`)
+        console.log(`🔍 Total products available: ${allProducts.length}`)
+        
+        // Log all unique categories in products for debugging
+        const availableCategories = [...new Set(allProducts.map(p => p.category))]
+        console.log(`🔍 Available categories in products:`, availableCategories)
+        
         displayedProducts = allProducts.filter((product) => product.category === category)
+        console.log(`📦 Filtered products for category "${category}":`, displayedProducts.length)
+        
+        if (displayedProducts.length > 0) {
+            console.log('🔍 Sample filtered products:', displayedProducts.slice(0, 3).map(p => ({ name: p.name, category: p.category })))
+        } else {
+            console.log('❌ No products found for this category!')
+        }
     }
 
     // Update the header category dropdown to match current selection
     const categoryFilter = document.getElementById("categoryFilter")
     if (categoryFilter) {
+        console.log(`🔄 Setting dropdown value to: "${category}"`)
         categoryFilter.value = category
+        console.log(`✅ Dropdown value set to: "${categoryFilter.value}"`)
     }
 
     currentPage = 1
     renderProducts()
     document.getElementById("productsSection").scrollIntoView({ behavior: "smooth" })
-
-    // Use proper category name for notification
-    const categoryName = category === "all" ? "All Products" : formatCategoryName(category)
-    showNotification(`Showing ${categoryName} (${displayedProducts.length} products)`, "info")
 }
 
 // Products Functionality
@@ -794,33 +945,113 @@ function initializeProducts() {
         renderProducts()
     })
 
-    // Load more functionality
-    document.getElementById("loadMoreBtn").addEventListener("click", loadMoreProducts)
+    // Initialize infinite scroll (with fallback)
+    setTimeout(() => {
+        initializeInfiniteScroll()
+    }, 100) // Small delay to ensure DOM is ready
 }
 
 function renderProducts() {
+    console.log("🔄 renderProducts v2.0 called - currentPage:", currentPage, "displayedProducts:", displayedProducts.length)
+    
+    // Get products grid with null check
     const productsGrid = document.getElementById("productsGrid")
+    if (!productsGrid) {
+        console.error("❌ productsGrid element not found!")
+        return
+    }
+    
+    // Calculate products to show
     const startIndex = 0
     const endIndex = currentPage * productsPerPage
     const productsToShow = displayedProducts.slice(startIndex, endIndex)
 
-    productsGrid.innerHTML = productsToShow.map((product) => createProductCard(product)).join("")
-
-    // Update load more button visibility
-    const loadMoreBtn = document.getElementById("loadMoreBtn")
-    if (endIndex >= displayedProducts.length) {
-        loadMoreBtn.style.display = "none"
-    } else {
-        loadMoreBtn.style.display = "block"
+    // Render products
+    try {
+        productsGrid.innerHTML = productsToShow.map((product) => createProductCard(product)).join("")
+        console.log("✅ Products rendered successfully:", productsToShow.length)
+    } catch (error) {
+        console.error("❌ Error rendering products:", error)
+        return
     }
 
+    // Handle infinite scroll indicators safely
+    handleInfiniteScrollIndicators(endIndex)
+
     // Add event listeners to product cards
-    addProductEventListeners()
+    try {
+        addProductEventListeners()
+    } catch (error) {
+        console.error("❌ Error adding product event listeners:", error)
+    }
+}
+
+// Separate function to handle infinite scroll indicators
+function handleInfiniteScrollIndicators(endIndex) {
+    try {
+        const infiniteScrollTrigger = document.getElementById("infiniteScrollTrigger")
+        const endOfProductsIndicator = document.getElementById("endOfProductsIndicator")
+        
+        console.log("🔍 Checking infinite scroll elements:", {
+            trigger: !!infiniteScrollTrigger,
+            indicator: !!endOfProductsIndicator,
+            endIndex,
+            totalProducts: displayedProducts.length
+        })
+        
+        // Only update indicators if both elements exist
+        if (infiniteScrollTrigger && endOfProductsIndicator) {
+            if (endIndex >= displayedProducts.length) {
+                // All products are loaded
+                infiniteScrollTrigger.classList.add("hidden")
+                endOfProductsIndicator.classList.remove("hidden")
+                console.log("✅ All products loaded - showing end indicator")
+            } else {
+                // More products available
+                infiniteScrollTrigger.classList.remove("hidden")
+                endOfProductsIndicator.classList.add("hidden")
+                console.log("✅ More products available - showing trigger")
+            }
+        } else {
+            console.warn("⚠️ Infinite scroll elements not found - creating fallback")
+            createFallbackLoadMoreButton(endIndex)
+        }
+    } catch (error) {
+        console.error("❌ Error handling infinite scroll indicators:", error)
+        // Create fallback button as last resort
+        try {
+            createFallbackLoadMoreButton(endIndex)
+        } catch (fallbackError) {
+            console.error("❌ Even fallback failed:", fallbackError)
+        }
+    }
 }
 
 function createProductCard(product) {
     const price = typeof product.price === 'string' ? product.price.replace(/^₹/, '') : product.price;
     const originalPrice = product.originalPrice ? (typeof product.originalPrice === 'string' ? product.originalPrice.replace(/^₹/, '') : product.originalPrice) : null;
+    
+    // Check if product is in cart and get quantity
+    const cartItem = cartItems.find(item => item.id === product.id);
+    const quantityInCart = cartItem ? cartItem.quantity : 0;
+
+    // Create the cart button area - either simple Add button or quantity controls
+    const cartButtonArea = quantityInCart > 0 ? `
+        <div class="quantity-controls flex items-center bg-primary rounded-full text-white">
+            <button class="decrease-quantity-btn hover:bg-secondary px-2 py-1.5 rounded-l-full transition duration-300" data-product-id="${product.id}">
+                <i class="fas fa-minus text-xs"></i>
+            </button>
+            <span class="quantity-display px-3 py-1.5 text-sm font-semibold bg-primary">${quantityInCart}</span>
+            <button class="increase-quantity-btn hover:bg-secondary px-2 py-1.5 rounded-r-full transition duration-300" data-product-id="${product.id}">
+                <i class="fas fa-plus text-xs"></i>
+            </button>
+        </div>
+    ` : `
+        <button class="add-to-cart bg-primary text-white px-3 py-1.5 rounded-full hover:bg-secondary transition duration-300 flex items-center space-x-1" data-product-id="${product.id}">
+            <i class="fas fa-plus text-xs"></i>
+            <span class="text-sm">Add</span>
+        </button>
+    `;
 
     return `
         <div class="product-card bg-white rounded-2xl shadow-lg hover:shadow-xl transition duration-300 overflow-hidden group" data-product-id="${product.id}">
@@ -847,10 +1078,7 @@ function createProductCard(product) {
                         <span class="text-primary font-bold text-base">₹${price}</span>
                         ${originalPrice ? `<span class="text-gray-400 line-through text-xs">₹${originalPrice}</span>` : ''}
                     </div>
-                    <button class="add-to-cart-btn bg-primary text-white px-3 py-1.5 rounded-full hover:bg-secondary transition duration-300 flex items-center space-x-1">
-                        <i class="fas fa-plus text-xs"></i>
-                        <span class="text-sm">Add</span>
-                    </button>
+                    ${cartButtonArea}
                 </div>
             </div>
         </div>
@@ -879,13 +1107,30 @@ function generateStarRating(rating) {
 }
 
 function addProductEventListeners() {
-    // Add to cart buttons - Updated to use correct selectors
-    document.querySelectorAll(".add-to-cart-btn, .add-to-cart-btn-mobile").forEach((button) => {
+    // Add to cart buttons
+    document.querySelectorAll(".add-to-cart").forEach((button) => {
         button.addEventListener("click", function (e) {
             e.preventDefault()
-            const productCard = this.closest('.product-card')
-            const productId = productCard.dataset.productId
+            const productId = this.dataset.productId
             addToCart(productId)
+        })
+    })
+
+    // Increase quantity buttons
+    document.querySelectorAll(".increase-quantity-btn").forEach((button) => {
+        button.addEventListener("click", function (e) {
+            e.preventDefault()
+            const productId = this.dataset.productId
+            addToCart(productId)
+        })
+    })
+
+    // Decrease quantity buttons
+    document.querySelectorAll(".decrease-quantity-btn").forEach((button) => {
+        button.addEventListener("click", function (e) {
+            e.preventDefault()
+            const productId = this.dataset.productId
+            decreaseCartQuantity(productId)
         })
     })
 
@@ -930,18 +1175,90 @@ function sortProducts() {
     }
 }
 
+// Infinite Scroll Functionality
+function initializeInfiniteScroll() {
+    const infiniteScrollTrigger = document.getElementById("infiniteScrollTrigger")
+    
+    if (!infiniteScrollTrigger) {
+        console.warn("Infinite scroll trigger element not found - infinite scroll disabled")
+        return
+    }
+
+    console.log("✅ Initializing infinite scroll functionality")
+
+    // Create an intersection observer to detect when the trigger comes into view
+    const observer = new IntersectionObserver((entries) => {
+        entries.forEach(entry => {
+            if (entry.isIntersecting && !entry.target.classList.contains("hidden")) {
+                console.log("🔄 Infinite scroll triggered - loading more products")
+                loadMoreProducts()
+            }
+        })
+    }, {
+        root: null, // Use the viewport as root
+        rootMargin: '100px', // Trigger 100px before the element is visible
+        threshold: 0.1 // Trigger when 10% of the element is visible
+    })
+
+    // Start observing the trigger element
+    observer.observe(infiniteScrollTrigger)
+    
+    // Store observer reference for cleanup if needed
+    window.infiniteScrollObserver = observer
+}
+
 function loadMoreProducts() {
-    currentPage++
-    renderProducts()
-    showNotification("More products loaded!", "success")
+    // Check if there are more products to load
+    const endIndex = currentPage * productsPerPage
+    if (endIndex >= displayedProducts.length) {
+        return // No more products to load
+    }
+
+    // Add a small delay to show loading state
+    setTimeout(() => {
+        currentPage++
+        renderProducts()
+        
+        // Products loaded silently for better UX
+    }, 300) // 300ms delay to show loading spinner briefly
+}
+
+// Fallback function to create a load more button if infinite scroll elements are missing
+function createFallbackLoadMoreButton(endIndex) {
+    const productsSection = document.getElementById("productsSection")
+    if (!productsSection) return
+    
+    // Remove any existing fallback button
+    const existingFallback = document.getElementById("fallbackLoadMore")
+    if (existingFallback) {
+        existingFallback.remove()
+    }
+    
+    // Only create button if there are more products to load
+    if (endIndex < displayedProducts.length) {
+        const fallbackButton = document.createElement("div")
+        fallbackButton.id = "fallbackLoadMore"
+        fallbackButton.className = "text-center mt-12"
+        fallbackButton.innerHTML = `
+            <button onclick="loadMoreProducts()" class="bg-primary text-white px-8 py-3 rounded-lg font-semibold hover:bg-secondary transition duration-300">
+                Load More Products
+            </button>
+        `
+        
+        const productsGrid = document.getElementById("productsGrid")
+        if (productsGrid && productsGrid.parentNode) {
+            productsGrid.parentNode.insertBefore(fallbackButton, productsGrid.nextSibling)
+        }
+    }
 }
 
 // Cart Functionality
 function initializeCart() {
-    // Sync with CartManager if available
-    if (window.cartManager) {
-        cartItems = window.cartManager.getItems();
-        cartCount = window.cartManager.getCount();
+    // Load cart from localStorage
+    const savedCart = localStorage.getItem("nearNowCartItems")
+    if (savedCart) {
+        cartItems = JSON.parse(savedCart)
+        cartCount = cartItems.reduce((total, item) => total + item.quantity, 0)
     }
 
     // Update cart count and display immediately
@@ -957,36 +1274,6 @@ function initializeCart() {
 }
 
 function addToCart(productId) {
-    // Use CartManager if available, otherwise fallback to local logic
-    if (window.cartManager) {
-        const success = window.cartManager.addToCart(productId, 1);
-        if (success) {
-            // Update local variables for UI consistency
-            cartItems = window.cartManager.getItems();
-            cartCount = window.cartManager.getCount();
-
-            // Update UI
-            updateCartCount();
-            updateCartDisplay();
-        }
-
-        // Update button state
-        const button = document.querySelector(`[data-product-id="${productId}"].add-to-cart`)
-        if (button) {
-            button.innerHTML = '<i class="fas fa-check"></i> <span>Added</span>'
-            button.classList.remove("bg-primary")
-            button.classList.add("bg-green-500")
-
-            setTimeout(() => {
-                button.innerHTML = '<i class="fas fa-plus"></i> <span>Add</span>'
-                button.classList.remove("bg-green-500")
-                button.classList.add("bg-primary")
-            }, 2000)
-        }
-        return success;
-    }
-
-    // Fallback logic for when CartManager is not available
     const product = allProducts.find((p) => p.id === productId)
     if (!product) return
 
@@ -1002,73 +1289,29 @@ function addToCart(productId) {
         })
     }
 
-    // Always recalculate cart count from the items array
+    // Recalculate cart count
     cartCount = cartItems.reduce((total, item) => total + item.quantity, 0)
 
-    // Save to localStorage first
+    // Save to localStorage
     saveCartToStorage()
 
-    // Then update the display
+    // Update the display
     updateCartCount()
     updateCartDisplay()
 
-    // Update button state
-    const button = document.querySelector(`[data-product-id="${productId}"].add-to-cart`)
-    if (button) {
-        button.innerHTML = '<i class="fas fa-check"></i> <span>Added</span>'
-        button.classList.remove("bg-primary")
-        button.classList.add("bg-green-500")
-
-        setTimeout(() => {
-            button.innerHTML = '<i class="fas fa-plus"></i> <span>Add</span>'
-            button.classList.remove("bg-green-500")
-            button.classList.add("bg-primary")
-        }, 2000)
-    }
+    // Update only the specific product card to avoid blinking
+    updateSpecificProductCard(productId)
 }
 
 function removeFromCart(productId) {
-    // Use CartManager if available, otherwise fallback to local logic
-    if (window.cartManager) {
-        const success = window.cartManager.removeFromCart(productId);
-        if (success) {
-            // Update local variables for UI consistency
-            cartItems = window.cartManager.getItems();
-            cartCount = window.cartManager.getCount();
-
-            // Update UI
-            updateCartCount();
-            updateCartDisplay();
-        }
-        return success;
-    }
-
-    // Fallback logic
     cartItems = cartItems.filter((item) => item.id !== productId)
     cartCount = cartItems.reduce((total, item) => total + item.quantity, 0)
     updateCartCount()
     updateCartDisplay()
     saveCartToStorage()
-    showNotification("Item removed from cart", "info")
 }
 
 function updateCartQuantity(productId, newQuantity) {
-    // Use CartManager if available, otherwise fallback to local logic
-    if (window.cartManager) {
-        const success = window.cartManager.updateQuantity(productId, newQuantity);
-        if (success) {
-            // Update local variables for UI consistency
-            cartItems = window.cartManager.getItems();
-            cartCount = window.cartManager.getCount();
-
-            // Update UI
-            updateCartCount();
-            updateCartDisplay();
-        }
-        return success;
-    }
-
-    // Fallback logic
     const item = cartItems.find((item) => item.id === productId)
     if (item) {
         if (newQuantity <= 0) {
@@ -1080,6 +1323,115 @@ function updateCartQuantity(productId, newQuantity) {
             updateCartDisplay()
             saveCartToStorage()
         }
+    }
+}
+
+function decreaseCartQuantity(productId) {
+    const existingItem = cartItems.find((item) => item.id === productId)
+    if (!existingItem) return
+
+    if (existingItem.quantity > 1) {
+        existingItem.quantity -= 1
+    } else {
+        // Remove item completely if quantity becomes 0
+        const index = cartItems.findIndex((item) => item.id === productId)
+        cartItems.splice(index, 1)
+    }
+
+    // Recalculate cart count
+    cartCount = cartItems.reduce((total, item) => total + item.quantity, 0)
+
+    // Save to localStorage
+    saveCartToStorage()
+
+    // Update the display
+    updateCartCount()
+    updateCartDisplay()
+
+    // Update only the specific product card to avoid blinking
+    updateSpecificProductCard(productId)
+}
+
+function updateSpecificProductCard(productId) {
+    // Find the specific product card and update only its cart controls
+    const productCard = document.querySelector(`[data-product-id="${productId}"]`)
+    if (!productCard) return
+
+    const cartItem = cartItems.find(item => item.id === productId)
+    const quantityInCart = cartItem ? cartItem.quantity : 0
+
+    // Find the current button area (either Add button or quantity controls)
+    const currentButton = productCard.querySelector('.add-to-cart')
+    const currentControls = productCard.querySelector('.quantity-controls')
+    const buttonContainer = currentButton ? currentButton.parentElement : (currentControls ? currentControls.parentElement : null)
+    
+    if (!buttonContainer) return
+
+    // Remove the current element
+    if (currentButton) {
+        currentButton.remove()
+    }
+    if (currentControls) {
+        currentControls.remove()
+    }
+    
+    // Create and insert the new element
+    if (quantityInCart > 0) {
+        // Create quantity controls
+        const quantityControls = document.createElement('div')
+        quantityControls.className = 'quantity-controls flex items-center bg-primary rounded-full text-white'
+        quantityControls.innerHTML = `
+            <button class="decrease-quantity-btn hover:bg-secondary px-2 py-1.5 rounded-l-full transition duration-300" data-product-id="${productId}">
+                <i class="fas fa-minus text-xs"></i>
+            </button>
+            <span class="quantity-display px-3 py-1.5 text-sm font-semibold bg-primary">${quantityInCart}</span>
+            <button class="increase-quantity-btn hover:bg-secondary px-2 py-1.5 rounded-r-full transition duration-300" data-product-id="${productId}">
+                <i class="fas fa-plus text-xs"></i>
+            </button>
+        `
+        buttonContainer.appendChild(quantityControls)
+        
+        // Re-attach event listeners for the new buttons
+        addEventListenersToSpecificCard(quantityControls)
+    } else {
+        // Create Add button
+        const addButton = document.createElement('button')
+        addButton.className = 'add-to-cart bg-primary text-white px-3 py-1.5 rounded-full hover:bg-secondary transition duration-300 flex items-center space-x-1'
+        addButton.setAttribute('data-product-id', productId)
+        addButton.innerHTML = `
+            <i class="fas fa-plus text-xs"></i>
+            <span class="text-sm">Add</span>
+        `
+        buttonContainer.appendChild(addButton)
+        
+        // Re-attach event listener for the new button
+        addButton.addEventListener('click', function(e) {
+            e.preventDefault()
+            const productId = this.dataset.productId
+            addToCart(productId)
+        })
+    }
+}
+
+function addEventListenersToSpecificCard(quantityControls) {
+    // Add event listeners to the specific quantity controls
+    const increaseButton = quantityControls.querySelector('.increase-quantity-btn')
+    const decreaseButton = quantityControls.querySelector('.decrease-quantity-btn')
+
+    if (increaseButton) {
+        increaseButton.addEventListener('click', function(e) {
+            e.preventDefault()
+            const productId = this.dataset.productId
+            addToCart(productId)
+        })
+    }
+
+    if (decreaseButton) {
+        decreaseButton.addEventListener('click', function(e) {
+            e.preventDefault()
+            const productId = this.dataset.productId
+            decreaseCartQuantity(productId)
+        })
     }
 }
 
@@ -1101,13 +1453,10 @@ function updateCartCount() {
     if (mobileCartCountElement) {
         mobileCartCountElement.textContent = cartCount
     }
+
 }
 
 function updateCartDisplay() {
-    // Sync with CartManager if available
-    if (window.cartManager) {
-        cartItems = window.cartManager.getItems();
-    }
 
     const cartItemsContainer = document.getElementById("cartItems")
     const cartTotal = document.getElementById("cartTotal")
@@ -1797,7 +2146,8 @@ initializeLazyLoading()
 
 // Console welcome message
 console.log(`
-🛒 Near & Now Website Loaded Successfully!
+🛒 Near & Now Website Loaded Successfully! v2.0 - Infinite Scroll Edition
+🚀 Script loaded at: ${new Date().toISOString()}
 `)
 
 // ===== NEW ENHANCED FEATURES =====
@@ -1867,7 +2217,7 @@ function initializeQuickView() {
                     addToCart(quickViewProduct.id)
                 }
                 closeQuickView()
-                showNotification(`${quickViewProduct.name} added to cart!`, 'success')
+                // Notification removed - visual feedback provided by quantity controls
             }
         })
     }
@@ -2026,7 +2376,7 @@ function loadQuickViewReviews(product) {
 }
 
 // Advanced Filtering Functionality
-function initializeAdvancedFilters() {
+async function initializeAdvancedFilters() {
     // Hide filters panel
     document.getElementById('hideFilters').addEventListener('click', () => {
         document.getElementById('filtersPanel').classList.add('hidden')
@@ -2056,7 +2406,7 @@ function initializeAdvancedFilters() {
     })
 
     // Category filters
-    populateCategoryFilters()
+    await populateCategoryFilters()
 
     // Rating filters
     document.querySelectorAll('.rating-filter').forEach(checkbox => {
@@ -2077,25 +2427,34 @@ function initializeAdvancedFilters() {
     document.getElementById('clearAllFilters').addEventListener('click', clearAllFilters)
 }
 
-function populateCategoryFilters() {
-    const categories = getAvailableCategories()
-    const container = document.getElementById('categoryFilters')
+async function populateCategoryFilters() {
+    try {
+        const categories = await getAvailableCategories()
+        const container = document.getElementById('categoryFilters')
 
-    const categoriesHTML = categories.map(category => `
-        <label class="flex items-center space-x-2 cursor-pointer">
-            <input type="checkbox" value="${category}" class="category-filter-checkbox">
-            <span class="text-sm text-gray-600">${category.charAt(0).toUpperCase() + category.slice(1)}</span>
-        </label>
-    `).join('')
+        if (!container) {
+            console.warn('Category filters container not found')
+            return
+        }
 
-    container.innerHTML = categoriesHTML
+        const categoriesHTML = categories.map(category => `
+            <label class="flex items-center space-x-2 cursor-pointer">
+                <input type="checkbox" value="${category.name}" class="category-filter-checkbox">
+                <span class="text-sm text-gray-600">${category.name.charAt(0).toUpperCase() + category.name.slice(1)}</span>
+            </label>
+        `).join('')
 
-    // Add event listeners
-    document.querySelectorAll('.category-filter-checkbox').forEach(checkbox => {
-        checkbox.addEventListener('change', () => {
-            updateCategoryFilters()
+        container.innerHTML = categoriesHTML
+
+        // Add event listeners
+        document.querySelectorAll('.category-filter-checkbox').forEach(checkbox => {
+            checkbox.addEventListener('change', () => {
+                updateCategoryFilters()
+            })
         })
-    })
+    } catch (error) {
+        console.error('Error populating category filters:', error)
+    }
 }
 
 function updateCategoryFilters() {
@@ -2159,7 +2518,7 @@ function applyAllFilters() {
         document.getElementById('filtersPanel').classList.add('hidden')
     }
 
-    showNotification(`Found ${filtered.length} products matching your filters`, 'info')
+    // Applied filters silently
 }
 
 function clearAllFilters() {
@@ -2311,7 +2670,7 @@ function applySearchFilters() {
     renderProducts()
 
     hideAdvancedSearchFilters()
-    showNotification(`Found ${filtered.length} products`, 'info')
+    // Search filters applied silently
 }
 
 function clearSearchFilters() {
@@ -2335,32 +2694,44 @@ function initializeMobileNavigation() {
     const mobileCategoriesDropdown = document.getElementById('mobileCategoriesDropdown')
     const mobileCategoriesIcon = document.getElementById('mobileCategoriesIcon')
 
+    // Only initialize if mobile nav elements exist
+    if (!mobileNavBtn || !mobileNavMenu) {
+        console.log('📱 Mobile navigation elements not found, skipping mobile nav initialization')
+        return
+    }
+
     // Open mobile navigation
     mobileNavBtn.addEventListener('click', () => {
         openMobileNavigation()
     })
 
     // Close mobile navigation
-    closeMobileNav.addEventListener('click', () => {
-        closeMobileNavigation()
-    })
+    if (closeMobileNav) {
+        closeMobileNav.addEventListener('click', () => {
+            closeMobileNavigation()
+        })
+    }
 
-    mobileNavOverlay.addEventListener('click', () => {
-        closeMobileNavigation()
-    })
+    if (mobileNavOverlay) {
+        mobileNavOverlay.addEventListener('click', () => {
+            closeMobileNavigation()
+        })
+    }
 
     // Mobile categories dropdown
-    mobileCategoriesBtn.addEventListener('click', () => {
-        const isOpen = mobileCategoriesDropdown.classList.contains('hidden')
+    if (mobileCategoriesBtn && mobileCategoriesDropdown && mobileCategoriesIcon) {
+        mobileCategoriesBtn.addEventListener('click', () => {
+            const isOpen = mobileCategoriesDropdown.classList.contains('hidden')
 
-        if (isOpen) {
-            mobileCategoriesDropdown.classList.remove('hidden')
-            mobileCategoriesIcon.style.transform = 'rotate(180deg)'
-        } else {
-            mobileCategoriesDropdown.classList.add('hidden')
-            mobileCategoriesIcon.style.transform = 'rotate(0deg)'
-        }
-    })
+            if (isOpen) {
+                mobileCategoriesDropdown.classList.remove('hidden')
+                mobileCategoriesIcon.style.transform = 'rotate(180deg)'
+            } else {
+                mobileCategoriesDropdown.classList.add('hidden')
+                mobileCategoriesIcon.style.transform = 'rotate(0deg)'
+            }
+        })
+    }
 
     // Mobile navigation links
     document.querySelectorAll('.mobile-nav-link').forEach(link => {
@@ -2374,21 +2745,30 @@ function initializeMobileNavigation() {
     })
 
     // Mobile quick actions
-    document.getElementById('mobileCartBtn').addEventListener('click', () => {
-        toggleCartSidebar()
-        closeMobileNavigation()
-    })
+    const mobileCartBtn = document.getElementById('mobileCartBtn')
+    if (mobileCartBtn) {
+        mobileCartBtn.addEventListener('click', () => {
+            toggleCartSidebar()
+            closeMobileNavigation()
+        })
+    }
 
-    document.getElementById('mobileWishlistBtn').addEventListener('click', () => {
-        // Navigate to wishlist or show wishlist modal
-        closeMobileNavigation()
-    })
+    const mobileWishlistBtn = document.getElementById('mobileWishlistBtn')
+    if (mobileWishlistBtn) {
+        mobileWishlistBtn.addEventListener('click', () => {
+            // Navigate to wishlist or show wishlist modal
+            closeMobileNavigation()
+        })
+    }
 
     // Mobile login
-    document.getElementById('mobileLoginBtn').addEventListener('click', () => {
-        showLoginModal()
-        closeMobileNavigation()
-    })
+    const mobileLoginBtn = document.getElementById('mobileLoginBtn')
+    if (mobileLoginBtn) {
+        mobileLoginBtn.addEventListener('click', () => {
+            showLoginModal()
+            closeMobileNavigation()
+        })
+    }
 
     // Mobile search
     const mobileSearchInput = document.getElementById('mobileSearchInput')
@@ -2409,8 +2789,12 @@ function openMobileNavigation() {
     const mobileNavMenu = document.getElementById('mobileNavMenu')
     const mobileNavOverlay = document.getElementById('mobileNavOverlay')
 
-    mobileNavMenu.classList.remove('-translate-x-full')
-    mobileNavOverlay.classList.remove('hidden')
+    if (mobileNavMenu) {
+        mobileNavMenu.classList.remove('-translate-x-full')
+    }
+    if (mobileNavOverlay) {
+        mobileNavOverlay.classList.remove('hidden')
+    }
     mobileNavOpen = true
 
     // Prevent body scroll
@@ -2421,8 +2805,12 @@ function closeMobileNavigation() {
     const mobileNavMenu = document.getElementById('mobileNavMenu')
     const mobileNavOverlay = document.getElementById('mobileNavOverlay')
 
-    mobileNavMenu.classList.add('-translate-x-full')
-    mobileNavOverlay.classList.add('hidden')
+    if (mobileNavMenu) {
+        mobileNavMenu.classList.add('-translate-x-full')
+    }
+    if (mobileNavOverlay) {
+        mobileNavOverlay.classList.add('hidden')
+    }
     mobileNavOpen = false
 
     // Restore body scroll

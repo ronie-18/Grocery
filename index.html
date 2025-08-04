@@ -241,12 +241,65 @@
         .line-clamp-2 {
             display: -webkit-box;
             -webkit-line-clamp: 2;
+            line-clamp: 2;
             -webkit-box-orient: vertical;
             overflow: hidden;
         }
 
         .product-card {
             transition: all 0.3s ease;
+        }
+
+        /* Quantity Controls Styles */
+        .quantity-controls {
+            transition: all 0.3s ease;
+            box-shadow: 0 2px 8px rgba(5, 150, 105, 0.3);
+            animation: quantityControlsAppear 0.3s ease-in;
+        }
+
+        @keyframes quantityControlsAppear {
+            from {
+                opacity: 0;
+                transform: scale(0.8);
+            }
+            to {
+                opacity: 1;
+                transform: scale(1);
+            }
+        }
+
+        .quantity-controls .decrease-quantity-btn:hover,
+        .quantity-controls .increase-quantity-btn:hover {
+            background-color: #047857;
+            transform: scale(1.1);
+        }
+
+        .quantity-controls .quantity-display {
+            min-width: 2rem;
+            text-align: center;
+            user-select: none;
+            font-weight: 600;
+        }
+
+        .quantity-controls button {
+            transition: all 0.2s ease;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .quantity-controls button:active {
+            transform: scale(0.95);
+        }
+
+        /* Add to cart button enhancement */
+        .add-to-cart-btn {
+            transition: all 0.3s ease;
+        }
+
+        .add-to-cart-btn:hover {
+            transform: translateY(-1px);
+            box-shadow: 0 4px 12px rgba(5, 150, 105, 0.4);
         }
 
         .product-card:hover {
@@ -404,18 +457,11 @@
         }
     </style>
     
-    <!-- Firebase SDK (only load if not already loaded) -->
-    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-firestore.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-database.js"></script> <!-- Added for Realtime Database -->
+    <!-- Supabase JavaScript SDK -->
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     
-    <!-- Load products-data.js as fallback -->
-    <script src="products-data.js"></script>
-    
-    <!-- Firebase Store Integration -->
-    <script src="firebase-store-integration.js"></script>
-    
-    <script src="cart-utils.js"></script>
+    <!-- Load Supabase client -->
+    <script src="supabase-client.js"></script>
 </head>
 
 <body class="bg-gray-50">
@@ -498,6 +544,18 @@
                             <a href="#"
                                 class="block py-2 px-4 text-sm text-gray-600 hover:text-primary transition duration-300 category-filter"
                                 data-category="spices">Spices</a>
+                            <a href="#"
+                                class="block py-2 px-4 text-sm text-gray-600 hover:text-primary transition duration-300 category-filter"
+                                data-category="oils">Oils</a>
+                            <a href="#"
+                                class="block py-2 px-4 text-sm text-gray-600 hover:text-primary transition duration-300 category-filter"
+                                data-category="pasta-noodles-vermicelli">Pasta, Noodles & Vermicelli</a>
+                            <a href="#"
+                                class="block py-2 px-4 text-sm text-gray-600 hover:text-primary transition duration-300 category-filter"
+                                data-category="bakery">Bakery</a>
+                            <a href="#"
+                                class="block py-2 px-4 text-sm text-gray-600 hover:text-primary transition duration-300 category-filter"
+                                data-category="salt-sugar">Salt and Sugar</a>
                             <a href="#"
                                 class="block py-2 px-4 text-sm text-gray-600 hover:text-primary transition duration-300 category-filter"
                                 data-category="dairy">Dairy Products</a>
@@ -1187,12 +1245,20 @@
                 <!-- Products will be populated by JavaScript -->
             </div>
 
-            <!-- Load More Button -->
-            <div class="text-center mt-12">
-                <button id="loadMoreBtn"
-                    class="bg-primary text-white px-8 py-3 rounded-lg font-semibold hover:bg-secondary transition duration-300">
-                    Load More Products
-                </button>
+            <!-- Infinite Scroll Trigger (hidden element that triggers loading when visible) -->
+            <div id="infiniteScrollTrigger" class="text-center mt-12 hidden">
+                <div class="inline-flex items-center px-8 py-3">
+                    <i class="fas fa-spinner fa-spin text-primary text-xl mr-3"></i>
+                    <span class="text-gray-600 font-semibold">Loading more products...</span>
+                </div>
+            </div>
+            
+            <!-- End of products indicator -->
+            <div id="endOfProductsIndicator" class="text-center mt-12 hidden">
+                <div class="inline-flex items-center px-8 py-3">
+                    <i class="fas fa-check-circle text-green-500 text-xl mr-3"></i>
+                    <span class="text-gray-600 font-semibold">You've seen all products!</span>
+                </div>
             </div>
         </div>
     </section>
@@ -1317,7 +1383,7 @@
         <i class="fas fa-arrow-up"></i>
     </button>
 
-    <script src="script.js"></script>
+    <script src="script.js?v=2.0"></script>
     <script>
         // Intercept Proceed to Checkout
         window.addEventListener('DOMContentLoaded', function () {

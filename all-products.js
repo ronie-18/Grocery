@@ -1,8 +1,8 @@
 // --- Product Data ---
-// products, getAllProducts, getAvailableCategories are loaded from products-data.js
+// Products are loaded from Supabase
 
-let allProducts = products;
-let displayedProducts = [...allProducts];
+let allProducts = [];
+let displayedProducts = [];
 let currentCategory = 'all';
 let currentSort = 'default';
 let currentPage = 1;
@@ -659,7 +659,7 @@ function initializeQuickView() {
                     addToCart(quickViewProduct.id)
                 }
                 closeQuickView()
-                showNotification(`${quickViewProduct.name} added to cart!`, 'success')
+                // Notification removed - visual feedback provided by quantity controls
             }
         })
     }
@@ -1577,34 +1577,78 @@ function initializeLoginSystem() {
 }
 
 // Initialize everything when DOM is loaded
-document.addEventListener('DOMContentLoaded', function () {
-    // Cart items will be loaded by CartManager
-    if (window.cartManager) {
-        cartItems = window.cartManager.getItems();
-        cartCount = window.cartManager.getCount();
-    } else {
-        // Fallback: Load cart items from localStorage
-        const savedCart = localStorage.getItem("nearNowCartItems");
-        if (savedCart) {
-            cartItems = JSON.parse(savedCart);
-            cartCount = cartItems.reduce((total, item) => total + item.quantity, 0);
+document.addEventListener('DOMContentLoaded', async function () {
+    try {
+        // Load products from Supabase first
+        console.log('🔄 Loading products from Supabase...')
+        allProducts = await getAllProducts()
+        displayedProducts = [...allProducts]
+        console.log(`✅ Loaded ${allProducts.length} products`)
+
+        // Initialize the UI components
+        initializeFilters()
+        renderProducts()
+        
+        // Cart items will be loaded by CartManager
+        if (window.cartManager) {
+            cartItems = window.cartManager.getItems();
+            cartCount = window.cartManager.getCount();
+        } else {
+            // Fallback: Load cart items from localStorage
+            const savedCart = localStorage.getItem("nearNowCartItems");
+            if (savedCart) {
+                cartItems = JSON.parse(savedCart);
+                cartCount = cartItems.reduce((total, item) => total + item.quantity, 0);
+            }
         }
+
+        // Initialize authentication
+        initializeAuth()
+        initializeLoginSystem()
+
+        // Initialize cart functionality
+        initializeCart()
+
+        // Initialize quick view functionality
+        initializeQuickView()
+
+        // Update cart and wishlist counts after loading from localStorage
+        updateCartCount();
+        updateWishlistCount();
+        
+        console.log('✅ All products page initialized successfully')
+    } catch (error) {
+        console.error('❌ Error initializing all products page:', error)
+        showErrorMessage('Failed to load products. Please refresh the page.')
     }
-
-    // Initialize authentication
-    initializeAuth()
-    initializeLoginSystem()
-
-    // Initialize cart functionality
-    initializeCart()
-
-    // Initialize quick view functionality
-    initializeQuickView()
-
-    // Update cart and wishlist counts after loading from localStorage
-    updateCartCount();
-    updateWishlistCount();
 });
+
+// Error message function
+function showErrorMessage(message) {
+    // Create or update error banner
+    let errorBanner = document.getElementById('error-banner')
+    if (!errorBanner) {
+        errorBanner = document.createElement('div')
+        errorBanner.id = 'error-banner'
+        errorBanner.className = 'fixed top-0 left-0 right-0 bg-red-500 text-white text-center py-3 px-4 z-50'
+        document.body.insertBefore(errorBanner, document.body.firstChild)
+    }
+    
+    errorBanner.innerHTML = `
+        <div class="container mx-auto flex items-center justify-between">
+            <span>${message}</span>
+            <button onclick="this.parentElement.parentElement.style.display='none'" class="ml-4 text-white hover:text-gray-200">
+                <i class="fas fa-times"></i>
+            </button>
+        </div>
+    `
+    errorBanner.style.display = 'block'
+    
+    // Auto-hide after 10 seconds
+    setTimeout(() => {
+        if (errorBanner) errorBanner.style.display = 'none'
+    }, 10000)
+}
 
 // Cart Functionality
 function initializeCart() {
