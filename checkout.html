@@ -11,6 +11,9 @@
         :root {
             --primary-color: #3B82F6;
             --secondary-color: #1E40AF;
+            --success-color: #10B981;
+            --warning-color: #F59E0B;
+            --error-color: #EF4444;
         }
 
         .text-primary {
@@ -32,8 +35,191 @@
         .focus\:border-primary:focus {
             border-color: var(--primary-color);
         }
+
         body {
             background: linear-gradient(135deg, #e0f7fa 0%, #e6ffe6 100%);
+        }
+
+        .input-group {
+            position: relative;
+        }
+
+        .input-group input:focus+.floating-label,
+        .input-group input:not(:placeholder-shown)+.floating-label {
+            transform: translateY(-1.5rem) scale(0.75);
+            color: var(--primary-color);
+        }
+
+        .floating-label {
+            position: absolute;
+            left: 1rem;
+            top: 50%;
+            transform: translateY(-50%);
+            transition: all 0.2s ease;
+            pointer-events: none;
+            background: white;
+            padding: 0 0.25rem;
+        }
+
+        .error-message {
+            font-size: 0.75rem;
+            color: var(--error-color);
+            margin-top: 0.25rem;
+            display: none;
+        }
+
+        .input-error {
+            border-color: var(--error-color) !important;
+            box-shadow: 0 0 0 1px var(--error-color) !important;
+        }
+
+        .progress-step {
+            transition: all 0.3s ease;
+        }
+
+        .progress-step.active {
+            background-color: var(--primary-color);
+            color: white;
+        }
+
+        .progress-step.completed {
+            background-color: var(--success-color);
+            color: white;
+        }
+
+        /* Fixed Progress Bar Alignment */
+        .progress-container {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            width: 100%;
+            max-width: 600px;
+            margin: 0 auto;
+            position: relative;
+        }
+
+        .progress-step-wrapper {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            flex: 0 0 auto;
+            z-index: 2;
+            position: relative;
+        }
+
+        .progress-line {
+            flex: 1;
+            height: 2px;
+            background-color: #e5e7eb;
+            margin: 0 1rem;
+            position: relative;
+            top: -20px;
+        }
+
+        .progress-line.completed {
+            background-color: var(--success-color);
+        }
+
+        .progress-circle {
+            width: 3rem;
+            height: 3rem;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1rem;
+            font-weight: bold;
+            background-color: #e5e7eb;
+            color: #6b7280;
+            border: 3px solid #e5e7eb;
+            transition: all 0.3s ease;
+        }
+
+        .progress-circle.active {
+            background-color: var(--primary-color);
+            color: white;
+            border-color: var(--primary-color);
+            transform: scale(1.1);
+            box-shadow: 0 0 0 4px rgba(59, 130, 246, 0.2);
+        }
+
+        .progress-circle.completed {
+            background-color: var(--success-color);
+            color: white;
+            border-color: var(--success-color);
+        }
+
+        .progress-label {
+            margin-top: 0.75rem;
+            font-size: 0.875rem;
+            font-weight: 600;
+            text-align: center;
+            color: #6b7280;
+            max-width: 120px;
+            line-height: 1.2;
+        }
+
+        .progress-label.active {
+            color: var(--primary-color);
+        }
+
+        .progress-label.completed {
+            color: var(--success-color);
+        }
+
+        .animate-pulse-slow {
+            animation: pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+        }
+
+        .cart-item {
+            transition: all 0.3s ease;
+        }
+
+        .cart-item:hover {
+            background-color: #f8fafc;
+        }
+
+        .quantity-btn {
+            transition: all 0.2s ease;
+        }
+
+        .quantity-btn:hover:not(:disabled) {
+            background-color: var(--primary-color);
+            color: white;
+        }
+
+        .sticky-summary {
+            position: sticky;
+            top: 2rem;
+        }
+
+        @media (max-width: 1024px) {
+            .sticky-summary {
+                position: static;
+            }
+        }
+
+        @media (max-width: 768px) {
+            .progress-container {
+                max-width: 100%;
+                padding: 0 1rem;
+            }
+
+            .progress-circle {
+                width: 2.5rem;
+                height: 2.5rem;
+                font-size: 0.875rem;
+            }
+
+            .progress-line {
+                margin: 0 0.5rem;
+                top: -16px;
+            }
+
+            .progress-label {
+                font-size: 0.75rem;
+                max-width: 100px;
+            }
         }
     </style>
 </head>
@@ -41,7 +227,8 @@
 <body class="bg-gray-50 min-h-screen flex flex-col">
     <!-- Header -->
     <div class="w-full bg-white shadow-sm py-2 px-4 flex items-center justify-between">
-        <a href="index.html" class="text-primary font-semibold hover:underline flex items-center text-xl">
+        <a href="index.html"
+            class="text-primary font-semibold hover:underline flex items-center text-xl transition-colors">
             <i class="fas fa-arrow-left mr-2"></i>Back To Cart
         </a>
         <div class="flex items-center justify-center flex-1">
@@ -58,77 +245,95 @@
     </div>
 
     <!-- Order Status Message -->
-    <div id="orderStatus" class="hidden w-full text-center py-3 px-4 font-semibold"></div>
+    <div id="orderStatus" class="hidden w-full text-center py-3 px-4 font-semibold transition-all duration-300"></div>
 
     <div class="max-w-6xl mx-auto mt-8 flex flex-col lg:flex-row gap-8 px-4">
         <div class="flex-1 min-w-0">
-            <!-- Progress Bar -->
-            <!-- <div class="flex items-center justify-center mb-8">
-                <div class="flex flex-col items-center flex-1">
-                    <div class="w-8 h-8 rounded-full bg-primary text-white flex items-center justify-center font-bold">1</div>
-                    <span class="mt-2 font-semibold text-primary text-sm text-center">Shipping & Gift Options</span>
+            <!-- Fixed Progress Bar -->
+            <div class="mb-8">
+                <div class="progress-container">
+                    <div class="progress-step-wrapper">
+                        <div class="progress-circle active">
+                            <i class="fas fa-shipping-fast"></i>
+                        </div>
+                        <span class="progress-label active">Shipping & Details</span>
+                    </div>
+                    <div class="progress-line"></div>
+                    <div class="progress-step-wrapper">
+                        <div class="progress-circle">
+                            <i class="fas fa-credit-card"></i>
+                        </div>
+                        <span class="progress-label">Payment</span>
+                    </div>
+                    <div class="progress-line"></div>
+                    <div class="progress-step-wrapper">
+                        <div class="progress-circle">
+                            <i class="fas fa-check-circle"></i>
+                        </div>
+                        <span class="progress-label">Confirmation</span>
+                    </div>
                 </div>
-                <div class="flex-1 h-1 bg-gray-200 mx-2"></div>
-                <div class="flex flex-col items-center flex-1">
-                    <div class="w-8 h-8 rounded-full bg-gray-200 text-gray-500 flex items-center justify-center font-bold">2</div>
-                    <span class="mt-2 font-semibold text-gray-400 text-sm text-center">Savings & Payment</span>
-                </div>
-                <div class="flex-1 h-1 bg-gray-200 mx-2"></div>
-                <div class="flex flex-col items-center flex-1">
-                    <div class="w-8 h-8 rounded-full bg-gray-200 text-gray-500 flex items-center justify-center font-bold">3</div>
-                    <span class="mt-2 font-semibold text-gray-400 text-sm text-center">Order Review</span>
-                </div>
-            </div> -->
+            </div>
 
             <!-- Gift Options -->
-            <div class="bg-white rounded-lg shadow-md p-6 mb-6">
+            <div class="bg-white rounded-lg shadow-md p-6 mb-6 border-l-4 border-yellow-400">
                 <label class="flex items-center cursor-pointer">
-                    <input type="checkbox" class="mr-3 h-4 w-4 text-primary focus:ring-primary border-gray-300 rounded">
+                    <input type="checkbox" id="giftOrder"
+                        class="mr-3 h-5 w-5 text-primary focus:ring-primary border-gray-300 rounded">
                     <div>
-                        <span class="font-semibold">🎁 Order includes gift(s)</span>
+                        <span class="font-semibold text-lg">🎁 Order includes gift(s)</span>
                         <p class="text-sm text-gray-500 mt-1">The packing slip included with your order will not display
-                            prices.</p>
+                            prices. Perfect for surprising your loved ones!</p>
                     </div>
                 </label>
             </div>
 
             <!-- Delivery Address -->
-            <form id="addressForm" class="bg-white rounded-lg shadow-md p-6 mb-6">
-                <h2 class="text-xl font-bold mb-6 flex items-center">
-                    <i class="fas fa-map-marker-alt text-primary mr-2"></i>
+            <form id="addressForm" class="bg-white rounded-lg shadow-md p-6 mb-6 border-t-4 border-primary">
+                <h2 class="text-2xl font-bold mb-6 flex items-center">
+                    <i class="fas fa-map-marker-alt text-primary mr-3"></i>
                     Delivery Address
                 </h2>
 
-                <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
-                    <div class="relative">
-                        <input type="text" id="firstName" placeholder="First Name*" required
-                            class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary">
-                        <span class="absolute top-3 right-3 text-red-500">*</span>
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
+                    <div class="input-group">
+                        <input type="text" id="firstName" placeholder=" " required
+                            class="w-full px-4 py-3 border-2 border-gray-300 rounded-lg focus:outline-none focus:border-primary transition-colors">
+                        <label class="floating-label text-gray-500">First Name *</label>
+                        <div class="error-message" id="firstName-error">First name is required</div>
                     </div>
-                    <div class="relative">
-                        <input type="text" id="lastName" placeholder="Last Name*" required
-                            class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary">
-                        <span class="absolute top-3 right-3 text-red-500">*</span>
+                    <div class="input-group">
+                        <input type="text" id="lastName" placeholder=" " required
+                            class="w-full px-4 py-3 border-2 border-gray-300 rounded-lg focus:outline-none focus:border-primary transition-colors">
+                        <label class="floating-label text-gray-500">Last Name *</label>
+                        <div class="error-message" id="lastName-error">Last name is required</div>
                     </div>
                 </div>
 
-                <input type="text" id="companyName" placeholder="Add Your Company Name (Optional)"
-                    class="w-full mb-4 px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary">
-
-                <div class="relative mb-4">
-                    <input type="text" id="streetAddress" placeholder="Street Address*" required
-                        class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary">
-                    <span class="absolute top-3 right-3 text-red-500">*</span>
+                <div class="input-group mb-6">
+                    <input type="text" id="companyName" placeholder=" "
+                        class="w-full px-4 py-3 border-2 border-gray-300 rounded-lg focus:outline-none focus:border-primary transition-colors">
+                    <label class="floating-label text-gray-500">Company Name (Optional)</label>
                 </div>
 
-                <input type="text" id="aptSuite" placeholder="Apt/Suite/Floor (Optional)"
-                    class="w-full mb-4 px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary">
+                <div class="input-group mb-6">
+                    <input type="text" id="streetAddress" placeholder=" " required
+                        class="w-full px-4 py-3 border-2 border-gray-300 rounded-lg focus:outline-none focus:border-primary transition-colors">
+                    <label class="floating-label text-gray-500">Street Address *</label>
+                    <div class="error-message" id="streetAddress-error">Street address is required</div>
+                </div>
+
+                <div class="input-group mb-6">
+                    <input type="text" id="aptSuite" placeholder=" "
+                        class="w-full px-4 py-3 border-2 border-gray-300 rounded-lg focus:outline-none focus:border-primary transition-colors">
+                    <label class="floating-label text-gray-500">Apt/Suite/Floor (Optional)</label>
+                </div>
 
                 <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
-                    <div class="relative">
+                    <div class="input-group">
                         <select id="state" required
-                            class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary">
-                            <option value="">State*</option>
+                            class="w-full px-4 py-3 border-2 border-gray-300 rounded-lg focus:outline-none focus:border-primary transition-colors appearance-none bg-white">
+                            <option value="">Select State *</option>
                             <option value="Andhra Pradesh">Andhra Pradesh</option>
                             <option value="Arunachal Pradesh">Arunachal Pradesh</option>
                             <option value="Assam">Assam</option>
@@ -159,142 +364,735 @@
                             <option value="Uttarakhand">Uttarakhand</option>
                             <option value="West Bengal">West Bengal</option>
                         </select>
-                        <span class="absolute top-3 right-8 text-red-500">*</span>
+                        <i class="fas fa-chevron-down absolute right-3 top-4 text-gray-400 pointer-events-none"></i>
+                        <div class="error-message" id="state-error">Please select a state</div>
                     </div>
-                    <div class="relative">
-                        <input type="text" id="city" placeholder="City*" required
-                            class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary">
-                        <span class="absolute top-3 right-3 text-red-500">*</span>
+                    <div class="input-group">
+                        <input type="text" id="city" placeholder=" " required
+                            class="w-full px-4 py-3 border-2 border-gray-300 rounded-lg focus:outline-none focus:border-primary transition-colors">
+                        <label class="floating-label text-gray-500">City *</label>
+                        <div class="error-message" id="city-error">City is required</div>
                     </div>
-                    <div class="relative">
-                        <input type="text" id="zipCode" placeholder="Zip Code*" required
-                            class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary">
-                        <span class="absolute top-3 right-3 text-red-500">*</span>
+                    <div class="input-group">
+                        <input type="text" id="zipCode" placeholder=" " required pattern="[0-9]{6}"
+                            class="w-full px-4 py-3 border-2 border-gray-300 rounded-lg focus:outline-none focus:border-primary transition-colors">
+                        <label class="floating-label text-gray-500">PIN Code *</label>
+                        <div class="error-message" id="zipCode-error">Valid 6-digit PIN code is required</div>
                     </div>
                 </div>
 
-                <label class="flex items-center mb-6 cursor-pointer">
+                <label
+                    class="flex items-center mb-6 cursor-pointer p-3 bg-gray-50 rounded-lg hover:bg-gray-100 transition-colors">
                     <input type="checkbox" id="useAsBilling"
-                        class="mr-3 h-4 w-4 text-primary focus:ring-primary border-gray-300 rounded">
-                    <span>Use as billing address</span>
+                        class="mr-3 h-5 w-5 text-primary focus:ring-primary border-gray-300 rounded">
+                    <span class="font-medium">Use as billing address</span>
                 </label>
 
                 <!-- Contact Info -->
-                <div class="bg-gray-50 rounded-lg p-6 mb-6">
-                    <h3 class="font-bold mb-4 flex items-center">
-                        <i class="fas fa-phone text-primary mr-2"></i>
-                        Contact Info
+                <div class="bg-gradient-to-r from-blue-50 to-indigo-50 rounded-lg p-6 mb-6 border border-blue-100">
+                    <h3 class="font-bold mb-4 flex items-center text-lg">
+                        <i class="fas fa-phone text-primary mr-3"></i>
+                        Contact Information
                     </h3>
                     <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
-                        <div class="relative">
-                            <input type="email" id="orderEmail" placeholder="Email for Order Tracking*" required
-                                class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary">
-                            <span class="absolute top-3 right-3 text-red-500">*</span>
+                        <div class="input-group">
+                            <input type="email" id="orderEmail" placeholder=" " required
+                                class="w-full px-4 py-3 border-2 border-gray-300 rounded-lg focus:outline-none focus:border-primary transition-colors">
+                            <label class="floating-label text-gray-500">Email for Order Tracking *</label>
+                            <div class="error-message" id="orderEmail-error">Valid email is required</div>
                         </div>
-                        <div class="relative">
-                            <input type="tel" id="orderPhone" placeholder="Phone for Delivery Contact*" required
-                                class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary">
-                            <span class="absolute top-3 right-3 text-red-500">*</span>
+                        <div class="input-group">
+                            <input type="tel" id="orderPhone" placeholder=" " required pattern="[0-9]{10}"
+                                class="w-full px-4 py-3 border-2 border-gray-300 rounded-lg focus:outline-none focus:border-primary transition-colors">
+                            <label class="floating-label text-gray-500">Phone for Delivery *</label>
+                            <div class="error-message" id="orderPhone-error">Valid 10-digit phone number is required
+                            </div>
                         </div>
                     </div>
-                    <label class="flex items-center mt-4 cursor-pointer">
+                    <label
+                        class="flex items-center mt-4 cursor-pointer p-2 bg-white rounded-lg hover:bg-blue-50 transition-colors">
                         <input type="checkbox" id="textAlerts"
-                            class="mr-3 h-4 w-4 text-primary focus:ring-primary border-gray-300 rounded">
-                        <span>📱 Get text alerts for your order on your mobile</span>
+                            class="mr-3 h-5 w-5 text-primary focus:ring-primary border-gray-300 rounded">
+                        <span>📱 Get text alerts for your order updates</span>
                     </label>
-                    <p class="text-xs text-gray-500 mt-3">
-                        <i class="fas fa-info-circle mr-1"></i>
-                        We'll also look for coupons associated with your email and phone number. We only contact you if
-                        there's an issue with your order.
+                    <p class="text-xs text-gray-600 mt-3 bg-white p-3 rounded-lg">
+                        <i class="fas fa-info-circle mr-1 text-blue-500"></i>
+                        We'll look for coupons associated with your email and phone. We only contact you for order
+                        updates or issues.
                     </p>
                 </div>
 
                 <!-- Payment Method Selection -->
-                <div class="bg-gray-50 rounded-lg p-6 mb-6">
-                    <h3 class="font-bold mb-4 flex items-center">
-                        <i class="fas fa-credit-card text-primary mr-2"></i>
+                <div class="bg-gradient-to-r from-green-50 to-emerald-50 rounded-lg p-6 mb-6 border border-green-100">
+                    <h3 class="font-bold mb-4 flex items-center text-lg">
+                        <i class="fas fa-credit-card text-primary mr-3"></i>
                         Payment Method
                     </h3>
-                    <div class="space-y-3">
-                        <label class="flex items-center cursor-pointer">
-                            <input type="radio" name="paymentMethod" id="paymentMethod" value="cod"
-                                class="mr-3 h-4 w-4 text-primary focus:ring-primary border-gray-300" checked>
-                            <span>💵 Cash on Delivery</span>
+                    <div class="space-y-4">
+                        <label
+                            class="flex items-center cursor-pointer p-4 bg-white rounded-lg border-2 border-transparent hover:border-primary transition-colors">
+                            <input type="radio" name="paymentMethod" id="paymentCOD" value="cod"
+                                class="mr-3 h-5 w-5 text-primary focus:ring-primary border-gray-300" checked>
+                            <div class="flex items-center">
+                                <span class="text-2xl mr-3">💵</span>
+                                <div>
+                                    <span class="font-semibold">Cash on Delivery</span>
+                                    <p class="text-sm text-gray-500">Pay when your order arrives</p>
+                                </div>
+                            </div>
                         </label>
-                        <label class="flex items-center cursor-pointer">
+                        <label
+                            class="flex items-center cursor-pointer p-4 bg-white rounded-lg border-2 border-transparent hover:border-primary transition-colors">
                             <input type="radio" name="paymentMethod" value="razorpay"
-                                class="mr-3 h-4 w-4 text-primary focus:ring-primary border-gray-300">
-                            <span>💳 RazorPay (Credit/Debit Card, UPI, Net Banking)</span>
+                                class="mr-3 h-5 w-5 text-primary focus:ring-primary border-gray-300">
+                            <div class="flex items-center">
+                                <span class="text-2xl mr-3">💳</span>
+                                <div>
+                                    <span class="font-semibold">Online Payment</span>
+                                    <p class="text-sm text-gray-500">Credit/Debit Card, UPI, Net Banking</p>
+                                </div>
+                            </div>
                         </label>
-                        <label class="flex items-center cursor-pointer">
+                        <label
+                            class="flex items-center cursor-pointer p-4 bg-white rounded-lg border-2 border-transparent hover:border-primary transition-colors">
                             <input type="radio" name="paymentMethod" value="other"
-                                class="mr-3 h-4 w-4 text-primary focus:ring-primary border-gray-300">
-                            <span>🏦 Other Payment Gateway</span>
+                                class="mr-3 h-5 w-5 text-primary focus:ring-primary border-gray-300">
+                            <div class="flex items-center">
+                                <span class="text-2xl mr-3">🏦</span>
+                                <div>
+                                    <span class="font-semibold">Other Payment Options</span>
+                                    <p class="text-sm text-gray-500">Digital wallets and more</p>
+                                </div>
+                            </div>
                         </label>
                     </div>
                 </div>
 
-                <button type="submit"
-                    class="w-full bg-primary text-white py-4 rounded-lg font-bold hover:bg-secondary transition duration-300 text-lg shadow-md">
+                <button type="submit" id="submitButton"
+                    class="w-full bg-primary text-white py-4 rounded-lg font-bold hover:bg-secondary transition duration-300 text-lg shadow-lg hover:shadow-xl transform hover:scale-[1.02]">
                     <i class="fas fa-shopping-cart mr-2"></i>
-                    Place Order
+                    <span id="submitButtonText">Place Order</span>
+                    <div id="submitSpinner" class="hidden inline-block ml-2">
+                        <i class="fas fa-spinner fa-spin"></i>
+                    </div>
                 </button>
             </form>
         </div>
 
         <!-- Order Summary -->
-        <div class="w-full lg:w-96 bg-white rounded-2xl shadow-xl p-8 h-fit self-start sticky top-8">
+        <div class="w-full lg:w-96 bg-white rounded-2xl shadow-xl p-8 h-fit sticky-summary border-t-4 border-primary">
             <div class="flex items-center mb-6">
                 <i class="fa-solid fa-basket-shopping text-primary text-2xl mr-3"></i>
                 <h2 class="text-2xl font-bold text-gray-800">Order Summary</h2>
             </div>
 
             <div id="orderSummary" class="mb-6 text-gray-700">
-                <!-- Order items will be populated here by JS -->
                 <div class="flex items-center justify-center py-8">
-                    <div class="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
+                    <div class="animate-pulse-slow rounded-full h-8 w-8 border-b-2 border-primary"></div>
                     <span class="ml-3 text-gray-500">Loading cart items...</span>
                 </div>
             </div>
 
-            <div class="flex items-center justify-between border-t pt-6 mt-6">
+            <div class="flex items-center justify-between border-t-2 border-primary pt-6 mt-6">
                 <span class="font-bold text-xl">Total</span>
                 <span id="orderTotal" class="text-3xl font-bold text-primary">₹0</span>
             </div>
 
-            <!-- Handling Charges fallback row for non-JS environments (hidden by JS) -->
-            <!--
-            <div class="flex justify-between text-sm mt-2">
-                <span>Handling Charges</span>
-                <span>₹18.00</span>
-            </div>
-            -->
-
-            <div class="mt-6 p-4 bg-green-50 rounded-lg">
+            <div class="mt-6 p-4 bg-gradient-to-r from-green-50 to-emerald-50 rounded-lg border border-green-200">
                 <div class="flex items-center text-green-700">
-                    <i class="fas fa-truck mr-2"></i>
+                    <i class="fas fa-truck mr-2 text-green-600"></i>
                     <span class="text-sm font-semibold">Free delivery on orders above ₹500</span>
                 </div>
+                <div id="deliveryProgress" class="mt-2 bg-green-200 rounded-full h-2">
+                    <div id="deliveryProgressBar" class="bg-green-600 h-2 rounded-full transition-all duration-500"
+                        style="width: 0%"></div>
+                </div>
+                <div id="deliveryMessage" class="text-xs text-green-600 mt-1"></div>
             </div>
 
             <!-- Quick Actions -->
             <div class="mt-6 space-y-3">
                 <button onclick="window.location.href='index.html'"
-                    class="w-full bg-gray-100 text-gray-700 py-2 rounded-lg font-semibold hover:bg-gray-200 transition duration-300">
+                    class="w-full bg-gray-100 text-gray-700 py-3 rounded-lg font-semibold hover:bg-gray-200 transition duration-300 border border-gray-300">
                     <i class="fas fa-arrow-left mr-2"></i>
                     Continue Shopping
                 </button>
                 <button onclick="clearCart()"
-                    class="w-full bg-red-100 text-red-700 py-2 rounded-lg font-semibold hover:bg-red-200 transition duration-300">
+                    class="w-full bg-red-50 text-red-600 py-3 rounded-lg font-semibold hover:bg-red-100 transition duration-300 border border-red-200">
                     <i class="fas fa-trash mr-2"></i>
                     Clear Cart
                 </button>
             </div>
+
+            <!-- Trust Badges -->
+            <div class="mt-6 pt-6 border-t border-gray-200">
+                <div class="flex justify-center space-x-4 text-gray-400">
+                    <div class="text-center">
+                        <i class="fas fa-shield-alt text-lg mb-1"></i>
+                        <p class="text-xs">Secure</p>
+                    </div>
+                    <div class="text-center">
+                        <i class="fas fa-truck text-lg mb-1"></i>
+                        <p class="text-xs">Fast Delivery</p>
+                    </div>
+                    <div class="text-center">
+                        <i class="fas fa-undo text-lg mb-1"></i>
+                        <p class="text-xs">Easy Returns</p>
+                    </div>
+                </div>
+            </div>
         </div>
     </div>
 
-    <!-- Include the external checkout.js file -->
-    <script src="checkout.js"></script>
+    <script>
+        // --- Enhanced Checkout Logic ---
+
+        // Get current user
+        const currentUser = null; // Replace with actual user data
+        const addressKey = currentUser ? `nearNowAddress_${currentUser.mobile}` : null;
+
+        // DOM elements
+        const addressForm = document.getElementById('addressForm');
+        const orderStatus = document.getElementById('orderStatus');
+        const orderSummary = document.getElementById('orderSummary');
+        const orderTotal = document.getElementById('orderTotal');
+        const submitButton = document.getElementById('submitButton');
+        const submitButtonText = document.getElementById('submitButtonText');
+        const submitSpinner = document.getElementById('submitSpinner');
+
+        // Form validation
+        function validateField(fieldId, validationType = 'required') {
+            const field = document.getElementById(fieldId);
+            const errorElement = document.getElementById(`${fieldId}-error`);
+            let isValid = true;
+            let errorMessage = '';
+
+            if (!field) return true;
+
+            const value = field.value.trim();
+
+            switch (validationType) {
+                case 'required':
+                    if (!value) {
+                        isValid = false;
+                        errorMessage = `${field.placeholder || 'This field'} is required`;
+                    }
+                    break;
+                case 'email':
+                    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+                    if (!value) {
+                        isValid = false;
+                        errorMessage = 'Email is required';
+                    } else if (!emailRegex.test(value)) {
+                        isValid = false;
+                        errorMessage = 'Please enter a valid email address';
+                    }
+                    break;
+                case 'phone':
+                    const phoneRegex = /^[0-9]{10}$/;
+                    if (!value) {
+                        isValid = false;
+                        errorMessage = 'Phone number is required';
+                    } else if (!phoneRegex.test(value)) {
+                        isValid = false;
+                        errorMessage = 'Please enter a valid 10-digit phone number';
+                    }
+                    break;
+                case 'zipcode':
+                    const zipRegex = /^[0-9]{6}$/;
+                    if (!value) {
+                        isValid = false;
+                        errorMessage = 'PIN code is required';
+                    } else if (!zipRegex.test(value)) {
+                        isValid = false;
+                        errorMessage = 'Please enter a valid 6-digit PIN code';
+                    }
+                    break;
+            }
+
+            if (isValid) {
+                field.classList.remove('input-error');
+                if (errorElement) {
+                    errorElement.style.display = 'none';
+                }
+            } else {
+                field.classList.add('input-error');
+                if (errorElement) {
+                    errorElement.textContent = errorMessage;
+                    errorElement.style.display = 'block';
+                }
+            }
+
+            return isValid;
+        }
+
+        // Real-time validation
+        document.addEventListener('DOMContentLoaded', () => {
+            // Add real-time validation listeners
+            const validationRules = {
+                'firstName': 'required',
+                'lastName': 'required',
+                'streetAddress': 'required',
+                'city': 'required',
+                'state': 'required',
+                'zipCode': 'zipcode',
+                'orderEmail': 'email',
+                'orderPhone': 'phone'
+            };
+
+            Object.entries(validationRules).forEach(([fieldId, rule]) => {
+                const field = document.getElementById(fieldId);
+                if (field) {
+                    field.addEventListener('blur', () => validateField(fieldId, rule));
+                    field.addEventListener('input', () => {
+                        if (field.classList.contains('input-error')) {
+                            validateField(fieldId, rule);
+                        }
+                    });
+                }
+            });
+
+            renderOrderSummary();
+        });
+
+        if (addressForm) {
+            addressForm.addEventListener('submit', function (e) {
+                e.preventDefault();
+
+                // Show loading state
+                submitButton.disabled = true;
+                submitButtonText.textContent = 'Processing...';
+                submitSpinner.classList.remove('hidden');
+
+                // Validate all fields
+                const validationRules = {
+                    'firstName': 'required',
+                    'lastName': 'required',
+                    'streetAddress': 'required',
+                    'city': 'required',
+                    'state': 'required',
+                    'zipCode': 'zipcode',
+                    'orderEmail': 'email',
+                    'orderPhone': 'phone'
+                };
+
+                let isValid = true;
+                Object.entries(validationRules).forEach(([fieldId, rule]) => {
+                    if (!validateField(fieldId, rule)) {
+                        isValid = false;
+                    }
+                });
+
+                if (!isValid) {
+                    showError('Please correct the errors above and try again.');
+                    resetSubmitButton();
+                    return;
+                }
+
+                // Store shipping information
+                const shippingInfo = {
+                    firstName: document.getElementById('firstName').value,
+                    lastName: document.getElementById('lastName').value,
+                    companyName: document.getElementById('companyName').value,
+                    streetAddress: document.getElementById('streetAddress').value,
+                    aptSuite: document.getElementById('aptSuite').value,
+                    city: document.getElementById('city').value,
+                    state: document.getElementById('state').value,
+                    zipCode: document.getElementById('zipCode').value,
+                    email: document.getElementById('orderEmail').value,
+                    phone: document.getElementById('orderPhone').value,
+                    useAsBilling: document.getElementById('useAsBilling').checked,
+                    textAlerts: document.getElementById('textAlerts').checked,
+                    isGift: document.getElementById('giftOrder').checked,
+                    paymentMethod: document.querySelector('input[name="paymentMethod"]:checked').value
+                };
+
+                // Simulate processing delay
+                setTimeout(() => {
+                    try {
+                        // Handle payment method
+                        const payment = shippingInfo.paymentMethod;
+                        if (payment === 'razorpay') {
+                            showStatus('Redirecting to payment gateway...', 'blue');
+                            // Here you would integrate with actual payment gateway
+                        } else if (payment === 'other') {
+                            showStatus('Redirecting to payment options...', 'blue');
+                        } else {
+                            showStatus('Order placed successfully! 🎉', 'green');
+                            // Clear cart after successful order
+                            setTimeout(() => {
+                                clearCart();
+                                // Could redirect to order confirmation page
+                            }, 2000);
+                        }
+                    } catch (error) {
+                        showError('An error occurred. Please try again.');
+                        console.error('Order submission error:', error);
+                    } finally {
+                        resetSubmitButton();
+                    }
+                }, 1500);
+            });
+        }
+
+        function resetSubmitButton() {
+            submitButton.disabled = false;
+            submitButtonText.textContent = 'Place Order';
+            submitSpinner.classList.add('hidden');
+        }
+
+        function showStatus(msg, color) {
+            if (orderStatus) {
+                orderStatus.textContent = msg;
+                orderStatus.classList.remove('hidden');
+                orderStatus.classList.remove('text-green-600', 'text-blue-600', 'text-orange-500', 'text-red-600');
+                orderStatus.classList.remove('bg-green-50', 'bg-blue-50', 'bg-orange-50', 'bg-red-50');
+
+                if (color === 'green') {
+                    orderStatus.classList.add('text-green-600', 'bg-green-50');
+                } else if (color === 'blue') {
+                    orderStatus.classList.add('text-blue-600', 'bg-blue-50');
+                } else if (color === 'orange') {
+                    orderStatus.classList.add('text-orange-500', 'bg-orange-50');
+                } else if (color === 'red') {
+                    orderStatus.classList.add('text-red-600', 'bg-red-50');
+                }
+
+                // Auto-hide after 5 seconds
+                setTimeout(() => {
+                    if (orderStatus && !orderStatus.classList.contains('text-red-600')) {
+                        orderStatus.classList.add('hidden');
+                    }
+                }, 5000);
+            }
+        }
+
+        function showError(msg) {
+            showStatus(msg, 'red');
+            // Scroll to top to show error
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+        }
+
+        // --- Enhanced Order Summary ---
+        function renderOrderSummary() {
+            console.log('Rendering order summary...');
+
+            if (!orderSummary || !orderTotal) {
+                console.error('Order summary elements not found');
+                return;
+            }
+
+            // Show loading state
+            orderSummary.innerHTML = `
+                <div class="text-center py-8">
+                    <div class="animate-pulse-slow rounded-full h-8 w-8 border-b-2 border-primary mx-auto mb-4"></div>
+                    <p class="text-gray-500">Loading your cart...</p>
+                </div>
+            `;
+
+            // Get cart items
+            let cartItems = [];
+            try {
+                const possibleKeys = ['nearNowCartItems', 'cartItems'];
+                for (let key of possibleKeys) {
+                    const storedItems = localStorage.getItem(key);
+                    if (storedItems) {
+                        const parsedItems = JSON.parse(storedItems);
+                        if (Array.isArray(parsedItems) && parsedItems.length > 0) {
+                            cartItems = parsedItems;
+                            break;
+                        }
+                    }
+                }
+
+                // Try sessionStorage if localStorage is empty
+                if (cartItems.length === 0) {
+                    const sessionCart = sessionStorage.getItem('cartItems');
+                    if (sessionCart) {
+                        const parsedItems = JSON.parse(sessionCart);
+                        if (Array.isArray(parsedItems) && parsedItems.length > 0) {
+                            cartItems = parsedItems;
+                        }
+                    }
+                }
+            } catch (error) {
+                console.error('Error parsing cart items:', error);
+                cartItems = [];
+            }
+
+            // Display empty cart message
+            if (!cartItems || cartItems.length === 0) {
+                orderSummary.innerHTML = `
+                    <div class="text-center py-8">
+                        <div class="w-16 h-16 mx-auto mb-4 bg-gray-100 rounded-full flex items-center justify-center">
+                            <i class="fas fa-shopping-cart text-gray-400 text-2xl"></i>
+                        </div>
+                        <p class="text-gray-500 mb-2 font-semibold">Your cart is empty</p>
+                        <p class="text-sm text-gray-400 mb-4">Add some items to your cart to continue</p>
+                        <a href="index.html" class="inline-block bg-primary text-white px-6 py-3 rounded-lg hover:bg-secondary transition-colors font-semibold">
+                            <i class="fas fa-plus mr-2"></i>Start Shopping
+                        </a>
+                    </div>
+                `;
+                orderTotal.textContent = '₹0';
+                updateDeliveryProgress(0);
+                return;
+            }
+
+            let subtotal = 0;
+            let summaryHTML = '';
+
+            cartItems.forEach((item, index) => {
+                try {
+                    let price = 0;
+                    if (item.price !== undefined && item.price !== null) {
+                        if (typeof item.price === 'string') {
+                            const cleanPrice = item.price.replace(/[₹$,\s]/g, '');
+                            price = parseFloat(cleanPrice);
+                        } else if (typeof item.price === 'number') {
+                            price = item.price;
+                        }
+                    }
+
+                    if (isNaN(price) || price <= 0) {
+                        console.warn(`Invalid price for item ${index}:`, item);
+                        price = 0;
+                    }
+
+                    const quantity = parseInt(item.quantity) || 1;
+                    const itemTotal = price * quantity;
+                    subtotal += itemTotal;
+
+                    const itemImage = item.image || item.img || `https://images.unsplash.com/photo-1560806887-1e4cd0b6cbd6?w=60&h=60&fit=crop&crop=center`;
+                    const itemName = item.name || item.title || 'Unknown Item';
+
+                    summaryHTML += `
+                        <div class="cart-item flex items-center justify-between py-4 border-b border-gray-100 rounded-lg px-2">
+                            <div class="flex items-center flex-1 min-w-0">
+                                <div class="relative">
+                                    <img src="${itemImage}" alt="${itemName}" class="w-16 h-16 rounded-lg object-cover shadow-sm border border-gray-200" onerror="this.src='https://via.placeholder.com/64x64?text=No+Image'">
+                                    <div class="absolute -top-2 -right-2 bg-primary text-white text-xs rounded-full w-5 h-5 flex items-center justify-center font-bold">${quantity}</div>
+                                </div>
+                                <div class="ml-3 flex-1 min-w-0">
+                                    <h4 class="font-semibold text-sm text-gray-800 truncate">${itemName}</h4>
+                                    <p class="text-xs text-gray-500">₹${price.toFixed(2)} each</p>
+                                    <div class="flex items-center mt-1">
+                                        <div class="flex items-center bg-gray-50 rounded-lg border">
+                                            <button onclick="updateItemQuantity(${index}, -1)" class="quantity-btn p-1 hover:bg-primary hover:text-white rounded-l-lg transition-colors text-xs ${quantity <= 1 ? 'opacity-50 cursor-not-allowed' : ''}" ${quantity <= 1 ? 'disabled' : ''}>
+                                                <i class="fas fa-minus"></i>
+                                            </button>
+                                            <span class="px-3 py-1 text-sm font-medium min-w-[2rem] text-center">${quantity}</span>
+                                            <button onclick="updateItemQuantity(${index}, 1)" class="quantity-btn p-1 hover:bg-primary hover:text-white rounded-r-lg transition-colors text-xs">
+                                                <i class="fas fa-plus"></i>
+                                            </button>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="text-right ml-3">
+                                <div class="font-bold text-primary text-lg">₹${itemTotal.toFixed(2)}</div>
+                                <button onclick="removeItem(${index})" class="text-xs text-red-500 hover:text-red-700 transition-colors mt-1 hover:bg-red-50 px-2 py-1 rounded">
+                                    <i class="fas fa-trash mr-1"></i>Remove
+                                </button>
+                            </div>
+                        </div>
+                    `;
+                } catch (error) {
+                    console.error(`Error processing item ${index}:`, error, item);
+                }
+            });
+
+            // Calculate fees
+            const deliveryFee = subtotal >= 500 ? 0 : 30;
+            const handlingCharge = 18;
+            const gstRate = 0.18; // 18% GST
+            const gstAmount = subtotal * gstRate;
+            const total = subtotal + deliveryFee + handlingCharge + gstAmount;
+
+            // Update delivery progress
+            updateDeliveryProgress(subtotal);
+
+            // Add breakdown
+            summaryHTML += `
+                <div class="py-4 space-y-3 bg-gray-50 rounded-lg p-4 mt-4">
+                    <div class="flex justify-between text-sm">
+                        <span class="text-gray-600">Subtotal (${cartItems.length} ${cartItems.length === 1 ? 'item' : 'items'})</span>
+                        <span class="font-semibold">₹${subtotal.toFixed(2)}</span>
+                    </div>
+                    <div class="flex justify-between text-sm">
+                        <span class="text-gray-600">Delivery Fee</span>
+                        <span class="${deliveryFee === 0 ? 'text-green-600 font-bold' : 'font-semibold'}">${deliveryFee === 0 ? 'FREE' : '₹' + deliveryFee}</span>
+                    </div>
+                    <div class="flex justify-between text-sm">
+                        <span class="text-gray-600">Handling Charges</span>
+                        <span class="font-semibold">₹${handlingCharge.toFixed(2)}</span>
+                    </div>
+                    <div class="flex justify-between text-sm">
+                        <span class="text-gray-600">GST (18%)</span>
+                        <span class="font-semibold">₹${gstAmount.toFixed(2)}</span>
+                    </div>
+                    ${deliveryFee > 0 ? `<div class="text-xs text-orange-600 bg-orange-50 p-2 rounded flex items-center"><i class="fas fa-info-circle mr-1"></i> Add ₹${(500 - subtotal).toFixed(2)} more for free delivery</div>` : ''}
+                </div>
+                <div class="flex justify-between items-center text-lg font-bold pt-3 border-t-2 border-primary mt-3">
+                    <span>Grand Total</span>
+                    <span class="text-primary">₹${total.toFixed(2)}</span>
+                </div>
+            `;
+
+            orderSummary.innerHTML = summaryHTML;
+            orderTotal.textContent = `₹${total.toFixed(2)}`;
+        }
+
+        function updateDeliveryProgress(subtotal) {
+            const deliveryProgressBar = document.getElementById('deliveryProgressBar');
+            const deliveryMessage = document.getElementById('deliveryMessage');
+
+            if (deliveryProgressBar && deliveryMessage) {
+                const progress = Math.min((subtotal / 500) * 100, 100);
+                deliveryProgressBar.style.width = `${progress}%`;
+
+                if (subtotal >= 500) {
+                    deliveryMessage.textContent = '🎉 You qualify for free delivery!';
+                    deliveryMessage.className = 'text-xs text-green-600 mt-1 font-semibold';
+                } else {
+                    const remaining = 500 - subtotal;
+                    deliveryMessage.textContent = `₹${remaining.toFixed(2)} more for free delivery`;
+                    deliveryMessage.className = 'text-xs text-orange-600 mt-1';
+                }
+            }
+        }
+
+        function updateItemQuantity(itemIndex, change) {
+            try {
+                let cartItems = getCartItems();
+                if (!cartItems || itemIndex >= cartItems.length) return;
+
+                const currentQuantity = parseInt(cartItems[itemIndex].quantity) || 1;
+                const newQuantity = Math.max(1, currentQuantity + change);
+
+                cartItems[itemIndex].quantity = newQuantity;
+                saveCartItems(cartItems);
+                renderOrderSummary();
+
+                showStatus(`Quantity updated to ${newQuantity}`, 'green');
+            } catch (error) {
+                console.error('Error updating quantity:', error);
+                showError('Failed to update quantity');
+            }
+        }
+
+        function removeItem(itemIndex) {
+            try {
+                let cartItems = getCartItems();
+                if (!cartItems || itemIndex >= cartItems.length) return;
+
+                const removedItem = cartItems.splice(itemIndex, 1)[0];
+                saveCartItems(cartItems);
+                renderOrderSummary();
+
+                showStatus(`"${removedItem.name || 'Item'}" removed from cart`, 'green');
+            } catch (error) {
+                console.error('Error removing item:', error);
+                showError('Failed to remove item');
+            }
+        }
+
+        function getCartItems() {
+            try {
+                const nearNowCart = localStorage.getItem('nearNowCartItems');
+                if (nearNowCart) return JSON.parse(nearNowCart);
+
+                const standardCart = localStorage.getItem('cartItems');
+                if (standardCart) return JSON.parse(standardCart);
+
+                return [];
+            } catch (error) {
+                console.error('Error getting cart items:', error);
+                return [];
+            }
+        }
+
+        function saveCartItems(items) {
+            localStorage.setItem('nearNowCartItems', JSON.stringify(items));
+            localStorage.setItem('cartItems', JSON.stringify(items));
+        }
+
+        function clearCart() {
+            localStorage.removeItem('nearNowCartItems');
+            localStorage.removeItem('cartItems');
+            sessionStorage.removeItem('cartItems');
+            renderOrderSummary();
+            showStatus('Cart cleared successfully', 'green');
+        }
+
+        function updateCart(items) {
+            if (Array.isArray(items)) {
+                saveCartItems(items);
+                renderOrderSummary();
+            }
+        }
+
+        // Storage change listener
+        window.addEventListener('storage', function (e) {
+            if (e.key === 'nearNowCartItems' || e.key === 'cartItems') {
+                renderOrderSummary();
+            }
+        });
+
+        // Auto-save form data
+        function saveFormData() {
+            const formData = {};
+            const inputs = addressForm.querySelectorAll('input, select');
+            inputs.forEach(input => {
+                if (input.type === 'checkbox' || input.type === 'radio') {
+                    formData[input.id] = input.checked;
+                } else {
+                    formData[input.id] = input.value;
+                }
+            });
+            localStorage.setItem('checkoutFormData', JSON.stringify(formData));
+        }
+
+        function loadFormData() {
+            try {
+                const savedData = localStorage.getItem('checkoutFormData');
+                if (savedData) {
+                    const formData = JSON.parse(savedData);
+                    Object.entries(formData).forEach(([id, value]) => {
+                        const input = document.getElementById(id);
+                        if (input) {
+                            if (input.type === 'checkbox' || input.type === 'radio') {
+                                input.checked = value;
+                            } else {
+                                input.value = value;
+                            }
+                        }
+                    });
+                }
+            } catch (error) {
+                console.error('Error loading form data:', error);
+            }
+        }
+
+        // Initialize
+        document.addEventListener('DOMContentLoaded', () => {
+            loadFormData();
+            renderOrderSummary();
+
+            // Auto-save form data on change
+            if (addressForm) {
+                addressForm.addEventListener('input', saveFormData);
+                addressForm.addEventListener('change', saveFormData);
+            }
+        });
+
+        // Expose functions globally
+        window.updateCart = updateCart;
+        window.clearCart = clearCart;
+        window.renderOrderSummary = renderOrderSummary;
+        window.updateItemQuantity = updateItemQuantity;
+        window.removeItem = removeItem;
+    </script>
 </body>
 
 </html>
