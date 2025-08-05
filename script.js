@@ -9,6 +9,7 @@ let currentCategory = "all"
 let currentSort = "default"
 const productsPerPage = 10
 let currentPage = 1
+let isPageInitializing = true // Flag to prevent automatic scrolling during page load
 
 // New Global Variables for Enhanced Features
 let currentFilters = {
@@ -219,6 +220,9 @@ async function initializeWebsite() {
         updateCartCount()
 
         console.log("✅ Near & Now website fully initialized!")
+        
+        // Allow scrolling after initialization is complete
+        isPageInitializing = false
     } catch (error) {
         console.error('❌ Error initializing website:', error)
         // Fallback: show error message to user
@@ -637,7 +641,9 @@ function initializeSlider() {
     // Hero button actions
     document.querySelectorAll(".shop-now-btn, .grab-deals-btn").forEach((btn) => {
         btn.addEventListener("click", () => {
-            document.getElementById("productsSection").scrollIntoView({ behavior: "smooth" })
+            if (!isPageInitializing) {
+                document.getElementById("productsSection").scrollIntoView({ behavior: "smooth" })
+            }
         })
     })
 }
@@ -756,7 +762,9 @@ function performSearch() {
         currentPage = 1
         renderProducts()
 
-        document.getElementById("productsSection").scrollIntoView({ behavior: "smooth" })
+        if (!isPageInitializing) {
+            document.getElementById("productsSection").scrollIntoView({ behavior: "smooth" })
+        }
     }
     hideSearchSuggestions()
 }
@@ -931,7 +939,9 @@ function filterByCategory(category) {
 
     currentPage = 1
     renderProducts()
-    document.getElementById("productsSection").scrollIntoView({ behavior: "smooth" })
+    if (!isPageInitializing) {
+        document.getElementById("productsSection").scrollIntoView({ behavior: "smooth" })
+    }
 }
 
 // Products Functionality
@@ -1309,6 +1319,9 @@ function removeFromCart(productId) {
     updateCartCount()
     updateCartDisplay()
     saveCartToStorage()
+    
+    // Update the specific product card to show "Add" button
+    updateSpecificProductCard(productId)
 }
 
 function updateCartQuantity(productId, newQuantity) {
@@ -1322,6 +1335,9 @@ function updateCartQuantity(productId, newQuantity) {
             updateCartCount()
             updateCartDisplay()
             saveCartToStorage()
+            
+            // Update the specific product card to reflect the new quantity
+            updateSpecificProductCard(productId)
         }
     }
 }
@@ -2058,7 +2074,9 @@ document.addEventListener("DOMContentLoaded", () => {
     // Free delivery button
     document.querySelectorAll(".free-delivery-btn").forEach((btn) => {
         btn.addEventListener("click", () => {
-            document.getElementById("productsSection").scrollIntoView({ behavior: "smooth" })
+            if (!isPageInitializing) {
+                document.getElementById("productsSection").scrollIntoView({ behavior: "smooth" })
+            }
             showNotification("Shop for ₹999 or more to get free delivery!", "info")
         })
     })
