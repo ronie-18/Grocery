@@ -1,0 +1,193 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Fresh Mart - All Products</title>
+    <link rel="stylesheet" href="allproducts.css">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+</head>
+
+<body>
+    <!-- Header -->
+    <header class="header">
+        <div class="container">
+            <div class="logo">
+                <i class="fas fa-shopping-basket"></i>
+                <h1>Fresh Mart</h1>
+            </div>
+            <div class="search-bar">
+                <input type="text" id="searchInput" placeholder="Search products...">
+                <button id="searchBtn"><i class="fas fa-search"></i></button>
+            </div>
+            <div class="cart-icon">
+                <i class="fas fa-shopping-cart"></i>
+                <span class="cart-count">0</span>
+            </div>
+        </div>
+    </header>
+
+    <!-- Main Content -->
+    <main class="main-content">
+        <div class="container">
+            <!-- Sidebar Filters -->
+            <aside class="filters-sidebar">
+                <h3><i class="fas fa-filter"></i> Filters</h3>
+
+                <!-- Categories -->
+                <div class="filter-section">
+                    <h4>Categories</h4>
+                    <div id="categoryFilters" class="filter-options">
+                        <!-- Categories will be populated dynamically -->
+                    </div>
+                </div>
+
+                <!-- Price Range -->
+                <div class="filter-section">
+                    <h4>Price Range (₹)</h4>
+                    <div class="price-range">
+                        <input type="range" id="minPrice" min="0" max="1000" value="0">
+                        <input type="range" id="maxPrice" min="0" max="1000" value="1000">
+                        <div class="price-display">
+                            <span>₹<span id="minPriceValue">0</span> - ₹<span id="maxPriceValue">1000</span></span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Brand -->
+                <div class="filter-section">
+                    <h4>Brands</h4>
+                    <div id="brandFilters" class="filter-options">
+                        <!-- Brands will be populated dynamically -->
+                    </div>
+                </div>
+
+                <!-- Rating -->
+                <div class="filter-section">
+                    <h4>Rating</h4>
+                    <div class="rating-filters">
+                        <label>
+                            <input type="checkbox" value="4" name="rating">
+                            <span class="stars">
+                                <i class="fas fa-star"></i><i class="fas fa-star"></i><i class="fas fa-star"></i><i
+                                    class="fas fa-star"></i><i class="far fa-star"></i>
+                                & above
+                            </span>
+                        </label>
+                        <label>
+                            <input type="checkbox" value="3" name="rating">
+                            <span class="stars">
+                                <i class="fas fa-star"></i><i class="fas fa-star"></i><i class="fas fa-star"></i><i
+                                    class="far fa-star"></i><i class="far fa-star"></i>
+                                & above
+                            </span>
+                        </label>
+                        <label>
+                            <input type="checkbox" value="2" name="rating">
+                            <span class="stars">
+                                <i class="fas fa-star"></i><i class="fas fa-star"></i><i class="far fa-star"></i><i
+                                    class="far fa-star"></i><i class="far fa-star"></i>
+                                & above
+                            </span>
+                        </label>
+                    </div>
+                </div>
+
+                <!-- Discount -->
+                <div class="filter-section">
+                    <h4>Discount</h4>
+                    <div class="filter-options">
+                        <label>
+                            <input type="checkbox" value="50" name="discount">
+                            50% or more
+                        </label>
+                        <label>
+                            <input type="checkbox" value="40" name="discount">
+                            40% or more
+                        </label>
+                        <label>
+                            <input type="checkbox" value="30" name="discount">
+                            30% or more
+                        </label>
+                        <label>
+                            <input type="checkbox" value="20" name="discount">
+                            20% or more
+                        </label>
+                        <label>
+                            <input type="checkbox" value="10" name="discount">
+                            10% or more
+                        </label>
+                    </div>
+                </div>
+
+                <button id="clearFilters" class="clear-filters-btn">
+                    <i class="fas fa-times"></i> Clear All Filters
+                </button>
+            </aside>
+
+            <!-- Products Section -->
+            <section class="products-section">
+                <div class="products-header">
+                    <div class="results-info">
+                        <span id="resultsCount">Loading products...</span>
+                    </div>
+                    <div class="sort-options">
+                        <label>Sort by:</label>
+                        <select id="sortSelect">
+                            <option value="name_asc">Name (A-Z)</option>
+                            <option value="name_desc">Name (Z-A)</option>
+                            <option value="price_asc">Price (Low to High)</option>
+                            <option value="price_desc">Price (High to Low)</option>
+                            <option value="rating_desc">Rating (High to Low)</option>
+                            <option value="discount_desc">Discount (High to Low)</option>
+                        </select>
+                    </div>
+                </div>
+
+                <!-- Products Grid -->
+                <div id="productsGrid" class="products-grid">
+                    <!-- Products will be populated dynamically -->
+                </div>
+
+                <!-- Loading Spinner -->
+                <div id="loadingSpinner" class="loading-spinner">
+                    <i class="fas fa-spinner fa-spin"></i>
+                    <p>Loading products...</p>
+                </div>
+
+                <!-- No Results -->
+                <div id="noResults" class="no-results" style="display: none;">
+                    <i class="fas fa-search"></i>
+                    <h3>No products found</h3>
+                    <p>Try adjusting your filters or search terms</p>
+                </div>
+
+                <!-- Pagination -->
+                <div id="pagination" class="pagination">
+                    <!-- Pagination will be populated dynamically -->
+                </div>
+            </section>
+        </div>
+    </main>
+
+    <!-- Product Modal -->
+    <div id="productModal" class="modal">
+        <div class="modal-content">
+            <span class="close">&times;</span>
+            <div id="modalContent">
+                <!-- Modal content will be populated dynamically -->
+            </div>
+        </div>
+    </div>
+
+    <!-- Toast Notification -->
+    <div id="toast" class="toast">
+        <span id="toastMessage"></span>
+    </div>
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/supabase/2.38.5/umd/supabase.js"></script>
+    <script src="allproducts.js"></script>
+</body>
+
+</html>
