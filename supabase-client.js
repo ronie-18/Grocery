@@ -841,3 +841,362 @@ window.updateCategoryName = async function(oldName, newName) {
 }
 
 console.log('💡 To update category name, run: updateCategoryName("Old Name", "New Name")')
+
+/**
+ * Authentication Functions
+ * Supabase Auth with Phone OTP Integration
+ */
+
+// Authentication state management
+let currentAuthUser = null
+let authSession = null
+
+// Initialize authentication state
+async function initializeAuth() {
+    try {
+        if (!supabaseClient) {
+            console.warn('Supabase client not initialized, waiting...')
+            // Wait for client to be ready
+            for (let i = 0; i < 30; i++) {
+                await new Promise(resolve => setTimeout(resolve, 100))
+                if (supabaseClient) break
+            }
+            
+            if (!supabaseClient) {
+                console.error('❌ Supabase client failed to initialize for auth')
+                return false
+            }
+        }
+
+        // Get current session
+        const { data: { session }, error } = await supabaseClient.auth.getSession()
+        
+        if (error) {
+            console.error('Error getting session:', error)
+            return false
+        }
+
+        if (session) {
+            authSession = session
+            currentAuthUser = session.user
+            console.log('✅ User session restored:', currentAuthUser.phone)
+            
+            // Update UI with logged in user
+            updateAuthUI(currentAuthUser)
+            
+            // Trigger user login event
+            window.dispatchEvent(new CustomEvent('userLoggedIn', { 
+                detail: { user: currentAuthUser, session: authSession } 
+            }))
+        } else {
+            console.log('📝 No active session found')
+        }
+
+        // Listen for auth changes
+        supabaseClient.auth.onAuthStateChange((event, session) => {
+            console.log('🔄 Auth state changed:', event)
+            
+            authSession = session
+            currentAuthUser = session?.user || null
+            
+            if (event === 'SIGNED_IN') {
+                console.log('✅ User signed in:', currentAuthUser.phone)
+                updateAuthUI(currentAuthUser)
+                
+                // Trigger user login event
+                window.dispatchEvent(new CustomEvent('userLoggedIn', { 
+                    detail: { user: currentAuthUser, session: authSession } 
+                }))
+            } else if (event === 'SIGNED_OUT') {
+                console.log('👋 User signed out')
+                updateAuthUI(null)
+                
+                // Trigger user logout event
+                window.dispatchEvent(new CustomEvent('userLoggedOut'))
+            }
+        })
+
+        return true
+    } catch (error) {
+        console.error('Error initializing auth:', error)
+        return false
+    }
+}
+
+// Send OTP to phone number
+async function sendPhoneOTP(phoneNumber, userName = '') {
+    try {
+        if (!supabaseClient) {
+            throw new Error('Supabase client not initialized')
+        }
+
+        // Format phone number to E.164 format (+91xxxxxxxxxx)
+        const formattedPhone = formatPhoneNumber(phoneNumber)
+        
+        console.log('📱 Sending OTP to:', formattedPhone)
+
+        const { data, error } = await supabaseClient.auth.signInWithOtp({
+            phone: formattedPhone,
+            options: {
+                // You can add custom data here if needed
+                data: {
+                    name: userName || 'User'
+                }
+            }
+        })
+
+        if (error) {
+            console.error('❌ Error sending OTP:', error)
+            throw error
+        }
+
+        console.log('✅ OTP sent successfully')
+        return { success: true, data }
+    } catch (error) {
+        console.error('Error in sendPhoneOTP:', error)
+        throw error
+    }
+}
+
+// Verify OTP
+async function verifyPhoneOTP(phoneNumber, otpCode, userName = '') {
+    try {
+        if (!supabaseClient) {
+            throw new Error('Supabase client not initialized')
+        }
+
+        const formattedPhone = formatPhoneNumber(phoneNumber)
+        
+        console.log('🔐 Verifying OTP for:', formattedPhone)
+
+        const { data, error } = await supabaseClient.auth.verifyOtp({
+            phone: formattedPhone,
+            token: otpCode,
+            type: 'sms'
+        })
+
+        if (error) {
+            console.error('❌ Error verifying OTP:', error)
+            throw error
+        }
+
+        console.log('✅ OTP verified successfully')
+        
+        // Set auth state immediately after successful verification
+        authSession = data.session
+        currentAuthUser = data.user
+
+        // Update user profile with name if provided - with a small delay to ensure session is established
+        if (userName && data.user && data.session) {
+            try {
+                console.log('📝 Updating user profile with name:', userName)
+                
+                // Small delay to ensure session is fully established
+                await new Promise(resolve => setTimeout(resolve, 100))
+                
+                await updateUserProfile({ name: userName })
+                console.log('✅ User profile updated successfully')
+            } catch (profileError) {
+                console.warn('⚠️ Profile update failed, but authentication succeeded:', profileError)
+                // Don't throw here - authentication was successful
+            }
+        }
+
+        return { success: true, user: data.user, session: data.session }
+    } catch (error) {
+        console.error('Error in verifyPhoneOTP:', error)
+        throw error
+    }
+}
+
+// Update user profile
+async function updateUserProfile(updates) {
+    try {
+        if (!supabaseClient) {
+            throw new Error('Supabase client not initialized')
+        }
+
+        // Check if we have a current session
+        const { data: { session }, error: sessionError } = await supabaseClient.auth.getSession()
+        
+        if (sessionError) {
+            console.error('❌ Error getting session:', sessionError)
+            throw new Error('Session error: ' + sessionError.message)
+        }
+
+        if (!session || !session.user) {
+            throw new Error('User not authenticated - no valid session')
+        }
+
+        console.log('📝 Updating profile for user:', session.user.id)
+
+        const { data, error } = await supabaseClient.auth.updateUser({
+            data: updates
+        })
+
+        if (error) {
+            console.error('❌ Error updating profile:', error)
+            throw error
+        }
+
+        console.log('✅ Profile updated successfully')
+        
+        // Update our local auth state
+        currentAuthUser = data.user
+        
+        return { success: true, user: data.user }
+    } catch (error) {
+        console.error('Error in updateUserProfile:', error)
+        throw error
+    }
+}
+
+// Sign out user
+async function signOut() {
+    try {
+        if (!supabaseClient) {
+            throw new Error('Supabase client not initialized')
+        }
+
+        const { error } = await supabaseClient.auth.signOut()
+
+        if (error) {
+            console.error('❌ Error signing out:', error)
+            throw error
+        }
+
+        console.log('✅ Signed out successfully')
+        
+        authSession = null
+        currentAuthUser = null
+
+        return { success: true }
+    } catch (error) {
+        console.error('Error in signOut:', error)
+        throw error
+    }
+}
+
+// Get current authenticated user
+function getCurrentUser() {
+    return currentAuthUser
+}
+
+// Get current session
+function getCurrentSession() {
+    return authSession
+}
+
+// Check if user is authenticated
+function isAuthenticated() {
+    return !!currentAuthUser && !!authSession
+}
+
+// Format phone number to E.164 format
+function formatPhoneNumber(phoneNumber) {
+    // Remove any non-digit characters
+    const cleanNumber = phoneNumber.replace(/\D/g, '')
+    
+    // If it's a 10-digit Indian number, add +91
+    if (cleanNumber.length === 10) {
+        return `+91${cleanNumber}`
+    }
+    
+    // If it already has country code but no +, add +
+    if (cleanNumber.length === 12 && cleanNumber.startsWith('91')) {
+        return `+${cleanNumber}`
+    }
+    
+    // If it already has +, return as is
+    if (phoneNumber.startsWith('+')) {
+        return phoneNumber
+    }
+    
+    // Default case - assume it's Indian number
+    return `+91${cleanNumber}`
+}
+
+// Update authentication UI
+function updateAuthUI(user) {
+    try {
+        // Update the existing currentUser variable for backward compatibility
+        if (typeof window !== 'undefined') {
+            if (user) {
+                // Try to get name from various possible sources
+                const userName = user.user_metadata?.name || 
+                               user.user_metadata?.full_name || 
+                               user.user_metadata?.display_name ||
+                               (typeof window !== 'undefined' && window.userDetails?.name) ||
+                               user.email?.split('@')[0] ||
+                               'User'
+                
+                window.currentUser = {
+                    id: user.id,
+                    name: userName,
+                    mobile: user.phone?.replace('+91', '') || '',
+                    fullMobile: user.phone || '',
+                    loginTime: new Date().toISOString(),
+                    isVerified: !!user.phone_confirmed_at,
+                    supabaseUser: user
+                }
+                
+                console.log('🔄 Updated currentUser with name:', userName)
+                
+                // Store in localStorage for backward compatibility
+                localStorage.setItem("nearNowCurrentUser", JSON.stringify(window.currentUser))
+                
+                // Update UI elements
+                if (window.updateUserDisplay) {
+                    window.updateUserDisplay()
+                }
+            } else {
+                window.currentUser = null
+                localStorage.removeItem("nearNowCurrentUser")
+                
+                // Update UI elements
+                if (window.updateUserDisplay) {
+                    window.updateUserDisplay()
+                }
+            }
+        }
+    } catch (error) {
+        console.error('Error updating auth UI:', error)
+    }
+}
+
+// Resend OTP (same as sendPhoneOTP but with different logging)
+async function resendPhoneOTP(phoneNumber, userName = '') {
+    console.log('🔄 Resending OTP...')
+    return await sendPhoneOTP(phoneNumber, userName)
+}
+
+/**
+ * Export authentication functions globally
+ */
+window.supabaseAuth = {
+    initializeAuth,
+    sendPhoneOTP,
+    verifyPhoneOTP,
+    resendPhoneOTP,
+    updateUserProfile,
+    signOut,
+    getCurrentUser,
+    getCurrentSession,
+    isAuthenticated,
+    formatPhoneNumber
+}
+
+// Initialize auth when DOM is ready
+document.addEventListener('DOMContentLoaded', async function() {
+    // Wait a bit for supabase client to initialize
+    setTimeout(async () => {
+        try {
+            await initializeAuth()
+            console.log('🔐 Supabase authentication initialized')
+        } catch (error) {
+            console.error('Failed to initialize Supabase auth:', error)
+        }
+    }, 1000)
+})
+
+console.log('🔐 Supabase authentication module loaded')
