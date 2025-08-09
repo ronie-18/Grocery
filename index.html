@@ -20,6 +20,12 @@
 
 
     <script>
+        // Immediately scroll to top to prevent scroll restoration
+        if ('scrollRestoration' in history) {
+            history.scrollRestoration = 'manual';
+        }
+        window.scrollTo(0, 0);
+        
         tailwind.config = {
             theme: {
                 extend: {
@@ -38,6 +44,15 @@
         }
     </script>
     <style>
+        /* Prevent scroll restoration and ensure page starts at top */
+        html {
+            scroll-behavior: auto;
+        }
+        
+        body {
+            scroll-behavior: auto;
+        }
+        
         .loading-screen {
             position: fixed;
             top: 0;
@@ -465,6 +480,13 @@
 </head>
 
 <body class="bg-gray-50">
+    <script>
+        // Immediate scroll to top - runs before any other content loads
+        window.scrollTo(0, 0);
+        if ('scrollRestoration' in history) {
+            history.scrollRestoration = 'manual';
+        }
+    </script>
     <!-- Mobile Nav Hamburger -->
     <button id="mobileNavBtn" class="fixed top-4 left-4 z-50 bg-white p-2 rounded-full shadow-md md:hidden"
         aria-label="Open navigation menu">
@@ -892,7 +914,7 @@
         <div class="container mx-auto px-4 py-4">
             <div class="grid grid-cols-12 gap-4 items-center">
                 <!-- Logo - Fixed width -->
-                <div class="col-span-3 flex items-center cursor-pointer" onclick="location.reload()">
+                <div class="col-span-3 flex items-center cursor-pointer" onclick="window.scrollTo(0, 0); location.reload()">
                     <div class="mr-3">
                         <img src="Logo.png" alt="Near & Now" class="w-20 h-20 md:w-24 md:h-24">
                     </div>
