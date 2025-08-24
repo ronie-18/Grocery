@@ -25,7 +25,7 @@
             history.scrollRestoration = 'manual';
         }
         window.scrollTo(0, 0);
-        
+
         tailwind.config = {
             theme: {
                 extend: {
@@ -48,11 +48,11 @@
         html {
             scroll-behavior: auto;
         }
-        
+
         body {
             scroll-behavior: auto;
         }
-        
+
         .loading-screen {
             position: fixed;
             top: 0;
@@ -257,8 +257,13 @@
 
         /* Enhanced Header Animations */
         @keyframes animate-spin-slow {
-            from { transform: rotate(0deg); }
-            to { transform: rotate(360deg); }
+            from {
+                transform: rotate(0deg);
+            }
+
+            to {
+                transform: rotate(360deg);
+            }
         }
 
         .animate-spin-slow {
@@ -267,8 +272,15 @@
 
         /* Floating animation for particles */
         @keyframes float {
-            0%, 100% { transform: translateY(0px); }
-            50% { transform: translateY(-10px); }
+
+            0%,
+            100% {
+                transform: translateY(0px);
+            }
+
+            50% {
+                transform: translateY(-10px);
+            }
         }
 
         .animate-float {
@@ -277,8 +289,15 @@
 
         /* Gradient text animation */
         @keyframes gradient-shift {
-            0%, 100% { background-position: 0% 50%; }
-            50% { background-position: 100% 50%; }
+
+            0%,
+            100% {
+                background-position: 0% 50%;
+            }
+
+            50% {
+                background-position: 100% 50%;
+            }
         }
 
         .animate-gradient {
@@ -293,11 +312,14 @@
 
         /* Custom pulse for badges */
         @keyframes pulse-glow {
-            0%, 100% { 
+
+            0%,
+            100% {
                 box-shadow: 0 0 5px rgba(239, 68, 68, 0.5);
                 transform: scale(1);
             }
-            50% { 
+
+            50% {
                 box-shadow: 0 0 20px rgba(239, 68, 68, 0.8), 0 0 30px rgba(239, 68, 68, 0.4);
                 transform: scale(1.05);
             }
@@ -371,6 +393,7 @@
                 opacity: 0;
                 transform: scale(0.8);
             }
+
             to {
                 opacity: 1;
                 transform: scale(1);
@@ -579,41 +602,41 @@
     <!-- Google Maps JavaScript API -->
     <script>
         // Load Google Maps dynamically with API key from secure config
-        document.addEventListener('DOMContentLoaded', async function() {
+        document.addEventListener('DOMContentLoaded', async function () {
             console.log('🚀 Loading secure configuration...');
-            
+
             // Load secure configuration first
             await loadSecureConfig();
-            
+
             console.log('🗺️ Loading Google Maps API...');
             console.log('API Key:', CONFIG.GOOGLE_MAPS_API_KEY ? CONFIG.GOOGLE_MAPS_API_KEY.substring(0, 10) + '...' : 'NOT FOUND');
-            
+
             if (!CONFIG.GOOGLE_MAPS_API_KEY || CONFIG.GOOGLE_MAPS_API_KEY.includes('FAILED') || CONFIG.GOOGLE_MAPS_API_KEY.includes('NOT_FOUND')) {
                 console.error('❌ API key not properly configured');
                 console.error('Please ensure your API key is properly set up');
                 return;
             }
-            
+
             const script = document.createElement('script');
             script.async = true;
             script.defer = true;
             script.src = `https://maps.googleapis.com/maps/api/js?key=${CONFIG.GOOGLE_MAPS_API_KEY}&libraries=places,geometry&callback=initializeGoogleMaps`;
-            
+
             // Add error handling
-            script.onerror = function() {
+            script.onerror = function () {
                 console.error('❌ Failed to load Google Maps API');
                 console.error('Check your API key and internet connection');
             };
-            
-            script.onload = function() {
+
+            script.onload = function () {
                 console.log('✅ Google Maps script loaded successfully');
             };
-            
+
             document.head.appendChild(script);
         });
-        
+
         // Global error handler for Google Maps
-        window.gm_authFailure = function() {
+        window.gm_authFailure = function () {
             console.error('❌ Google Maps API authentication failed');
             console.error('Please check your API key configuration');
         };
@@ -875,7 +898,8 @@
                                     class="w-full px-4 py-3 border border-gray-300 rounded-r-lg focus:outline-none focus:border-primary"
                                     placeholder="Enter mobile number" pattern="[0-9]{10}" maxlength="10" required>
                             </div>
-                            <p class="text-xs text-gray-500 mt-1">We'll send a real OTP to your mobile number for verification</p>
+                            <p class="text-xs text-gray-500 mt-1">We'll send a real OTP to your mobile number for
+                                verification</p>
                         </div>
 
                         <button type="submit" id="sendOtpBtn"
@@ -1054,24 +1078,30 @@
     <header class="bg-white shadow-lg border-b border-gray-100 sticky top-0 z-40">
         <!-- Unified gradient accent bar -->
         <div class="h-1 bg-gradient-to-r from-primary via-secondary to-primary"></div>
-        
+
         <div class="container mx-auto px-4 py-4">
             <div class="grid grid-cols-12 gap-6 items-center">
                 <!-- Unified Logo Section -->
-                <div class="col-span-2 flex items-center cursor-pointer group" onclick="window.scrollTo(0, 0); location.reload()">
+                <div class="col-span-2 flex items-center cursor-pointer group"
+                    onclick="window.scrollTo(0, 0); location.reload()">
                     <div class="relative mr-4">
                         <!-- Consistent glass morphism container -->
-                        <div class="relative w-16 h-16 md:w-20 md:h-20 bg-white rounded-2xl shadow-lg border border-gray-200 group-hover:border-primary/30 transition-all duration-500 p-2 group-hover:shadow-xl">
+                        <div
+                            class="relative w-16 h-16 md:w-20 md:h-20 bg-white rounded-2xl shadow-lg border border-gray-200 group-hover:border-primary/30 transition-all duration-500 p-2 group-hover:shadow-xl">
                             <img src="Logo.png" alt="Near & Now" class="w-full h-full object-cover rounded-xl">
                             <!-- Unified hover glow -->
-                            <div class="absolute inset-0 bg-gradient-to-br from-primary/10 to-secondary/10 rounded-2xl opacity-0 group-hover:opacity-100 transition-all duration-500"></div>
+                            <div
+                                class="absolute inset-0 bg-gradient-to-br from-primary/10 to-secondary/10 rounded-2xl opacity-0 group-hover:opacity-100 transition-all duration-500">
+                            </div>
                         </div>
                     </div>
                     <div class="hidden md:block">
-                        <h1 class="text-xl md:text-2xl font-bold text-gray-800 group-hover:text-primary transition-all duration-300">
+                        <h1
+                            class="text-xl md:text-2xl font-bold text-gray-800 group-hover:text-primary transition-all duration-300">
                             Near & Now
                         </h1>
-                        <p class="text-sm text-gray-500 group-hover:text-secondary transition-all duration-300 font-medium">
+                        <p
+                            class="text-sm text-gray-500 group-hover:text-secondary transition-all duration-300 font-medium">
                             Digital Dukan, Local Dil Se
                         </p>
                     </div>
@@ -1080,30 +1110,39 @@
                 <!-- Unified Location Selector -->
                 <div class="col-span-3 md:col-span-2">
                     <div class="relative">
-                        <button id="locationSelector" class="flex items-center w-full px-4 py-3 text-left bg-white rounded-2xl shadow-lg border border-gray-200 group-hover:border-primary/30 transition-all duration-500 group hover:shadow-xl">
+                        <button id="locationSelector"
+                            class="flex items-center w-full px-4 py-3 text-left bg-white rounded-2xl shadow-lg border border-gray-200 group-hover:border-primary/30 transition-all duration-500 group hover:shadow-xl">
                             <div class="flex-shrink-0 mr-3">
                                 <!-- Unified icon container matching logo style -->
-                                <div class="relative w-12 h-12 bg-white rounded-xl shadow-md border border-gray-200 group-hover:border-primary/30 transition-all duration-500 flex items-center justify-center">
+                                <div
+                                    class="relative w-12 h-12 bg-white rounded-xl shadow-md border border-gray-200 group-hover:border-primary/30 transition-all duration-500 flex items-center justify-center">
                                     <i class="fas fa-map-marker-alt text-primary text-lg"></i>
                                     <!-- Unified hover glow -->
-                                    <div class="absolute inset-0 bg-gradient-to-br from-primary/10 to-secondary/10 rounded-xl opacity-0 group-hover:opacity-100 transition-all duration-500"></div>
+                                    <div
+                                        class="absolute inset-0 bg-gradient-to-br from-primary/10 to-secondary/10 rounded-xl opacity-0 group-hover:opacity-100 transition-all duration-500">
+                                    </div>
                                 </div>
                             </div>
                             <div class="flex-1 min-w-0 flex items-center">
-                                <div id="selectedLocation" class="text-sm font-bold text-gray-800 truncate group-hover:text-primary transition-all duration-300">
+                                <div id="selectedLocation"
+                                    class="text-sm font-bold text-gray-800 truncate group-hover:text-primary transition-all duration-300">
                                     Select Location
                                 </div>
                             </div>
                             <div class="flex-shrink-0 ml-2">
                                 <!-- Unified chevron container -->
-                                <div class="w-8 h-8 bg-gray-50 rounded-lg flex items-center justify-center group-hover:bg-primary/10 transition-all duration-300">
-                                    <i class="fas fa-chevron-down text-gray-400 group-hover:text-primary text-xs transition-transform duration-300" id="locationChevron"></i>
+                                <div
+                                    class="w-8 h-8 bg-gray-50 rounded-lg flex items-center justify-center group-hover:bg-primary/10 transition-all duration-300">
+                                    <i class="fas fa-chevron-down text-gray-400 group-hover:text-primary text-xs transition-transform duration-300"
+                                        id="locationChevron"></i>
                                 </div>
                             </div>
                         </button>
 
                         <!-- Unified Location Dropdown -->
-                        <div id="locationDropdown" class="absolute top-full left-0 right-0 mt-3 bg-white border border-gray-200 rounded-2xl shadow-xl z-50 hidden" style="min-width: 320px; max-width: 420px;">
+                        <div id="locationDropdown"
+                            class="absolute top-full left-0 right-0 mt-3 bg-white border border-gray-200 rounded-2xl shadow-xl z-50 hidden"
+                            style="min-width: 320px; max-width: 420px;">
                             <!-- Header with current location info -->
                             <div class="bg-gray-50 px-4 py-3 border-b border-gray-200">
                                 <div class="flex items-center justify-between">
@@ -1116,32 +1155,36 @@
                                     </button>
                                 </div>
                             </div>
-                            
+
                             <div class="p-4">
                                 <!-- Search Location Input -->
                                 <div class="relative mb-4">
                                     <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
                                         <i class="fas fa-search text-gray-400 text-sm"></i>
                                     </div>
-                                    <input type="text" id="locationSearchInput" 
-                                           placeholder="Search for area, street name..."
-                                           class="w-full pl-10 pr-10 py-3 border border-gray-300 rounded-lg focus:outline-none focus:border-primary focus:ring-2 focus:ring-primary focus:ring-opacity-20 transition-all duration-300">
-                                    <div id="clearSearchBtn" class="absolute inset-y-0 right-0 pr-3 flex items-center cursor-pointer hidden">
+                                    <input type="text" id="locationSearchInput"
+                                        placeholder="Search for area, street name..."
+                                        class="w-full pl-10 pr-10 py-3 border border-gray-300 rounded-lg focus:outline-none focus:border-primary focus:ring-2 focus:ring-primary focus:ring-opacity-20 transition-all duration-300">
+                                    <div id="clearSearchBtn"
+                                        class="absolute inset-y-0 right-0 pr-3 flex items-center cursor-pointer hidden">
                                         <i class="fas fa-times-circle text-gray-400 hover:text-gray-600"></i>
                                     </div>
                                 </div>
 
                                 <!-- Current Location Option -->
                                 <div class="mb-4">
-                                    <button id="useCurrentLocation" class="flex items-center justify-between w-full px-4 py-3 text-left bg-blue-50 hover:bg-blue-100 rounded-lg transition-all duration-300 group">
+                                    <button id="useCurrentLocation"
+                                        class="flex items-center justify-between w-full px-4 py-3 text-left bg-blue-50 hover:bg-blue-100 rounded-lg transition-all duration-300 group">
                                         <div class="flex items-center">
                                             <div class="flex-shrink-0 mr-3">
-                                                <div class="w-10 h-10 bg-white rounded-full flex items-center justify-center shadow-sm">
+                                                <div
+                                                    class="w-10 h-10 bg-white rounded-full flex items-center justify-center shadow-sm">
                                                     <i class="fas fa-crosshairs text-blue-600 text-lg"></i>
                                                 </div>
                                             </div>
                                             <div>
-                                                <div class="text-sm font-semibold text-blue-900">Use current location</div>
+                                                <div class="text-sm font-semibold text-blue-900">Use current location
+                                                </div>
                                                 <div class="text-xs text-blue-700">Using GPS</div>
                                             </div>
                                         </div>
@@ -1152,11 +1195,13 @@
                                 <!-- Quick Actions -->
                                 <div class="mb-4">
                                     <div class="grid grid-cols-2 gap-2">
-                                        <button id="addHomeAddress" class="flex items-center px-3 py-2 bg-gray-50 hover:bg-gray-100 rounded-lg transition-all duration-300">
+                                        <button id="addHomeAddress"
+                                            class="flex items-center px-3 py-2 bg-gray-50 hover:bg-gray-100 rounded-lg transition-all duration-300">
                                             <i class="fas fa-home text-gray-600 mr-2"></i>
                                             <span class="text-sm font-medium text-gray-700">Add Home</span>
                                         </button>
-                                        <button id="addWorkAddress" class="flex items-center px-3 py-2 bg-gray-50 hover:bg-gray-100 rounded-lg transition-all duration-300">
+                                        <button id="addWorkAddress"
+                                            class="flex items-center px-3 py-2 bg-gray-50 hover:bg-gray-100 rounded-lg transition-all duration-300">
                                             <i class="fas fa-briefcase text-gray-600 mr-2"></i>
                                             <span class="text-sm font-medium text-gray-700">Add Work</span>
                                         </button>
@@ -1183,7 +1228,8 @@
                 <div class="col-span-5 md:col-span-6">
                     <div class="relative max-w-2xl mx-auto">
                         <!-- Unified search container -->
-                        <div class="relative bg-white rounded-2xl shadow-lg border border-gray-200 group hover:border-primary/30 transition-all duration-500 hover:shadow-xl overflow-hidden">
+                        <div
+                            class="relative bg-white rounded-2xl shadow-lg border border-gray-200 group hover:border-primary/30 transition-all duration-500 hover:shadow-xl overflow-hidden">
                             <div class="flex items-center">
                                 <!-- Unified Categories Dropdown -->
                                 <div class="relative">
@@ -1193,8 +1239,10 @@
                                         <!-- Categories will be populated dynamically -->
                                     </select>
                                     <!-- Unified dropdown icon container -->
-                                    <div class="absolute right-3 top-1/2 transform -translate-y-1/2 pointer-events-none">
-                                        <div class="w-6 h-6 bg-white rounded-lg shadow-sm border border-gray-200 flex items-center justify-center">
+                                    <div
+                                        class="absolute right-3 top-1/2 transform -translate-y-1/2 pointer-events-none">
+                                        <div
+                                            class="w-6 h-6 bg-white rounded-lg shadow-sm border border-gray-200 flex items-center justify-center">
                                             <i class="fas fa-chevron-down text-gray-400 text-xs"></i>
                                         </div>
                                     </div>
@@ -1202,9 +1250,9 @@
 
                                 <!-- Unified Search Input -->
                                 <div class="flex-1 relative">
-                                    <input type="text" id="searchInput" 
-                                           placeholder="Search for products, brands and more..."
-                                           class="w-full px-6 py-4 bg-transparent focus:outline-none text-sm md:text-lg text-gray-700 placeholder-gray-400 font-medium">
+                                    <input type="text" id="searchInput"
+                                        placeholder="Search for products, brands and more..."
+                                        class="w-full px-6 py-4 bg-transparent focus:outline-none text-sm md:text-lg text-gray-700 placeholder-gray-400 font-medium">
                                 </div>
 
                                 <!-- Unified Search Button -->
@@ -1214,7 +1262,9 @@
                                         onclick="window.location.href='allproducts.html'">
                                         <i class="fas fa-search text-primary text-lg"></i>
                                         <!-- Unified hover glow -->
-                                        <div class="absolute inset-0 bg-gradient-to-br from-primary/10 to-secondary/10 rounded-xl opacity-0 group-hover:opacity-100 transition-all duration-500"></div>
+                                        <div
+                                            class="absolute inset-0 bg-gradient-to-br from-primary/10 to-secondary/10 rounded-xl opacity-0 group-hover:opacity-100 transition-all duration-500">
+                                        </div>
                                     </button>
                                 </div>
                             </div>
@@ -1275,16 +1325,18 @@
                     <!-- Simple Account Button -->
                     <div id="accountBtn"
                         class="group relative flex flex-col items-center justify-center cursor-pointer p-4 min-h-[80px] md:min-h-[90px] w-[70px] md:w-[80px]">
-                        
+
                         <div class="relative mb-2">
                             <!-- Simple icon container -->
                             <div class="relative w-12 h-12 flex items-center justify-center">
-                                <i class="fas fa-user text-primary text-lg group-hover:text-secondary transition-all duration-300"></i>
+                                <i
+                                    class="fas fa-user text-primary text-lg group-hover:text-secondary transition-all duration-300"></i>
                             </div>
                         </div>
-                        
+
                         <div class="text-center">
-                            <span class="text-xs font-semibold text-gray-700 group-hover:text-primary transition-all duration-300">
+                            <span
+                                class="text-xs font-semibold text-gray-700 group-hover:text-primary transition-all duration-300">
                                 Login
                             </span>
                         </div>
@@ -1293,18 +1345,22 @@
                     <!-- Unified Cart Button -->
                     <div id="cartBtn"
                         class="group relative flex flex-col items-center justify-center cursor-pointer p-4 rounded-2xl bg-white shadow-lg border border-gray-200 group-hover:border-primary/30 transition-all duration-500 hover:shadow-xl min-h-[80px] md:min-h-[90px] w-[70px] md:w-[80px]">
-                        
+
                         <div class="relative mb-2">
                             <!-- Unified icon container matching other elements -->
-                            <div class="relative w-12 h-12 bg-white rounded-xl shadow-md border border-gray-200 group-hover:border-primary/30 transition-all duration-500 flex items-center justify-center">
+                            <div
+                                class="relative w-12 h-12 bg-white rounded-xl shadow-md border border-gray-200 group-hover:border-primary/30 transition-all duration-500 flex items-center justify-center">
                                 <i class="fa-solid fa-cart-shopping text-primary text-lg"></i>
                                 <!-- Unified hover glow -->
-                                <div class="absolute inset-0 bg-gradient-to-br from-primary/10 to-secondary/10 rounded-xl opacity-0 group-hover:opacity-100 transition-all duration-500"></div>
+                                <div
+                                    class="absolute inset-0 bg-gradient-to-br from-primary/10 to-secondary/10 rounded-xl opacity-0 group-hover:opacity-100 transition-all duration-500">
+                                </div>
                             </div>
                         </div>
-                        
+
                         <div class="text-center">
-                            <span class="text-xs font-semibold text-gray-700 group-hover:text-primary transition-all duration-300">
+                            <span
+                                class="text-xs font-semibold text-gray-700 group-hover:text-primary transition-all duration-300">
                                 Cart
                             </span>
                         </div>
