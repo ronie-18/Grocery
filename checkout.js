@@ -698,7 +698,7 @@ const setupEventListeners = () => {
                 // Personal details
                 firstName: document.getElementById('firstName').value.trim(),
                 lastName: document.getElementById('lastName').value.trim(),
-                companyName: document.getElementById('companyName').value.trim(),
+                landmark: document.getElementById('landmark').value.trim(),
 
                 // Address
                 streetAddress: document.getElementById('streetAddress').value.trim(),

@@ -312,9 +312,9 @@
                 </div>
 
                 <div class="input-group mb-6">
-                    <input type="text" id="companyName" placeholder=" "
+                    <input type="text" id="landmark" placeholder=" "
                         class="w-full px-4 py-3 border-2 border-gray-300 rounded-lg focus:outline-none focus:border-primary transition-colors">
-                    <label class="floating-label text-gray-500">Company Name (Optional)</label>
+                    <label class="floating-label text-gray-500">Landmark (Optional)</label>
                 </div>
 
                 <div class="input-group mb-6">
@@ -327,7 +327,7 @@
                 <div class="input-group mb-6">
                     <input type="text" id="aptSuite" placeholder=" "
                         class="w-full px-4 py-3 border-2 border-gray-300 rounded-lg focus:outline-none focus:border-primary transition-colors">
-                    <label class="floating-label text-gray-500">Apt/Suite/Floor (Optional)</label>
+                    <label class="floating-label text-gray-500">Apt/Suite/Floor *</label>
                 </div>
 
                 <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
@@ -389,39 +389,6 @@
                     <span class="font-medium">Use as billing address</span>
                 </label>
 
-                <!-- Contact Info -->
-                <div class="bg-gradient-to-r from-blue-50 to-indigo-50 rounded-lg p-6 mb-6 border border-blue-100">
-                    <h3 class="font-bold mb-4 flex items-center text-lg">
-                        <i class="fas fa-phone text-primary mr-3"></i>
-                        Contact Information
-                    </h3>
-                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
-                        <div class="input-group">
-                            <input type="email" id="orderEmail" placeholder=" " required
-                                class="w-full px-4 py-3 border-2 border-gray-300 rounded-lg focus:outline-none focus:border-primary transition-colors">
-                            <label class="floating-label text-gray-500">Email for Order Tracking *</label>
-                            <div class="error-message" id="orderEmail-error">Valid email is required</div>
-                        </div>
-                        <div class="input-group">
-                            <input type="tel" id="orderPhone" placeholder=" " required pattern="[0-9]{10}"
-                                class="w-full px-4 py-3 border-2 border-gray-300 rounded-lg focus:outline-none focus:border-primary transition-colors">
-                            <label class="floating-label text-gray-500">Phone for Delivery *</label>
-                            <div class="error-message" id="orderPhone-error">Valid 10-digit phone number is required
-                            </div>
-                        </div>
-                    </div>
-                    <label
-                        class="flex items-center mt-4 cursor-pointer p-2 bg-white rounded-lg hover:bg-blue-50 transition-colors">
-                        <input type="checkbox" id="textAlerts"
-                            class="mr-3 h-5 w-5 text-primary focus:ring-primary border-gray-300 rounded">
-                        <span>📱 Get text alerts for your order updates</span>
-                    </label>
-                    <p class="text-xs text-gray-600 mt-3 bg-white p-3 rounded-lg">
-                        <i class="fas fa-info-circle mr-1 text-blue-500"></i>
-                        We'll look for coupons associated with your email and phone. We only contact you for order
-                        updates or issues.
-                    </p>
-                </div>
 
                 <!-- Payment Method Selection -->
                 <div class="bg-gradient-to-r from-green-50 to-emerald-50 rounded-lg p-6 mb-6 border border-green-100">
