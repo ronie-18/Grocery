@@ -1947,23 +1947,18 @@ function updateUserDisplay() {
         
         console.log('👤 Updating UI with display name:', displayName)
         
-        // Ensure the button has the correct classes including relative positioning for dropdown
-        accountBtn.className = "group flex flex-col items-center justify-center cursor-pointer p-4 rounded-2xl bg-white border-2 border-gray-100 hover:border-primary hover:shadow-xl transition-all duration-500 transform hover:scale-110 hover:-translate-y-1 min-h-[120px] w-[80px] relative"
+        // Simple login button classes for logged in users - no rotating effects
+        accountBtn.className = "group relative flex flex-col items-center justify-center cursor-pointer p-4 min-h-[80px] md:min-h-[90px] w-[70px] md:w-[80px]"
         
         accountBtn.innerHTML = `
             <div class="relative">
                 <div class="text-center cursor-pointer user-menu-trigger">
                     <div class="relative mb-2">
-                        <div
-                            class="absolute -inset-3 bg-gradient-to-r from-primary via-secondary to-primary rounded-full opacity-0 group-hover:opacity-100 transition-all duration-500 animate-spin-slow">
-                        </div>
-                        <div
-                            class="relative bg-gradient-to-br from-gray-50 to-gray-100 group-hover:from-primary group-hover:to-secondary p-4 rounded-full transition-all duration-500 shadow-lg group-hover:shadow-xl">
-                            <i
-                                class="fas fa-user text-2xl text-gray-600 group-hover:text-white transition-all duration-500 transform group-hover:scale-110"></i>
+                        <div class="relative w-12 h-12 flex items-center justify-center">
+                            <i class="fas fa-user text-primary text-lg group-hover:text-secondary transition-all duration-300"></i>
                         </div>
                     </div>
-                    <span class="text-sm font-semibold text-gray-700 group-hover:text-primary transition-all duration-300 group-hover:scale-105 block">${displayName}</span>
+                    <span class="text-xs font-semibold text-gray-700 group-hover:text-primary transition-all duration-300">${displayName}</span>
                 </div>
                 <div class="user-dropdown absolute top-full left-1/2 transform -translate-x-1/2 mt-2 w-48 bg-white rounded-lg shadow-lg border border-gray-200 opacity-0 invisible scale-95 transition-all duration-200 z-50">
                     <div class="py-2">
@@ -1996,24 +1991,17 @@ function updateUserDisplay() {
             console.log('🎯 User dropdown initialized after display update')
         }, 100)
     } else {
-        // Reset account button to login state when user is logged out
-        // Ensure the button has the correct classes
-        accountBtn.className = "group flex flex-col items-center justify-center cursor-pointer p-4 rounded-2xl bg-white border-2 border-gray-100 hover:border-primary hover:shadow-xl transition-all duration-500 transform hover:scale-110 hover:-translate-y-1 min-h-[120px] w-[80px]"
+        // Reset account button to login state when user is logged out - simple design
+        accountBtn.className = "group relative flex flex-col items-center justify-center cursor-pointer p-4 min-h-[80px] md:min-h-[90px] w-[70px] md:w-[80px]"
         
         accountBtn.innerHTML = `
             <div class="relative mb-2">
-                <div
-                    class="absolute -inset-3 bg-gradient-to-r from-primary via-secondary to-primary rounded-full opacity-0 group-hover:opacity-100 transition-all duration-500 animate-spin-slow">
-                </div>
-                <div
-                    class="relative bg-gradient-to-br from-gray-50 to-gray-100 group-hover:from-primary group-hover:to-secondary p-4 rounded-full transition-all duration-500 shadow-lg group-hover:shadow-xl">
-                    <i
-                        class="fas fa-user text-2xl text-gray-600 group-hover:text-white transition-all duration-500 transform group-hover:scale-110"></i>
+                <div class="relative w-12 h-12 flex items-center justify-center">
+                    <i class="fas fa-user text-primary text-lg group-hover:text-secondary transition-all duration-300"></i>
                 </div>
             </div>
             <div class="text-center">
-                <span
-                    class="text-sm font-semibold text-gray-700 group-hover:text-primary transition-all duration-300 group-hover:scale-105 block">Login</span>
+                <span class="text-xs font-semibold text-gray-700 group-hover:text-primary transition-all duration-300">Login</span>
             </div>
         `
     }
@@ -3146,3 +3134,1832 @@ function showQuickViewFromSearch(productId) {
     hideSearchSuggestions()
     showQuickView(productId)
 }
+
+// ===== GOOGLE MAPS INTEGRATION =====
+
+// Google Maps Global Variables
+let map = null
+let userMarker = null
+let radiusCircle = null
+let shopMarkers = []
+let infoWindow = null
+let geocoder = null
+let placesService = null
+
+// Location and Shop Variables
+let userLocation = null
+let nearbyShops = []
+let lastLocationCheck = null
+
+// Mock shop data for demonstration (will be replaced with real data later)
+const mockShops = [
+    {
+        id: 1,
+        name: "Fresh Mart Grocery",
+        address: "123 Main Street, Local Area",
+        phone: "+91 9876543210",
+        rating: 4.5,
+        image: "https://images.unsplash.com/photo-1556742049-0cfed4f6a45d?w=300&h=200&fit=crop",
+        categories: ["Grocery", "Fresh Produce", "Dairy"],
+        openingHours: "6:00 AM - 11:00 PM",
+        deliveryTime: "30-45 mins",
+        distance: 0.8,
+        lat: null, // Will be set dynamically based on user location
+        lng: null
+    },
+    {
+        id: 2,
+        name: "Organic Store",
+        address: "456 Green Avenue, Eco District",
+        phone: "+91 9876543211",
+        rating: 4.2,
+        image: "https://images.unsplash.com/photo-1542838132-92c53300491e?w=300&h=200&fit=crop",
+        categories: ["Organic", "Health Foods", "Supplements"],
+        openingHours: "7:00 AM - 10:00 PM",
+        deliveryTime: "45-60 mins",
+        distance: 1.2,
+        lat: null,
+        lng: null
+    },
+    {
+        id: 3,
+        name: "QuickStop Convenience",
+        address: "789 Busy Road, Commercial Zone",
+        phone: "+91 9876543212",
+        rating: 4.0,
+        image: "https://images.unsplash.com/photo-1578662996442-48f60103fc96?w=300&h=200&fit=crop",
+        categories: ["Convenience", "Snacks", "Beverages"],
+        openingHours: "24 Hours",
+        deliveryTime: "15-30 mins",
+        distance: 0.5,
+        lat: null,
+        lng: null
+    },
+    {
+        id: 4,
+        name: "Metro Supermarket",
+        address: "321 Shopping Complex, City Center",
+        phone: "+91 9876543213",
+        rating: 4.7,
+        image: "https://images.unsplash.com/photo-1583394838336-acd977736f90?w=300&h=200&fit=crop",
+        categories: ["Supermarket", "Electronics", "Clothing"],
+        openingHours: "9:00 AM - 10:00 PM",
+        deliveryTime: "30-45 mins",
+        distance: 1.8,
+        lat: null,
+        lng: null
+    }
+]
+
+// Initialize Google Maps (callback function)
+function initializeGoogleMaps() {
+    console.log('Google Maps API loaded successfully')
+    
+    // Initialize geocoder and other services
+    geocoder = new google.maps.Geocoder()
+    
+    // Check if this is the first visit and handle location
+    handleLocationOnFirstVisit()
+    
+    // Initialize location services if not already done
+    if (!window.locationSelectorInitialized) {
+        console.log('🔧 Initializing location services from Google Maps callback...')
+        initializeLocationSelector()
+        updateLocationDisplay()
+        loadSavedAddresses()
+        window.locationSelectorInitialized = true
+    }
+    
+    // Try to initialize autocomplete if dropdown is already open
+    if (locationDropdownOpen && !locationAutocomplete) {
+        console.log('🔄 Dropdown is open, initializing autocomplete...')
+        initializeLocationAutocomplete()
+    }
+}
+
+// Handle location capture on first visit
+function handleLocationOnFirstVisit() {
+    const hasLocationBeenCaptured = localStorage.getItem('nearNowLocationCaptured')
+    const lastLocationTime = localStorage.getItem('nearNowLastLocationTime')
+    
+    // Only capture location if it's the first visit or location is older than 24 hours
+    const shouldCaptureLocation = !hasLocationBeenCaptured || 
+        (lastLocationTime && (Date.now() - parseInt(lastLocationTime)) > 24 * 60 * 60 * 1000)
+    
+    if (shouldCaptureLocation) {
+        console.log('First visit or location data expired - capturing user location...')
+        
+        // Try to get user's current location first
+        if (navigator.geolocation) {
+            navigator.geolocation.getCurrentPosition(
+                (position) => {
+                    const lat = position.coords.latitude
+                    const lng = position.coords.longitude
+                    userLocation = { lat, lng }
+                    
+                    // Reverse geocode to get PIN code
+                    reverseGeocodeToGetPIN(lat, lng)
+                    
+                    // Mark location as captured
+                    localStorage.setItem('nearNowLocationCaptured', 'true')
+                    localStorage.setItem('nearNowLastLocationTime', Date.now().toString())
+                    localStorage.setItem('nearNowUserLocation', JSON.stringify(userLocation))
+                    
+                    console.log('Location captured:', userLocation)
+                    
+                    // Initialize map and update location selector
+                    initializeMapWithLocation()
+                    updateLocationDisplay()
+                },
+                (error) => {
+                    console.log('Geolocation failed, prompting for PIN code:', error)
+                    promptForPINCode()
+                },
+                {
+                    enableHighAccuracy: true,
+                    timeout: 10000,
+                    maximumAge: 300000 // 5 minutes
+                }
+            )
+        } else {
+            console.log('Geolocation not supported, prompting for PIN code')
+            promptForPINCode()
+        }
+    } else {
+        // Load existing location data
+        const savedLocation = localStorage.getItem('nearNowUserLocation')
+        if (savedLocation) {
+            userLocation = JSON.parse(savedLocation)
+            console.log('Using saved location:', userLocation)
+        }
+    }
+}
+
+
+
+// Reverse geocode to get PIN code from coordinates
+function reverseGeocodeToGetPIN(lat, lng) {
+    if (!geocoder) return
+    
+    const latlng = { lat, lng }
+    
+    geocoder.geocode({ location: latlng }, (results, status) => {
+        if (status === "OK" && results[0]) {
+            // Extract PIN code from address components
+            let pinCode = null
+            
+            for (let component of results[0].address_components) {
+                if (component.types.includes("postal_code")) {
+                    pinCode = component.long_name
+                    break
+                }
+            }
+            
+            if (pinCode) {
+                localStorage.setItem('nearNowUserPIN', pinCode)
+                console.log('PIN code extracted:', pinCode)
+            }
+        }
+    })
+}
+
+// Prompt user for PIN code input
+function promptForPINCode() {
+    // Create and show PIN code input modal
+    showPINCodeModal()
+}
+
+// Show PIN code input modal
+function showPINCodeModal() {
+    // Create modal HTML
+    const modalHTML = `
+        <div id="pinCodeModal" class="fixed inset-0 z-50 flex items-center justify-center p-4">
+            <div class="fixed inset-0 bg-black bg-opacity-50 backdrop-blur-sm"></div>
+            <div class="bg-white rounded-2xl shadow-2xl w-full max-w-md relative z-10">
+                <div class="p-8">
+                    <div class="text-center mb-6">
+                        <div class="bg-primary bg-opacity-10 p-3 rounded-full w-16 h-16 mx-auto mb-4 flex items-center justify-center">
+                            <i class="fas fa-map-marker-alt text-2xl text-primary"></i>
+                        </div>
+                        <h2 class="text-2xl font-bold text-gray-800 mb-2">Find Stores Near You</h2>
+                        <p class="text-gray-600">Enter your PIN code to discover nearby grocery stores</p>
+                    </div>
+                    
+                    <form id="pinCodeForm">
+                        <div class="mb-6">
+                            <label class="block text-gray-700 text-sm font-bold mb-2">PIN Code</label>
+                            <input type="text" id="pinCodeInput" 
+                                   class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:border-primary text-lg text-center"
+                                   placeholder="Enter 6-digit PIN code" 
+                                   pattern="[0-9]{6}" 
+                                   maxlength="6" 
+                                   required>
+                            <p class="text-xs text-gray-500 mt-2">We'll show you the best grocery stores in your area</p>
+                        </div>
+                        
+                        <div class="flex space-x-3">
+                            <button type="button" id="skipLocationBtn" 
+                                    class="flex-1 px-4 py-3 border border-gray-300 rounded-lg text-gray-700 hover:bg-gray-50 transition duration-300">
+                                Skip for Now
+                            </button>
+                            <button type="submit" id="findStoresBtn"
+                                    class="flex-1 bg-primary text-white px-4 py-3 rounded-lg font-bold hover:bg-secondary transition duration-300">
+                                Find Stores
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    `
+    
+    // Add modal to page
+    document.body.insertAdjacentHTML('beforeend', modalHTML)
+    
+    // Add event listeners
+    setupPINCodeModalListeners()
+}
+
+// Setup PIN code modal event listeners
+function setupPINCodeModalListeners() {
+    const modal = document.getElementById('pinCodeModal')
+    const form = document.getElementById('pinCodeForm')
+    const pinInput = document.getElementById('pinCodeInput')
+    const skipBtn = document.getElementById('skipLocationBtn')
+    const findBtn = document.getElementById('findStoresBtn')
+    
+    // Auto-focus on input
+    pinInput.focus()
+    
+    // Only allow numbers
+    pinInput.addEventListener('input', (e) => {
+        e.target.value = e.target.value.replace(/[^0-9]/g, '')
+    })
+    
+    // Form submission
+    form.addEventListener('submit', (e) => {
+        e.preventDefault()
+        const pinCode = pinInput.value.trim()
+        
+        if (pinCode.length === 6) {
+            findBtn.innerHTML = '<i class="fas fa-spinner fa-spin mr-2"></i>Finding Stores...'
+            findBtn.disabled = true
+            
+            geocodePINCode(pinCode)
+                .then(() => {
+                    hidePINCodeModal()
+                })
+                .catch((error) => {
+                    console.error('Geocoding failed:', error)
+                    showError('Unable to find location for this PIN code. Please try again.')
+                    findBtn.innerHTML = 'Find Stores'
+                    findBtn.disabled = false
+                })
+        }
+    })
+    
+    // Skip button
+    skipBtn.addEventListener('click', () => {
+        hidePINCodeModal()
+        localStorage.setItem('nearNowLocationCaptured', 'true')
+        localStorage.setItem('nearNowLastLocationTime', Date.now().toString())
+    })
+    
+    // Close on backdrop click
+    modal.addEventListener('click', (e) => {
+        if (e.target === modal) {
+            hidePINCodeModal()
+        }
+    })
+}
+
+// Hide PIN code modal
+function hidePINCodeModal() {
+    const modal = document.getElementById('pinCodeModal')
+    if (modal) {
+        modal.remove()
+    }
+}
+
+// Geocode PIN code to get coordinates
+function geocodePINCode(pinCode) {
+    return new Promise((resolve, reject) => {
+        if (!geocoder) {
+            reject(new Error('Geocoder not initialized'))
+            return
+        }
+        
+        // Format PIN code for India
+        const address = `${pinCode}, India`
+        
+        geocoder.geocode({ address: address }, (results, status) => {
+            if (status === "OK" && results[0]) {
+                const location = results[0].geometry.location
+                userLocation = {
+                    lat: location.lat(),
+                    lng: location.lng()
+                }
+                
+                // Save location data
+                localStorage.setItem('nearNowUserLocation', JSON.stringify(userLocation))
+                localStorage.setItem('nearNowUserPIN', pinCode)
+                localStorage.setItem('nearNowLocationCaptured', 'true')
+                localStorage.setItem('nearNowLastLocationTime', Date.now().toString())
+                
+                console.log('PIN code geocoded successfully:', userLocation)
+                
+                // Update location selector
+                const shortAddress = formatAddressForHeader(results[0].formatted_address)
+                updateSelectedLocation(shortAddress, results[0].formatted_address)
+                
+                // Initialize map and show nearby shops
+                initializeMapWithLocation()
+                
+                resolve(userLocation)
+            } else {
+                reject(new Error(`Geocoding failed: ${status}`))
+            }
+        })
+    })
+}
+
+// Initialize map with user location
+function initializeMapWithLocation() {
+    if (!userLocation) return
+    
+    // Create or show map container
+    createMapContainer()
+    
+    // Initialize the map
+    map = new google.maps.Map(document.getElementById('nearNowMap'), {
+        center: userLocation,
+        zoom: 14,
+        styles: [
+            {
+                "featureType": "poi",
+                "elementType": "labels",
+                "stylers": [{"visibility": "off"}]
+            }
+        ],
+        mapTypeControl: false,
+        streetViewControl: false,
+        fullscreenControl: true
+    })
+    
+    // Add user location marker
+    addUserLocationMarker()
+    
+    // Add radius circle
+    addRadiusCircle()
+    
+    // Generate and display mock shops
+    generateMockShops()
+    
+    // Initialize Places service for future use
+    placesService = new google.maps.places.PlacesService(map)
+    
+    // Initialize info window
+    infoWindow = new google.maps.InfoWindow()
+}
+
+// Create map container if it doesn't exist
+function createMapContainer() {
+    let mapContainer = document.getElementById('nearNowMapContainer')
+    
+    if (!mapContainer) {
+        const mapHTML = `
+            <section id="nearNowMapContainer" class="py-12 bg-white border-t border-gray-200">
+                <div class="container mx-auto px-4">
+                    <div class="text-center mb-8">
+                        <h2 class="text-3xl font-bold text-gray-800 mb-2">Stores Near You</h2>
+                        <p class="text-lg text-gray-600">Discover nearby grocery stores within 2km radius</p>
+                    </div>
+                    
+                    <div class="bg-gray-50 rounded-2xl p-6">
+                        <div class="grid lg:grid-cols-3 gap-6">
+                            <!-- Map -->
+                            <div class="lg:col-span-2">
+                                <div id="nearNowMap" class="w-full h-96 rounded-xl shadow-lg"></div>
+                            </div>
+                            
+                            <!-- Shop List -->
+                            <div class="lg:col-span-1">
+                                <h3 class="text-xl font-bold text-gray-800 mb-4">Nearby Stores</h3>
+                                <div id="nearbyShopsList" class="space-y-4 max-h-96 overflow-y-auto">
+                                    <!-- Shops will be populated here -->
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </section>
+        `
+        
+        // Insert map container after the categories section
+        const categoriesSection = document.getElementById('categoriesSection')
+        if (categoriesSection) {
+            categoriesSection.insertAdjacentHTML('afterend', mapHTML)
+        }
+    }
+}
+
+// Add user location marker
+function addUserLocationMarker() {
+    if (!map || !userLocation) return
+    
+    userMarker = new google.maps.Marker({
+        position: userLocation,
+        map: map,
+        title: 'Your Location',
+        icon: {
+            url: 'data:image/svg+xml;charset=UTF-8,' + encodeURIComponent(`
+                <svg xmlns="http://www.w3.org/2000/svg" width="30" height="40" viewBox="0 0 30 40">
+                    <path fill="#059669" stroke="#047857" stroke-width="2" d="M15 2C8.373 2 3 7.373 3 14c0 8.5 12 22 12 22s12-13.5 12-22c0-6.627-5.373-12-12-12z"/>
+                    <circle fill="white" cx="15" cy="14" r="6"/>
+                </svg>
+            `),
+            scaledSize: new google.maps.Size(30, 40),
+            anchor: new google.maps.Point(15, 40)
+        },
+        animation: google.maps.Animation.DROP
+    })
+    
+    // Add click listener for user marker
+    userMarker.addListener('click', () => {
+        infoWindow.setContent(`
+            <div class="p-2">
+                <h3 class="font-bold text-primary">Your Location</h3>
+                <p class="text-sm text-gray-600">You are here</p>
+            </div>
+        `)
+        infoWindow.open(map, userMarker)
+    })
+}
+
+// Add radius circle
+function addRadiusCircle() {
+    if (!map || !userLocation) return
+    
+    radiusCircle = new google.maps.Circle({
+        strokeColor: '#059669',
+        strokeOpacity: 0.8,
+        strokeWeight: 2,
+        fillColor: '#059669',
+        fillOpacity: 0.1,
+        map: map,
+        center: userLocation,
+        radius: 2000 // 2km in meters
+    })
+}
+
+// Generate mock shops around user location
+function generateMockShops() {
+    if (!userLocation) return
+    
+    // Clear existing shops
+    nearbyShops = []
+    clearShopMarkers()
+    
+    // Generate random positions around user location within 2km
+    mockShops.forEach((shop, index) => {
+        const angle = (index * 90) + Math.random() * 360 // Distribute shops around
+        const distance = 0.5 + Math.random() * 1.5 // Random distance between 0.5km and 2km
+        
+        // Calculate shop coordinates
+        const shopLocation = calculateDestination(userLocation, distance, angle)
+        
+        // Update shop data with coordinates
+        const enhancedShop = {
+            ...shop,
+            lat: shopLocation.lat,
+            lng: shopLocation.lng,
+            distance: distance.toFixed(1)
+        }
+        
+        nearbyShops.push(enhancedShop)
+        
+        // Add shop marker
+        addShopMarker(enhancedShop)
+    })
+    
+    // Update shops list in UI
+    updateShopsList()
+}
+
+// Calculate destination coordinates given origin, distance (km), and bearing (degrees)
+function calculateDestination(origin, distance, bearing) {
+    const R = 6371 // Earth's radius in kilometers
+    const lat1 = origin.lat * Math.PI / 180
+    const lng1 = origin.lng * Math.PI / 180
+    const bearingRad = bearing * Math.PI / 180
+    
+    const lat2 = Math.asin(
+        Math.sin(lat1) * Math.cos(distance / R) +
+        Math.cos(lat1) * Math.sin(distance / R) * Math.cos(bearingRad)
+    )
+    
+    const lng2 = lng1 + Math.atan2(
+        Math.sin(bearingRad) * Math.sin(distance / R) * Math.cos(lat1),
+        Math.cos(distance / R) - Math.sin(lat1) * Math.sin(lat2)
+    )
+    
+    return {
+        lat: lat2 * 180 / Math.PI,
+        lng: lng2 * 180 / Math.PI
+    }
+}
+
+// Add shop marker to map
+function addShopMarker(shop) {
+    if (!map) return
+    
+    const marker = new google.maps.Marker({
+        position: { lat: shop.lat, lng: shop.lng },
+        map: map,
+        title: shop.name,
+        icon: {
+            url: 'data:image/svg+xml;charset=UTF-8,' + encodeURIComponent(`
+                <svg xmlns="http://www.w3.org/2000/svg" width="24" height="32" viewBox="0 0 24 32">
+                    <path fill="#ff6b6b" stroke="#e55656" stroke-width="1" d="M12 1C6.48 1 2 5.48 2 11c0 6.5 10 19 10 19s10-12.5 10-19c0-5.52-4.48-10-10-10z"/>
+                    <circle fill="white" cx="12" cy="11" r="4"/>
+                </svg>
+            `),
+            scaledSize: new google.maps.Size(24, 32),
+            anchor: new google.maps.Point(12, 32)
+        }
+    })
+    
+    // Add click listener for shop marker
+    marker.addListener('click', () => {
+        showShopInfoWindow(shop, marker)
+    })
+    
+    shopMarkers.push(marker)
+}
+
+// Show shop info window
+function showShopInfoWindow(shop, marker) {
+    const infoContent = `
+        <div class="p-3 max-w-xs">
+            <img src="${shop.image}" alt="${shop.name}" class="w-full h-24 object-cover rounded-lg mb-3">
+            <h3 class="font-bold text-lg text-gray-800 mb-1">${shop.name}</h3>
+            <div class="flex items-center mb-2">
+                <div class="flex text-yellow-400 text-sm mr-2">
+                    ${generateStarRating(shop.rating)}
+                </div>
+                <span class="text-sm text-gray-600">${shop.rating}</span>
+            </div>
+            <p class="text-sm text-gray-600 mb-2">
+                <i class="fas fa-map-marker-alt mr-1"></i>
+                ${shop.distance}km away
+            </p>
+            <p class="text-sm text-gray-600 mb-2">
+                <i class="fas fa-clock mr-1"></i>
+                ${shop.openingHours}
+            </p>
+            <p class="text-sm text-gray-600 mb-3">
+                <i class="fas fa-shipping-fast mr-1"></i>
+                Delivery: ${shop.deliveryTime}
+            </p>
+            <div class="flex space-x-2">
+                <button onclick="callShop('${shop.phone}')" 
+                        class="flex-1 bg-primary text-white px-3 py-1 rounded text-sm hover:bg-secondary transition">
+                    <i class="fas fa-phone mr-1"></i> Call
+                </button>
+                <button onclick="getDirections(${shop.lat}, ${shop.lng})" 
+                        class="flex-1 bg-gray-600 text-white px-3 py-1 rounded text-sm hover:bg-gray-700 transition">
+                    <i class="fas fa-directions mr-1"></i> Directions
+                </button>
+            </div>
+        </div>
+    `
+    
+    infoWindow.setContent(infoContent)
+    infoWindow.open(map, marker)
+}
+
+// Generate star rating HTML
+function generateStarRating(rating) {
+    const fullStars = Math.floor(rating)
+    const hasHalfStar = rating % 1 !== 0
+    let starsHTML = ''
+    
+    for (let i = 0; i < fullStars; i++) {
+        starsHTML += '<i class="fas fa-star"></i>'
+    }
+    
+    if (hasHalfStar) {
+        starsHTML += '<i class="fas fa-star-half-alt"></i>'
+    }
+    
+    const emptyStars = 5 - Math.ceil(rating)
+    for (let i = 0; i < emptyStars; i++) {
+        starsHTML += '<i class="far fa-star"></i>'
+    }
+    
+    return starsHTML
+}
+
+// Update shops list in UI
+function updateShopsList() {
+    const shopsList = document.getElementById('nearbyShopsList')
+    if (!shopsList) return
+    
+    const shopsHTML = nearbyShops.map(shop => `
+        <div class="bg-white p-4 rounded-lg shadow-md hover:shadow-lg transition cursor-pointer" 
+             onclick="focusOnShop(${shop.lat}, ${shop.lng})">
+            <div class="flex space-x-3">
+                <img src="${shop.image}" alt="${shop.name}" class="w-16 h-16 object-cover rounded-lg">
+                <div class="flex-1">
+                    <h4 class="font-bold text-gray-800 mb-1">${shop.name}</h4>
+                    <div class="flex items-center mb-1">
+                        <div class="flex text-yellow-400 text-xs mr-2">
+                            ${generateStarRating(shop.rating)}
+                        </div>
+                        <span class="text-xs text-gray-600">${shop.rating}</span>
+                    </div>
+                    <p class="text-xs text-gray-600 mb-1">
+                        <i class="fas fa-map-marker-alt mr-1"></i>
+                        ${shop.distance}km away
+                    </p>
+                    <p class="text-xs text-primary font-semibold">
+                        <i class="fas fa-shipping-fast mr-1"></i>
+                        ${shop.deliveryTime}
+                    </p>
+                </div>
+            </div>
+            <div class="mt-3 flex space-x-2">
+                <button onclick="event.stopPropagation(); callShop('${shop.phone}')" 
+                        class="flex-1 bg-primary text-white px-3 py-1 rounded text-xs hover:bg-secondary transition">
+                    <i class="fas fa-phone mr-1"></i> Call
+                </button>
+                <button onclick="event.stopPropagation(); getDirections(${shop.lat}, ${shop.lng})" 
+                        class="flex-1 bg-gray-600 text-white px-3 py-1 rounded text-xs hover:bg-gray-700 transition">
+                    <i class="fas fa-directions mr-1"></i> Directions
+                </button>
+            </div>
+        </div>
+    `).join('')
+    
+    shopsList.innerHTML = shopsHTML
+}
+
+// Focus on shop on map
+function focusOnShop(lat, lng) {
+    if (!map) return
+    
+    map.setCenter({ lat, lng })
+    map.setZoom(16)
+    
+    // Find and click the marker
+    const shopMarker = shopMarkers.find(marker => {
+        const position = marker.getPosition()
+        return Math.abs(position.lat() - lat) < 0.0001 && Math.abs(position.lng() - lng) < 0.0001
+    })
+    
+    if (shopMarker) {
+        google.maps.event.trigger(shopMarker, 'click')
+    }
+}
+
+// Clear shop markers
+function clearShopMarkers() {
+    shopMarkers.forEach(marker => {
+        marker.setMap(null)
+    })
+    shopMarkers = []
+}
+
+// Call shop function
+function callShop(phoneNumber) {
+    window.open(`tel:${phoneNumber}`, '_self')
+}
+
+// Get directions function
+function getDirections(lat, lng) {
+    const destination = `${lat},${lng}`
+    const url = `https://www.google.com/maps/dir/?api=1&destination=${destination}`
+    window.open(url, '_blank')
+}
+
+// Function to manually trigger PIN code entry (for testing)
+window.triggerPINCodeEntry = function() {
+    promptForPINCode()
+}
+
+// Function to reset location data (for testing)
+window.resetLocationData = function() {
+    localStorage.removeItem('nearNowLocationCaptured')
+    localStorage.removeItem('nearNowLastLocationTime')
+    localStorage.removeItem('nearNowUserLocation')
+    localStorage.removeItem('nearNowUserPIN')
+    console.log('Location data reset. Reload the page to trigger location capture again.')
+}
+
+// Function to search for real nearby shops using Places API (future enhancement)
+function searchNearbyShopsWithPlacesAPI() {
+    if (!placesService || !userLocation) return
+    
+    const request = {
+        location: userLocation,
+        radius: 2000, // 2km radius
+        types: ['grocery_or_supermarket', 'food', 'store']
+    }
+    
+    placesService.nearbySearch(request, (results, status) => {
+        if (status === google.maps.places.PlacesServiceStatus.OK && results) {
+            console.log('Found nearby places:', results)
+            
+            // Clear mock shops and replace with real data
+            clearShopMarkers()
+            nearbyShops = []
+            
+            results.slice(0, 10).forEach((place, index) => {
+                const shop = {
+                    id: `place_${index}`,
+                    name: place.name,
+                    address: place.vicinity,
+                    phone: place.formatted_phone_number || 'N/A',
+                    rating: place.rating || 4.0,
+                    image: place.photos && place.photos[0] 
+                        ? place.photos[0].getUrl({ maxWidth: 300, maxHeight: 200 })
+                        : 'https://images.unsplash.com/photo-1556742049-0cfed4f6a45d?w=300&h=200&fit=crop',
+                    categories: place.types || ['Store'],
+                    openingHours: place.opening_hours?.weekday_text?.[0] || 'Hours not available',
+                    deliveryTime: '30-60 mins',
+                    distance: calculateDistance(userLocation, place.geometry.location),
+                    lat: place.geometry.location.lat(),
+                    lng: place.geometry.location.lng()
+                }
+                
+                nearbyShops.push(shop)
+                addShopMarker(shop)
+            })
+            
+            updateShopsList()
+        }
+    })
+}
+
+// Calculate distance between two points
+function calculateDistance(pos1, pos2) {
+    const R = 6371 // Earth's radius in km
+    const dLat = (pos2.lat() - pos1.lat) * Math.PI / 180
+    const dLng = (pos2.lng() - pos1.lng) * Math.PI / 180
+    const a = Math.sin(dLat/2) * Math.sin(dLat/2) +
+              Math.cos(pos1.lat * Math.PI / 180) * Math.cos(pos2.lat() * Math.PI / 180) *
+              Math.sin(dLng/2) * Math.sin(dLng/2)
+    const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a))
+    const distance = R * c
+    return distance.toFixed(1)
+}
+
+// Show error message
+function showError(message) {
+    // Create a simple toast notification
+    const toast = document.createElement('div')
+    toast.className = 'fixed top-4 right-4 bg-red-500 text-white px-6 py-3 rounded-lg shadow-lg z-50'
+    toast.innerHTML = `
+        <div class="flex items-center">
+            <i class="fas fa-exclamation-circle mr-2"></i>
+            <span>${message}</span>
+        </div>
+    `
+    
+    document.body.appendChild(toast)
+    
+    // Remove toast after 5 seconds
+    setTimeout(() => {
+        toast.remove()
+    }, 5000)
+}
+
+// Export functions for global access
+window.nearNowMaps = {
+    initializeGoogleMaps,
+    triggerPINCodeEntry: window.triggerPINCodeEntry,
+    resetLocationData: window.resetLocationData,
+    searchNearbyShopsWithPlacesAPI
+}
+
+console.log('Google Maps integration module loaded')
+
+// ===== END OF GOOGLE MAPS INTEGRATION =====
+
+// ===== LOCATION SELECTOR FUNCTIONALITY =====
+
+// Location selector global variables
+let locationDropdownOpen = false
+let savedAddresses = []
+let locationAutocomplete = null
+
+// Initialize location selector when DOM is loaded
+document.addEventListener('DOMContentLoaded', function() {
+    console.log('🚀 DOM Content Loaded - Initializing location selector...')
+    
+    try {
+        initializeLocationSelector()
+        loadSavedAddresses()
+        updateLocationDisplay()
+        
+        // Location services will be initialized when Google Maps loads
+        
+        window.locationSelectorInitialized = true
+        console.log('✅ Location selector initialization complete')
+    } catch (error) {
+        console.error('❌ Error initializing location selector:', error)
+    }
+})
+
+// Also initialize immediately if DOM is already loaded
+if (document.readyState === 'loading') {
+    console.log('📄 DOM still loading, waiting for DOMContentLoaded...')
+} else {
+    console.log('📄 DOM already loaded, initializing immediately...')
+    setTimeout(() => {
+        try {
+            initializeLocationSelector()
+            loadSavedAddresses()
+            updateLocationDisplay()
+            // Location services will be initialized when Google Maps loads
+            window.locationSelectorInitialized = true
+            console.log('✅ Immediate location selector initialization complete')
+        } catch (error) {
+            console.error('❌ Error in immediate initialization:', error)
+        }
+    }, 100)
+}
+
+// Initialize location selector functionality
+function initializeLocationSelector() {
+    console.log('🔧 Initializing location selector functionality...')
+    
+    const locationSelector = document.getElementById('locationSelector')
+    const locationDropdown = document.getElementById('locationDropdown')
+    const locationChevron = document.getElementById('locationChevron')
+    const locationSearchInput = document.getElementById('locationSearchInput')
+    const useCurrentLocationBtn = document.getElementById('useCurrentLocation')
+    const closeLocationBtn = document.getElementById('closeLocationDropdown')
+    const clearSearchBtn = document.getElementById('clearSearchBtn')
+    const addHomeBtn = document.getElementById('addHomeAddress')
+    const addWorkBtn = document.getElementById('addWorkAddress')
+
+    console.log('🔍 Elements found:', {
+        locationSelector: !!locationSelector,
+        locationDropdown: !!locationDropdown,
+        locationChevron: !!locationChevron,
+        locationSearchInput: !!locationSearchInput,
+        useCurrentLocationBtn: !!useCurrentLocationBtn,
+        closeLocationBtn: !!closeLocationBtn,
+        clearSearchBtn: !!clearSearchBtn,
+        addHomeBtn: !!addHomeBtn,
+        addWorkBtn: !!addWorkBtn
+    })
+
+    if (!locationSelector) {
+        console.error('❌ Location selector element not found!')
+        return
+    }
+
+    // Toggle dropdown on click
+    console.log('🖱️ Adding click event listener to location selector...')
+    locationSelector.addEventListener('click', (e) => {
+        console.log('🎯 Location selector clicked!')
+        e.stopPropagation()
+        toggleLocationDropdown()
+    })
+    
+    console.log('✅ Click event listener added successfully')
+
+    // Close button
+    if (closeLocationBtn) {
+        closeLocationBtn.addEventListener('click', (e) => {
+            e.stopPropagation()
+            closeLocationDropdown()
+        })
+    }
+
+    // Use current location button
+    if (useCurrentLocationBtn) {
+        useCurrentLocationBtn.addEventListener('click', (e) => {
+            e.preventDefault()
+            e.stopPropagation()
+            getCurrentLocationForHeader()
+        })
+    }
+
+    // Location search input
+    if (locationSearchInput) {
+        locationSearchInput.addEventListener('input', (e) => {
+            // Show/hide clear button
+            if (clearSearchBtn) {
+                if (e.target.value.length > 0) {
+                    clearSearchBtn.classList.remove('hidden')
+                } else {
+                    clearSearchBtn.classList.add('hidden')
+                }
+            }
+            
+            // Don't trigger manual search if autocomplete is active
+            if (!locationAutocomplete) {
+                debounce(handleLocationSearch, 300)(e)
+            }
+        })
+        
+        // Clear search button
+        if (clearSearchBtn) {
+            clearSearchBtn.addEventListener('click', () => {
+                locationSearchInput.value = ''
+                clearSearchBtn.classList.add('hidden')
+                clearLocationSuggestions()
+                loadLocationSuggestions()
+            })
+        }
+        
+        // Initialize Google Places Autocomplete when dropdown opens
+        // This will be called from openLocationDropdown
+    }
+
+    // Add Home button
+    if (addHomeBtn) {
+        addHomeBtn.addEventListener('click', (e) => {
+            e.preventDefault()
+            e.stopPropagation()
+            addNamedAddress('home')
+        })
+    }
+
+    // Add Work button
+    if (addWorkBtn) {
+        addWorkBtn.addEventListener('click', (e) => {
+            e.preventDefault()
+            e.stopPropagation()
+            addNamedAddress('work')
+        })
+    }
+
+    // Close dropdown when clicking outside
+    document.addEventListener('click', (e) => {
+        if (!locationDropdown?.contains(e.target) && !locationSelector?.contains(e.target)) {
+            closeLocationDropdown()
+        }
+    })
+
+    // Close dropdown on escape key
+    document.addEventListener('keydown', (e) => {
+        if (e.key === 'Escape' && locationDropdownOpen) {
+            closeLocationDropdown()
+        }
+    })
+}
+
+// Toggle location dropdown
+function toggleLocationDropdown() {
+    console.log('🔄 Toggle location dropdown called. Current state:', locationDropdownOpen)
+    if (locationDropdownOpen) {
+        console.log('📤 Closing dropdown...')
+        closeLocationDropdown()
+    } else {
+        console.log('📥 Opening dropdown...')
+        openLocationDropdown()
+    }
+}
+
+// Open location dropdown
+function openLocationDropdown() {
+    console.log('📥 Opening location dropdown...')
+    const locationDropdown = document.getElementById('locationDropdown')
+    const locationChevron = document.getElementById('locationChevron')
+    const locationSearchInput = document.getElementById('locationSearchInput')
+
+    if (!locationDropdown) {
+        console.error('❌ Location dropdown element not found!')
+        return
+    }
+
+    console.log('🎨 Removing hidden class and updating UI...')
+    locationDropdown.classList.remove('hidden')
+    locationChevron?.classList.add('rotate-180')
+    locationDropdownOpen = true
+
+    console.log('✅ Dropdown opened. New state:', locationDropdownOpen)
+
+    // Initialize Google Places Autocomplete if not already done
+    if (!locationAutocomplete && typeof google !== 'undefined' && google.maps && google.maps.places) {
+        console.log('🗺️ Initializing Google Places Autocomplete...')
+        initializeLocationAutocomplete()
+    }
+
+    // Focus on search input
+    setTimeout(() => {
+        locationSearchInput?.focus()
+    }, 100)
+
+    // Load recent searches or suggestions
+    loadLocationSuggestions()
+}
+
+// Close location dropdown
+function closeLocationDropdown() {
+    const locationDropdown = document.getElementById('locationDropdown')
+    const locationChevron = document.getElementById('locationChevron')
+
+    if (!locationDropdown) return
+
+    locationDropdown.classList.add('hidden')
+    locationChevron?.classList.remove('rotate-180')
+    locationDropdownOpen = false
+}
+
+// Get current location for header
+function getCurrentLocationForHeader() {
+    const useCurrentLocationBtn = document.getElementById('useCurrentLocation')
+    
+    if (!navigator.geolocation) {
+        showLocationError('Geolocation is not supported by this browser')
+        return
+    }
+
+    // Update button to show loading state
+    if (useCurrentLocationBtn) {
+        useCurrentLocationBtn.innerHTML = `
+            <div class="flex items-center justify-between w-full">
+                <div class="flex items-center">
+                    <div class="flex-shrink-0 mr-3">
+                        <div class="w-10 h-10 bg-white rounded-full flex items-center justify-center shadow-sm">
+                            <i class="fas fa-spinner fa-spin text-blue-600 text-lg"></i>
+                        </div>
+                    </div>
+                    <div>
+                        <div class="text-sm font-semibold text-blue-900">Getting location...</div>
+                        <div class="text-xs text-blue-700">Please wait</div>
+                    </div>
+                </div>
+                <i class="fas fa-chevron-right text-blue-600 text-xs animate-pulse"></i>
+            </div>
+        `
+    }
+
+    navigator.geolocation.getCurrentPosition(
+        (position) => {
+            const lat = position.coords.latitude
+            const lng = position.coords.longitude
+            
+            // Update global user location
+            userLocation = { lat, lng }
+            localStorage.setItem('nearNowUserLocation', JSON.stringify(userLocation))
+            
+            // Reverse geocode to get address
+            reverseGeocodeForHeader(lat, lng)
+            
+            // Mark location as captured
+            localStorage.setItem('nearNowLocationCaptured', 'true')
+            localStorage.setItem('nearNowLastLocationTime', Date.now().toString())
+        },
+        (error) => {
+            console.error('Geolocation error:', error)
+            showLocationError('Unable to get your location. Please try manually searching.')
+            resetCurrentLocationButton()
+        },
+        {
+            enableHighAccuracy: true,
+            timeout: 10000,
+            maximumAge: 300000
+        }
+    )
+}
+
+// Reset current location button
+function resetCurrentLocationButton() {
+    const useCurrentLocationBtn = document.getElementById('useCurrentLocation')
+    if (useCurrentLocationBtn) {
+        useCurrentLocationBtn.innerHTML = `
+            <div class="flex items-center justify-between w-full">
+                <div class="flex items-center">
+                    <div class="flex-shrink-0 mr-3">
+                        <div class="w-10 h-10 bg-white rounded-full flex items-center justify-center shadow-sm">
+                            <i class="fas fa-crosshairs text-blue-600 text-lg"></i>
+                        </div>
+                    </div>
+                    <div>
+                        <div class="text-sm font-semibold text-blue-900">Use current location</div>
+                        <div class="text-xs text-blue-700">Using GPS</div>
+                    </div>
+                </div>
+                <i class="fas fa-chevron-right text-blue-600 text-xs"></i>
+            </div>
+        `
+    }
+}
+
+// Reverse geocode for header display
+function reverseGeocodeForHeader(lat, lng) {
+    if (!geocoder) {
+        // If geocoder is not available, just use coordinates
+        updateSelectedLocation(`${lat.toFixed(4)}, ${lng.toFixed(4)}`)
+        return
+    }
+
+    const latlng = { lat, lng }
+    
+    geocoder.geocode({ location: latlng }, (results, status) => {
+        if (status === "OK" && results[0]) {
+            const address = results[0].formatted_address
+            const shortAddress = formatAddressForHeader(address)
+            
+            updateSelectedLocation(shortAddress, address)
+            
+            // Save to localStorage and saved addresses
+            saveLocationToAddresses({
+                shortAddress,
+                fullAddress: address,
+                coordinates: { lat, lng },
+                type: 'current',
+                timestamp: Date.now()
+            })
+            
+            closeLocationDropdown()
+            resetCurrentLocationButton()
+            
+            // Trigger map update if map is already initialized
+            if (map) {
+                map.setCenter({ lat, lng })
+                if (userMarker) {
+                    userMarker.setPosition({ lat, lng })
+                }
+                if (radiusCircle) {
+                    radiusCircle.setCenter({ lat, lng })
+                }
+                generateMockShops()
+            } else {
+                // Initialize map if not already done
+                initializeMapWithLocation()
+            }
+        } else {
+            console.error('Reverse geocoding failed:', status)
+            updateSelectedLocation('Current Location')
+            resetCurrentLocationButton()
+        }
+    })
+}
+
+// Format address for header display
+function formatAddressForHeader(fullAddress) {
+    const parts = fullAddress.split(',')
+    
+    // Try to get a meaningful short address
+    if (parts.length >= 2) {
+        // Return area and city/state
+        return `${parts[0].trim()}, ${parts[1].trim()}`
+    }
+    
+    return parts[0]?.trim() || fullAddress
+}
+
+// Update selected location display
+function updateSelectedLocation(shortAddress, fullAddress = null) {
+    const selectedLocationElement = document.getElementById('selectedLocation')
+    
+    if (selectedLocationElement) {
+        selectedLocationElement.textContent = shortAddress
+        selectedLocationElement.title = fullAddress || shortAddress
+    }
+    
+    // Save to localStorage
+    localStorage.setItem('nearNowSelectedLocation', JSON.stringify({
+        short: shortAddress,
+        full: fullAddress || shortAddress,
+        timestamp: Date.now()
+    }))
+}
+
+// Calculate estimated delivery time
+function calculateDeliveryTime(address) {
+    // This is a simplified calculation - in production, this would be based on
+    // actual distance, traffic, store preparation time, etc.
+    const baseTime = 10 // Base preparation time in minutes
+    
+    // Add time based on keywords in address
+    let additionalTime = 0
+    const lowerAddress = address.toLowerCase()
+    
+    if (lowerAddress.includes('highway') || lowerAddress.includes('expressway')) {
+        additionalTime += 15
+    } else if (lowerAddress.includes('sector') || lowerAddress.includes('phase')) {
+        additionalTime += 10
+    } else if (lowerAddress.includes('colony') || lowerAddress.includes('society')) {
+        additionalTime += 5
+    }
+    
+    // Random factor to make it more realistic
+    const randomFactor = Math.floor(Math.random() * 5)
+    
+    const totalTime = baseTime + additionalTime + randomFactor
+    
+    // Format the time
+    if (totalTime <= 15) {
+        return `${totalTime} mins`
+    } else if (totalTime <= 30) {
+        return `${Math.round(totalTime / 5) * 5} mins`
+    } else {
+        return `${Math.round(totalTime / 10) * 10}-${Math.round(totalTime / 10) * 10 + 10} mins`
+    }
+}
+
+// Initialize Google Places Autocomplete
+function initializeLocationAutocomplete() {
+    const locationSearchInput = document.getElementById('locationSearchInput')
+    if (!locationSearchInput) {
+        console.error('Location search input not found')
+        return
+    }
+
+    // Check if already initialized
+    if (locationAutocomplete) {
+        console.log('Autocomplete already initialized')
+        return
+    }
+
+    try {
+        console.log('Creating Google Places Autocomplete for India...')
+        
+        // Create autocomplete instance
+        locationAutocomplete = new google.maps.places.Autocomplete(locationSearchInput, {
+            types: ['geocode', 'establishment'],
+            componentRestrictions: { country: 'IN' }, // Restrict to India
+            fields: ['formatted_address', 'geometry', 'address_components', 'name']
+        })
+
+        // Style the autocomplete dropdown
+        const pacContainer = document.querySelector('.pac-container')
+        if (pacContainer) {
+            pacContainer.style.zIndex = '9999'
+        }
+
+        console.log('✅ Autocomplete created successfully')
+
+        locationAutocomplete.addListener('place_changed', () => {
+            const place = locationAutocomplete.getPlace()
+            
+            console.log('Place selected:', place)
+            
+            if (!place.geometry) {
+                console.error('No geometry for selected place')
+                return
+            }
+
+            const address = place.formatted_address || place.name
+            const shortAddress = formatAddressForHeader(address)
+            const coordinates = {
+                lat: place.geometry.location.lat(),
+                lng: place.geometry.location.lng()
+            }
+
+            console.log('Updating location to:', shortAddress, coordinates)
+
+            // Update global user location
+            userLocation = coordinates
+            localStorage.setItem('nearNowUserLocation', JSON.stringify(userLocation))
+
+            updateSelectedLocation(shortAddress, address)
+            
+            // Save to addresses
+            saveLocationToAddresses({
+                shortAddress,
+                fullAddress: address,
+                coordinates,
+                type: 'search',
+                timestamp: Date.now()
+            })
+
+            // Clear search input
+            locationSearchInput.value = ''
+            const clearSearchBtn = document.getElementById('clearSearchBtn')
+            if (clearSearchBtn) {
+                clearSearchBtn.classList.add('hidden')
+            }
+
+            closeLocationDropdown()
+
+            // Update map if available
+            if (map) {
+                map.setCenter(coordinates)
+                if (userMarker) {
+                    userMarker.setPosition(coordinates)
+                }
+                if (radiusCircle) {
+                    radiusCircle.setCenter(coordinates)
+                }
+                generateMockShops()
+            } else {
+                initializeMapWithLocation()
+            }
+        })
+
+        // Listen for DOM changes to ensure autocomplete dropdown is visible
+        const observer = new MutationObserver(() => {
+            const pacContainer = document.querySelector('.pac-container')
+            if (pacContainer && pacContainer.style.display !== 'none') {
+                pacContainer.style.zIndex = '9999'
+            }
+        })
+        observer.observe(document.body, { childList: true, subtree: true })
+        
+    } catch (error) {
+        console.error('Failed to initialize Places Autocomplete:', error)
+    }
+}
+
+// Handle location search (fallback for when Places API is not available)
+function handleLocationSearch(event) {
+    const query = event.target.value.trim()
+    
+    console.log('🔍 Manual search triggered for:', query)
+    
+    if (query.length < 3) {
+        clearLocationSuggestions()
+        return
+    }
+
+    // Show loading state
+    const suggestionsContainer = document.getElementById('locationSuggestions')
+    if (suggestionsContainer) {
+        suggestionsContainer.innerHTML = `
+            <div class="flex items-center px-3 py-4 text-gray-500">
+                <i class="fas fa-spinner fa-spin mr-2"></i>
+                <span class="text-sm">Searching for "${query}"...</span>
+            </div>
+        `
+    }
+
+    // If geocoder is available, use it for search
+    if (geocoder) {
+        console.log('🗺️ Using Google Geocoder for search...')
+        geocoder.geocode({ 
+            address: query + ', India',
+            componentRestrictions: { country: 'IN' }
+        }, (results, status) => {
+            console.log('Geocoder results:', status, results)
+            if (status === "OK" && results.length > 0) {
+                displayLocationSuggestions(results.slice(0, 5))
+            } else {
+                showNoResults(query)
+            }
+        })
+    } else {
+        console.error('❌ Geocoder not available')
+        showNoResults(query)
+    }
+}
+
+// Show no results message
+function showNoResults(query) {
+    const suggestionsContainer = document.getElementById('locationSuggestions')
+    if (suggestionsContainer) {
+        suggestionsContainer.innerHTML = `
+            <div class="px-3 py-4 text-center text-gray-500">
+                <i class="fas fa-search text-gray-400 mb-2"></i>
+                <div class="text-sm">No results found for "${query}"</div>
+                <div class="text-xs">Try searching for a city, area, or PIN code</div>
+            </div>
+        `
+    }
+}
+
+// Display location suggestions
+function displayLocationSuggestions(suggestions) {
+    const suggestionsContainer = document.getElementById('locationSuggestions')
+    if (!suggestionsContainer) return
+
+    const suggestionsHTML = suggestions.map(result => {
+        const address = result.formatted_address
+        const shortAddress = formatAddressForHeader(address)
+        
+        return `
+            <button class="location-suggestion flex items-center w-full px-3 py-3 text-left hover:bg-gray-50 rounded-lg transition-all duration-300 group"
+                    data-address="${address}"
+                    data-short="${shortAddress}"
+                    data-lat="${result.geometry.location.lat()}"
+                    data-lng="${result.geometry.location.lng()}">
+                <div class="flex-shrink-0 mr-3">
+                    <div class="w-8 h-8 bg-gray-50 rounded-full flex items-center justify-center group-hover:bg-gray-100 transition-all duration-300">
+                        <i class="fas fa-map-marker-alt text-gray-400 text-sm"></i>
+                    </div>
+                </div>
+                <div class="flex-1">
+                    <div class="text-sm font-medium text-gray-800">${shortAddress}</div>
+                    <div class="text-xs text-gray-500 truncate">${address}</div>
+                </div>
+            </button>
+        `
+    }).join('')
+
+    suggestionsContainer.innerHTML = suggestionsHTML
+
+    // Add click listeners to suggestions
+    suggestionsContainer.querySelectorAll('.location-suggestion').forEach(button => {
+        button.addEventListener('click', (e) => {
+            e.preventDefault()
+            const address = button.dataset.address
+            const shortAddress = button.dataset.short
+            const lat = parseFloat(button.dataset.lat)
+            const lng = parseFloat(button.dataset.lng)
+
+            selectLocation(shortAddress, address, { lat, lng })
+        })
+    })
+}
+
+// Clear location suggestions
+function clearLocationSuggestions() {
+    const suggestionsContainer = document.getElementById('locationSuggestions')
+    if (suggestionsContainer) {
+        suggestionsContainer.innerHTML = ''
+    }
+}
+
+// Select a location
+function selectLocation(shortAddress, fullAddress, coordinates) {
+    // Update global user location
+    userLocation = coordinates
+    localStorage.setItem('nearNowUserLocation', JSON.stringify(userLocation))
+
+    updateSelectedLocation(shortAddress, fullAddress)
+    
+    // Save to addresses
+    saveLocationToAddresses({
+        shortAddress,
+        fullAddress,
+        coordinates,
+        type: 'selected',
+        timestamp: Date.now()
+    })
+
+    closeLocationDropdown()
+
+    // Update map if available
+    if (map) {
+        map.setCenter(coordinates)
+        if (userMarker) {
+            userMarker.setPosition(coordinates)
+        }
+        if (radiusCircle) {
+            radiusCircle.setCenter(coordinates)
+        }
+        generateMockShops()
+    } else {
+        initializeMapWithLocation()
+    }
+}
+
+// Load saved addresses
+function loadSavedAddresses() {
+    const saved = localStorage.getItem('nearNowSavedAddresses')
+    if (saved) {
+        try {
+            savedAddresses = JSON.parse(saved)
+            displaySavedAddresses()
+        } catch (error) {
+            console.error('Error loading saved addresses:', error)
+            savedAddresses = []
+        }
+    }
+}
+
+// Save location to addresses
+function saveLocationToAddresses(locationData) {
+    // Remove any existing location with the same coordinates
+    savedAddresses = savedAddresses.filter(addr => {
+        const distance = calculateDistanceBetweenPoints(
+            addr.coordinates,
+            locationData.coordinates
+        )
+        return distance > 0.1 // Keep if more than 100m apart
+    })
+
+    // Add new location to the beginning
+    savedAddresses.unshift(locationData)
+
+    // Keep only the last 5 addresses
+    savedAddresses = savedAddresses.slice(0, 5)
+
+    // Save to localStorage
+    localStorage.setItem('nearNowSavedAddresses', JSON.stringify(savedAddresses))
+    displaySavedAddresses()
+}
+
+// Display saved addresses
+function displaySavedAddresses() {
+    const savedContainer = document.getElementById('savedAddresses')
+    if (!savedContainer) return
+
+    if (savedAddresses.length === 0) {
+        savedContainer.innerHTML = ''
+        return
+    }
+
+    // Separate named addresses from recent ones
+    const namedAddresses = savedAddresses.filter(addr => addr.type === 'home' || addr.type === 'work')
+    const recentAddresses = savedAddresses.filter(addr => addr.type !== 'home' && addr.type !== 'work')
+
+    let savedHTML = ''
+
+    // Show named addresses first
+    if (namedAddresses.length > 0) {
+        savedHTML += `
+            <div class="mb-3">
+                <div class="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-2">Saved Addresses</div>
+                ${namedAddresses.map(addr => {
+                    const icon = addr.type === 'home' ? 'fa-home' : 'fa-briefcase'
+                    const bgColor = addr.type === 'home' ? 'bg-orange-50' : 'bg-purple-50'
+                    const iconColor = addr.type === 'home' ? 'text-orange-600' : 'text-purple-600'
+                    const label = addr.type === 'home' ? 'Home' : 'Work'
+                    
+                    return `
+                        <button class="saved-address flex items-center justify-between w-full px-3 py-3 text-left hover:bg-gray-50 rounded-lg transition-all duration-300 group mb-1"
+                                data-address="${addr.fullAddress}"
+                                data-short="${addr.shortAddress}"
+                                data-lat="${addr.coordinates.lat}"
+                                data-lng="${addr.coordinates.lng}">
+                            <div class="flex items-center">
+                                <div class="flex-shrink-0 mr-3">
+                                    <div class="w-10 h-10 ${bgColor} rounded-full flex items-center justify-center">
+                                        <i class="fas ${icon} ${iconColor} text-sm"></i>
+                                    </div>
+                                </div>
+                                <div class="flex-1">
+                                    <div class="text-sm font-semibold text-gray-800">${label}</div>
+                                    <div class="text-xs text-gray-500 line-clamp-1">${addr.shortAddress.replace(/^[🏠💼]\s*/, '')}</div>
+                                </div>
+                            </div>
+                            <i class="fas fa-chevron-right text-gray-400 text-xs opacity-0 group-hover:opacity-100 transition-opacity"></i>
+                        </button>
+                    `
+                }).join('')}
+            </div>
+        `
+    }
+
+    // Show recent addresses
+    if (recentAddresses.length > 0) {
+        savedHTML += `
+            <div>
+                <div class="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-2">Recent Locations</div>
+                ${recentAddresses.map(addr => {
+                    const timeAgo = getTimeAgo(addr.timestamp)
+                    const icon = addr.type === 'current' ? 'fa-crosshairs' : 'fa-map-marker-alt'
+                    
+                    return `
+                        <button class="saved-address flex items-center w-full px-3 py-3 text-left hover:bg-gray-50 rounded-lg transition-all duration-300 group"
+                                data-address="${addr.fullAddress}"
+                                data-short="${addr.shortAddress}"
+                                data-lat="${addr.coordinates.lat}"
+                                data-lng="${addr.coordinates.lng}">
+                            <div class="flex-shrink-0 mr-3">
+                                <div class="w-8 h-8 bg-gray-50 rounded-full flex items-center justify-center group-hover:bg-gray-100 transition-all duration-300">
+                                    <i class="fas ${icon} text-gray-400 text-sm"></i>
+                                </div>
+                            </div>
+                            <div class="flex-1">
+                                <div class="text-sm font-medium text-gray-800 line-clamp-1">${addr.shortAddress}</div>
+                                <div class="text-xs text-gray-500">${timeAgo}</div>
+                            </div>
+                        </button>
+                    `
+                }).join('')}
+            </div>
+        `
+    }
+
+    savedContainer.innerHTML = savedHTML
+
+    // Add click listeners to saved addresses
+    savedContainer.querySelectorAll('.saved-address').forEach(button => {
+        button.addEventListener('click', (e) => {
+            e.preventDefault()
+            const address = button.dataset.address
+            const shortAddress = button.dataset.short
+            const lat = parseFloat(button.dataset.lat)
+            const lng = parseFloat(button.dataset.lng)
+
+            selectLocation(shortAddress, address, { lat, lng })
+        })
+    })
+}
+
+// Load location suggestions (popular areas)
+function loadLocationSuggestions() {
+    // Don't show popular locations - only show saved addresses
+    const suggestionsContainer = document.getElementById('locationSuggestions')
+    if (suggestionsContainer) {
+        suggestionsContainer.innerHTML = ''
+    }
+}
+
+// Update location display on page load
+function updateLocationDisplay() {
+    const savedLocation = localStorage.getItem('nearNowSelectedLocation')
+    if (savedLocation) {
+        try {
+            const locationData = JSON.parse(savedLocation)
+            updateSelectedLocation(locationData.short, locationData.full)
+        } catch (error) {
+            console.error('Error parsing saved location:', error)
+        }
+    }
+}
+
+// Calculate distance between two points
+function calculateDistanceBetweenPoints(pos1, pos2) {
+    const R = 6371 // Earth's radius in km
+    const dLat = (pos2.lat - pos1.lat) * Math.PI / 180
+    const dLng = (pos2.lng - pos1.lng) * Math.PI / 180
+    const a = Math.sin(dLat/2) * Math.sin(dLat/2) +
+              Math.cos(pos1.lat * Math.PI / 180) * Math.cos(pos2.lat * Math.PI / 180) *
+              Math.sin(dLng/2) * Math.sin(dLng/2)
+    const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a))
+    return R * c
+}
+
+// Get time ago string
+function getTimeAgo(timestamp) {
+    const now = Date.now()
+    const diff = now - timestamp
+    const minutes = Math.floor(diff / 60000)
+    const hours = Math.floor(diff / 3600000)
+    const days = Math.floor(diff / 86400000)
+
+    if (days > 0) return `${days} day${days > 1 ? 's' : ''} ago`
+    if (hours > 0) return `${hours} hour${hours > 1 ? 's' : ''} ago`
+    if (minutes > 0) return `${minutes} min${minutes > 1 ? 's' : ''} ago`
+    return 'Just now'
+}
+
+// Add named address (Home/Work)
+function addNamedAddress(type) {
+    console.log(`📍 Adding ${type} address...`)
+    
+    // Get current location first
+    if (navigator.geolocation) {
+        showLocationToast(`Setting up ${type} address...`, 'info')
+        
+        navigator.geolocation.getCurrentPosition(
+            async (position) => {
+                const lat = position.coords.latitude
+                const lng = position.coords.longitude
+                
+                // Reverse geocode to get address
+                if (geocoder) {
+                    geocoder.geocode({ location: { lat, lng } }, (results, status) => {
+                        if (status === "OK" && results[0]) {
+                            const address = results[0].formatted_address
+                            const shortAddress = formatAddressForHeader(address)
+                            
+                            // Save as named address
+                            const namedAddress = {
+                                shortAddress: `${type === 'home' ? '🏠' : '💼'} ${shortAddress}`,
+                                fullAddress: address,
+                                coordinates: { lat, lng },
+                                type: type,
+                                timestamp: Date.now()
+                            }
+                            
+                            saveLocationToAddresses(namedAddress)
+                            showLocationToast(`${type.charAt(0).toUpperCase() + type.slice(1)} address saved!`, 'success')
+                            
+                            // Refresh the saved addresses display
+                            displaySavedAddresses()
+                        } else {
+                            showLocationError(`Unable to get address for ${type} location`)
+                        }
+                    })
+                } else {
+                    showLocationError('Location service not available')
+                }
+            },
+            (error) => {
+                showLocationError(`Unable to get current location for ${type}`)
+            }
+        )
+    } else {
+        showLocationError('Geolocation is not supported by this browser')
+    }
+}
+
+// Show location toast notification
+function showLocationToast(message, type = 'info') {
+    const toast = document.createElement('div')
+    const bgColor = type === 'success' ? 'bg-green-500' : type === 'error' ? 'bg-red-500' : 'bg-blue-500'
+    const icon = type === 'success' ? 'fa-check-circle' : type === 'error' ? 'fa-exclamation-circle' : 'fa-info-circle'
+    
+    toast.className = `fixed top-4 right-4 ${bgColor} text-white px-6 py-3 rounded-lg shadow-lg z-50 flex items-center`
+    toast.innerHTML = `
+        <i class="fas ${icon} mr-2"></i>
+        <span>${message}</span>
+    `
+    
+    document.body.appendChild(toast)
+    
+    setTimeout(() => {
+        toast.classList.add('opacity-0', 'transition-opacity', 'duration-300')
+        setTimeout(() => toast.remove(), 300)
+    }, 3000)
+}
+
+// Show location error
+function showLocationError(message) {
+    showLocationToast(message, 'error')
+}
+
+// Debounce function
+function debounce(func, wait) {
+    let timeout
+    return function executedFunction(...args) {
+        const later = () => {
+            clearTimeout(timeout)
+            func(...args)
+        }
+        clearTimeout(timeout)
+        timeout = setTimeout(later, wait)
+    }
+}
+
+// Export location functions for global access
+window.nearNowLocation = {
+    openLocationDropdown,
+    closeLocationDropdown,
+    getCurrentLocationForHeader,
+    selectLocation,
+    updateSelectedLocation,
+    toggleLocationDropdown
+}
+
+// Make key functions globally available for debugging
+window.toggleLocationDropdown = toggleLocationDropdown
+window.openLocationDropdown = openLocationDropdown
+window.closeLocationDropdown = closeLocationDropdown
+window.initializeLocationSelector = initializeLocationSelector
+
+// Backup initialization on window load
+window.addEventListener('load', function() {
+    console.log('🌍 Window loaded - Running backup initialization...')
+    setTimeout(() => {
+        if (!window.locationSelectorInitialized) {
+            console.log('🔄 Location selector not initialized yet, running backup...')
+            try {
+                initializeLocationSelector()
+                loadSavedAddresses()
+                updateLocationDisplay()
+                // Location services will be initialized when Google Maps loads
+                window.locationSelectorInitialized = true
+                console.log('✅ Backup initialization successful')
+            } catch (error) {
+                console.error('❌ Backup initialization failed:', error)
+            }
+        } else {
+            console.log('✅ Location selector already initialized')
+        }
+    }, 500)
+})
+
+// Manual initialization function for debugging
+window.manualInitLocationSelector = function() {
+    console.log('🛠️ Manual initialization triggered...')
+    try {
+        initializeLocationSelector()
+        loadSavedAddresses()
+        updateLocationDisplay()
+        window.locationSelectorInitialized = true
+        console.log('✅ Manual initialization complete')
+    } catch (error) {
+        console.error('❌ Manual initialization failed:', error)
+    }
+}
+
+// Simple test function
+window.testLocationButton = function() {
+    console.log('🧪 Testing location button...')
+    console.log('Available functions:', {
+        toggleLocationDropdown: typeof window.toggleLocationDropdown,
+        openLocationDropdown: typeof window.openLocationDropdown,
+        closeLocationDropdown: typeof window.closeLocationDropdown
+    })
+    
+    const btn = document.getElementById('locationSelector')
+    console.log('Location button found:', !!btn)
+    
+    if (btn && typeof window.toggleLocationDropdown === 'function') {
+        console.log('🎯 Triggering toggle...')
+        window.toggleLocationDropdown()
+    } else {
+        console.log('❌ Cannot test - missing button or function')
+        if (!window.locationSelectorInitialized) {
+            console.log('🔄 Trying manual initialization...')
+            window.manualInitLocationSelector()
+        }
+    }
+}
+
+console.log('Location selector module loaded')
+
+// ===== END OF LOCATION SELECTOR FUNCTIONALITY =====
