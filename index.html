@@ -573,14 +573,26 @@
     <script src="supabase-client.js"></script>
 
     <!-- Configuration -->
+    <script src="config.local.js"></script>
     <script src="config.js"></script>
 
     <!-- Google Maps JavaScript API -->
     <script>
-        // Load Google Maps dynamically with API key from config
-        document.addEventListener('DOMContentLoaded', function() {
-            console.log('🚀 Loading Google Maps API...');
+        // Load Google Maps dynamically with API key from secure config
+        document.addEventListener('DOMContentLoaded', async function() {
+            console.log('🚀 Loading secure configuration...');
+            
+            // Load secure configuration first
+            await loadSecureConfig();
+            
+            console.log('🗺️ Loading Google Maps API...');
             console.log('API Key:', CONFIG.GOOGLE_MAPS_API_KEY ? CONFIG.GOOGLE_MAPS_API_KEY.substring(0, 10) + '...' : 'NOT FOUND');
+            
+            if (!CONFIG.GOOGLE_MAPS_API_KEY || CONFIG.GOOGLE_MAPS_API_KEY.includes('FAILED') || CONFIG.GOOGLE_MAPS_API_KEY.includes('NOT_FOUND')) {
+                console.error('❌ API key not properly configured');
+                console.error('Please ensure your API key is properly set up');
+                return;
+            }
             
             const script = document.createElement('script');
             script.async = true;
@@ -603,7 +615,7 @@
         // Global error handler for Google Maps
         window.gm_authFailure = function() {
             console.error('❌ Google Maps API authentication failed');
-            console.error('Please check your API key in config.js');
+            console.error('Please check your API key configuration');
         };
     </script>
 </head>
