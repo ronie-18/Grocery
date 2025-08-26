@@ -5,7 +5,7 @@
 const CONFIG = {
     // Google Maps API - This will be loaded securely
     GOOGLE_MAPS_API_KEY: null, // Will be set by loadSecureConfig()
-    
+
     // App settings
     LOCATION_CACHE_DURATION: 24 * 60 * 60 * 1000, // 24 hours in milliseconds
     SEARCH_RADIUS_KM: 2, // 2km radius for nearby shops

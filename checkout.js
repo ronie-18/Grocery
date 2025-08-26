@@ -2,9 +2,8 @@
 
 // Configuration
 const CONFIG = {
-    FREE_DELIVERY_THRESHOLD: 500,
-    DELIVERY_FEE: 30,
-    HANDLING_CHARGE: 18,
+    DELIVERY_FEE: 50,
+    HANDLING_CHARGE: 20,
     GST_RATE: 0.18,
     AUTO_HIDE_STATUS_DELAY: 5000,
     FORM_AUTO_SAVE_KEY: 'checkoutFormData'
@@ -35,9 +34,7 @@ const getElements = () => ({
     orderTotal: document.getElementById('orderTotal'),
     submitButton: document.getElementById('submitButton'),
     submitButtonText: document.getElementById('submitButtonText'),
-    submitSpinner: document.getElementById('submitSpinner'),
-    deliveryProgressBar: document.getElementById('deliveryProgressBar'),
-    deliveryMessage: document.getElementById('deliveryMessage')
+    submitSpinner: document.getElementById('submitSpinner')
 });
 
 // Utility functions
@@ -268,7 +265,7 @@ const calculateOrderTotal = (cartItems) => {
         subtotal += price * quantity;
     });
 
-    const deliveryFee = subtotal >= CONFIG.FREE_DELIVERY_THRESHOLD ? 0 : CONFIG.DELIVERY_FEE;
+    const deliveryFee = CONFIG.DELIVERY_FEE;
     const handlingCharge = CONFIG.HANDLING_CHARGE;
     const gstAmount = subtotal * CONFIG.GST_RATE;
     const total = subtotal + deliveryFee + handlingCharge + gstAmount;
@@ -281,25 +278,6 @@ const calculateOrderTotal = (cartItems) => {
         total,
         itemCount: cartItems.length
     };
-};
-
-// Delivery progress
-const updateDeliveryProgress = (subtotal) => {
-    const { deliveryProgressBar, deliveryMessage } = getElements();
-
-    if (deliveryProgressBar && deliveryMessage) {
-        const progress = Math.min((subtotal / CONFIG.FREE_DELIVERY_THRESHOLD) * 100, 100);
-        deliveryProgressBar.style.width = `${progress}%`;
-
-        if (subtotal >= CONFIG.FREE_DELIVERY_THRESHOLD) {
-            deliveryMessage.innerHTML = '<i class="fas fa-check-circle mr-1"></i>🎉 You qualify for free delivery!';
-            deliveryMessage.className = 'text-xs text-green-600 mt-1 font-semibold';
-        } else {
-            const remaining = CONFIG.FREE_DELIVERY_THRESHOLD - subtotal;
-            deliveryMessage.innerHTML = `<i class="fas fa-info-circle mr-1"></i>Add ${formatCurrency(remaining)} more for free delivery`;
-            deliveryMessage.className = 'text-xs text-orange-600 mt-1';
-        }
-    }
 };
 
 // Order summary rendering
@@ -315,7 +293,7 @@ const renderOrderSummary = () => {
     // Show loading state
     orderSummary.innerHTML = `
         <div class="text-center py-8">
-            <div class="animate-pulse rounded-full h-8 w-8 border-b-2 border-primary mx-auto mb-4"></div>
+            <div class="animate-spin rounded-full h-8 w-8 border-b-2 border-primary mx-auto mb-4"></div>
             <p class="text-gray-500">Loading your cart...</p>
         </div>
     `;
@@ -337,7 +315,6 @@ const renderOrderSummary = () => {
             </div>
         `;
         orderTotal.textContent = formatCurrency(0);
-        updateDeliveryProgress(0);
         return;
     }
 
@@ -402,9 +379,6 @@ const renderOrderSummary = () => {
     // Calculate totals
     const totals = calculateOrderTotal(cartItems);
 
-    // Update delivery progress
-    updateDeliveryProgress(totals.subtotal);
-
     // Add order breakdown
     summaryHTML += `
         <div class="py-4 space-y-3 bg-gradient-to-r from-gray-50 to-blue-50 rounded-lg p-4 mt-4 border border-gray-200">
@@ -417,13 +391,8 @@ const renderOrderSummary = () => {
                     <span class="font-semibold">${formatCurrency(totals.subtotal)}</span>
                 </div>
                 <div class="flex justify-between text-sm">
-                    <span class="text-gray-600 flex items-center">
-                        Delivery Fee
-                        ${totals.deliveryFee === 0 ? '<i class="fas fa-gift text-green-500 ml-1" title="Free delivery!"></i>' : ''}
-                    </span>
-                    <span class="${totals.deliveryFee === 0 ? 'text-green-600 font-bold' : 'font-semibold'}">
-                        ${totals.deliveryFee === 0 ? 'FREE' : formatCurrency(totals.deliveryFee)}
-                    </span>
+                    <span class="text-gray-600">Delivery Fee</span>
+                    <span class="font-semibold">${formatCurrency(totals.deliveryFee)}</span>
                 </div>
                 <div class="flex justify-between text-sm">
                     <span class="text-gray-600">Handling Charges</span>
@@ -433,17 +402,6 @@ const renderOrderSummary = () => {
                     <span class="text-gray-600">GST (18%)</span>
                     <span class="font-semibold">${formatCurrency(totals.gstAmount)}</span>
                 </div>
-                ${totals.deliveryFee > 0 ? `
-                <div class="text-xs text-orange-600 bg-orange-50 p-3 rounded-lg flex items-center border border-orange-200">
-                    <i class="fas fa-truck mr-2"></i>
-                    <span>Add ${formatCurrency(CONFIG.FREE_DELIVERY_THRESHOLD - totals.subtotal)} more for free delivery!</span>
-                </div>
-                ` : `
-                <div class="text-xs text-green-600 bg-green-50 p-3 rounded-lg flex items-center border border-green-200">
-                    <i class="fas fa-check-circle mr-2"></i>
-                    <span>🎉 You saved ${formatCurrency(CONFIG.DELIVERY_FEE)} on delivery!</span>
-                </div>
-                `}
             </div>
         </div>
         <div class="flex justify-between items-center text-lg font-bold pt-4 border-t-2 border-primary mt-4 bg-primary bg-opacity-5 p-3 rounded-lg">
@@ -648,7 +606,7 @@ const processOrder = async (orderData) => {
                 break;
 
             default: // Cash on Delivery
-                showSuccess('🎉 Order placed successfully! You will receive a confirmation email shortly.');
+                showSuccess('Order placed successfully! You will receive a confirmation email shortly.');
 
                 // Clear form data and cart
                 localStorage.removeItem(CONFIG.FORM_AUTO_SAVE_KEY);
@@ -698,11 +656,11 @@ const setupEventListeners = () => {
                 // Personal details
                 firstName: document.getElementById('firstName').value.trim(),
                 lastName: document.getElementById('lastName').value.trim(),
-                companyName: document.getElementById('companyName').value.trim(),
 
                 // Address
                 streetAddress: document.getElementById('streetAddress').value.trim(),
                 aptSuite: document.getElementById('aptSuite').value.trim(),
+                landmark: document.getElementById('landmark').value.trim(),
                 city: document.getElementById('city').value.trim(),
                 state: document.getElementById('state').value,
                 zipCode: document.getElementById('zipCode').value.trim(),
@@ -713,7 +671,6 @@ const setupEventListeners = () => {
 
                 // Preferences
                 useAsBilling: document.getElementById('useAsBilling').checked,
-                textAlerts: document.getElementById('textAlerts').checked,
                 isGift: document.getElementById('giftOrder').checked,
                 paymentMethod: document.querySelector('input[name="paymentMethod"]:checked').value,
 
@@ -824,15 +781,3 @@ window.clearCart = clearCart;
 window.renderOrderSummary = renderOrderSummary;
 window.updateItemQuantity = updateItemQuantity;
 window.removeItem = removeItem;
-
-// Export for module systems
-if (typeof module !== 'undefined' && module.exports) {
-    module.exports = {
-        updateCart,
-        clearCart,
-        renderOrderSummary,
-        updateItemQuantity,
-        removeItem,
-        initializeCheckout
-    };
-}
