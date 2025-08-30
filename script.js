@@ -796,12 +796,23 @@ async function logoutUser() {
 
 // Slider Functionality
 function initializeSlider() {
+    // Check if slider elements exist before initializing
+    const sliderContainer = document.getElementById("sliderContainer")
+    const prevSlideBtn = document.getElementById("prevSlide")
+    const nextSlideBtn = document.getElementById("nextSlide")
+    const sliderDots = document.querySelectorAll(".slider-dot")
+    
+    if (!sliderContainer || !prevSlideBtn || !nextSlideBtn) {
+        console.log("Slider elements not found - slider functionality disabled")
+        return
+    }
+
     setInterval(nextSlide, 6000)
 
-    document.getElementById("prevSlide").addEventListener("click", prevSlide)
-    document.getElementById("nextSlide").addEventListener("click", nextSlide)
+    prevSlideBtn.addEventListener("click", prevSlide)
+    nextSlideBtn.addEventListener("click", nextSlide)
 
-    document.querySelectorAll(".slider-dot").forEach((dot, index) => {
+    sliderDots.forEach((dot, index) => {
         dot.addEventListener("click", () => goToSlide(index))
     })
 
@@ -832,6 +843,10 @@ function goToSlide(slideIndex) {
 
 function updateSlider() {
     const sliderContainer = document.getElementById("sliderContainer")
+    if (!sliderContainer) {
+        return // Exit if slider container doesn't exist
+    }
+    
     const translateX = -currentSlide * 100
     sliderContainer.style.transform = `translateX(${translateX}%)`
 
@@ -1947,15 +1962,16 @@ function updateUserDisplay() {
         
         console.log('👤 Updating UI with display name:', displayName)
         
-        // Simple login button classes for logged in users - no rotating effects
-        accountBtn.className = "group relative flex flex-col items-center justify-center cursor-pointer p-4 min-h-[80px] md:min-h-[90px] w-[70px] md:w-[80px]"
+        // Updated login button classes for logged in users with animations
+        accountBtn.className = "group relative flex flex-col items-center justify-center cursor-pointer transition-all duration-500"
         
         accountBtn.innerHTML = `
             <div class="relative">
                 <div class="text-center cursor-pointer user-menu-trigger">
                     <div class="relative mb-2">
-                        <div class="relative w-12 h-12 flex items-center justify-center">
-                            <i class="fas fa-user text-primary text-lg group-hover:text-secondary transition-all duration-300"></i>
+                        <div class="relative w-12 h-12 bg-white rounded-xl shadow-md transition-all duration-500 flex items-center justify-center hover:shadow-lg">
+                            <i class="fa-solid fa-user text-primary text-lg"></i>
+                            <div class="absolute inset-0 bg-gradient-to-br from-primary/10 to-secondary/10 rounded-xl opacity-0 group-hover:opacity-100 transition-all duration-500"></div>
                         </div>
                     </div>
                     <span class="text-xs font-semibold text-gray-700 group-hover:text-primary transition-all duration-300">${displayName}</span>
@@ -1991,13 +2007,14 @@ function updateUserDisplay() {
             console.log('🎯 User dropdown initialized after display update')
         }, 100)
     } else {
-        // Reset account button to login state when user is logged out - simple design
-        accountBtn.className = "group relative flex flex-col items-center justify-center cursor-pointer p-4 min-h-[80px] md:min-h-[90px] w-[70px] md:w-[80px]"
+        // Reset account button to login state when user is logged out with animations
+        accountBtn.className = "group relative flex flex-col items-center justify-center cursor-pointer transition-all duration-500"
         
         accountBtn.innerHTML = `
             <div class="relative mb-2">
-                <div class="relative w-12 h-12 flex items-center justify-center">
-                    <i class="fas fa-user text-primary text-lg group-hover:text-secondary transition-all duration-300"></i>
+                <div class="relative w-12 h-12 bg-white rounded-xl shadow-md transition-all duration-500 flex items-center justify-center hover:shadow-lg">
+                    <i class="fa-solid fa-user text-primary text-lg"></i>
+                    <div class="absolute inset-0 bg-gradient-to-br from-primary/10 to-secondary/10 rounded-xl opacity-0 group-hover:opacity-100 transition-all duration-500"></div>
                 </div>
             </div>
             <div class="text-center">
@@ -2420,8 +2437,9 @@ function initializeMobileFeatures() {
             let diffX = startX - endX
             let diffY = startY - endY
 
-            // Detect swipe gestures
-            if (Math.abs(diffX) > Math.abs(diffY)) {
+            // Detect swipe gestures - only if slider exists
+            const sliderContainer = document.getElementById("sliderContainer")
+            if (sliderContainer && Math.abs(diffX) > Math.abs(diffY)) {
                 if (diffX > 50) {
                     // Swipe left - next slide
                     nextSlide()
@@ -4001,8 +4019,7 @@ function initializeLocationSelector() {
     const useCurrentLocationBtn = document.getElementById('useCurrentLocation')
     const closeLocationBtn = document.getElementById('closeLocationDropdown')
     const clearSearchBtn = document.getElementById('clearSearchBtn')
-    const addHomeBtn = document.getElementById('addHomeAddress')
-    const addWorkBtn = document.getElementById('addWorkAddress')
+
 
     console.log('🔍 Elements found:', {
         locationSelector: !!locationSelector,
@@ -4011,9 +4028,7 @@ function initializeLocationSelector() {
         locationSearchInput: !!locationSearchInput,
         useCurrentLocationBtn: !!useCurrentLocationBtn,
         closeLocationBtn: !!closeLocationBtn,
-        clearSearchBtn: !!clearSearchBtn,
-        addHomeBtn: !!addHomeBtn,
-        addWorkBtn: !!addWorkBtn
+        clearSearchBtn: !!clearSearchBtn
     })
 
     if (!locationSelector) {
@@ -4080,23 +4095,7 @@ function initializeLocationSelector() {
         // This will be called from openLocationDropdown
     }
 
-    // Add Home button
-    if (addHomeBtn) {
-        addHomeBtn.addEventListener('click', (e) => {
-            e.preventDefault()
-            e.stopPropagation()
-            addNamedAddress('home')
-        })
-    }
 
-    // Add Work button
-    if (addWorkBtn) {
-        addWorkBtn.addEventListener('click', (e) => {
-            e.preventDefault()
-            e.stopPropagation()
-            addNamedAddress('work')
-        })
-    }
 
     // Close dropdown when clicking outside
     document.addEventListener('click', (e) => {
@@ -4305,15 +4304,9 @@ function reverseGeocodeForHeader(lat, lng) {
 
 // Format address for header display
 function formatAddressForHeader(fullAddress) {
-    const parts = fullAddress.split(',')
-    
-    // Try to get a meaningful short address
-    if (parts.length >= 2) {
-        // Return area and city/state
-        return `${parts[0].trim()}, ${parts[1].trim()}`
-    }
-    
-    return parts[0]?.trim() || fullAddress
+    // Now that we have word wrapping, return the full address
+    // The CSS will handle the display and wrapping
+    return fullAddress.trim()
 }
 
 // Update selected location display
@@ -4321,8 +4314,22 @@ function updateSelectedLocation(shortAddress, fullAddress = null) {
     const selectedLocationElement = document.getElementById('selectedLocation')
     
     if (selectedLocationElement) {
-        selectedLocationElement.textContent = shortAddress
+        // Use innerHTML to preserve styling and add word wrapping
+        selectedLocationElement.innerHTML = shortAddress
         selectedLocationElement.title = fullAddress || shortAddress
+        
+        // Ensure the element has proper styling for word wrapping with ellipsis after 2 lines
+        selectedLocationElement.style.setProperty('display', '-webkit-box', 'important')
+        selectedLocationElement.style.setProperty('-webkit-line-clamp', '2', 'important')
+        selectedLocationElement.style.setProperty('-webkit-box-orient', 'vertical', 'important')
+        selectedLocationElement.style.setProperty('white-space', 'normal', 'important')
+        selectedLocationElement.style.setProperty('word-wrap', 'break-word', 'important')
+        selectedLocationElement.style.setProperty('overflow-wrap', 'break-word', 'important')
+        selectedLocationElement.style.setProperty('word-break', 'break-word', 'important')
+        selectedLocationElement.style.setProperty('line-height', '1.2', 'important')
+        selectedLocationElement.style.setProperty('max-height', '2.4rem', 'important')
+        selectedLocationElement.style.setProperty('overflow', 'hidden', 'important')
+        selectedLocationElement.style.setProperty('text-overflow', 'ellipsis', 'important')
     }
     
     // Save to localStorage
@@ -4795,56 +4802,7 @@ function getTimeAgo(timestamp) {
     return 'Just now'
 }
 
-// Add named address (Home/Work)
-function addNamedAddress(type) {
-    console.log(`📍 Adding ${type} address...`)
-    
-    // Get current location first
-    if (navigator.geolocation) {
-        showLocationToast(`Setting up ${type} address...`, 'info')
-        
-        navigator.geolocation.getCurrentPosition(
-            async (position) => {
-                const lat = position.coords.latitude
-                const lng = position.coords.longitude
-                
-                // Reverse geocode to get address
-                if (geocoder) {
-                    geocoder.geocode({ location: { lat, lng } }, (results, status) => {
-                        if (status === "OK" && results[0]) {
-                            const address = results[0].formatted_address
-                            const shortAddress = formatAddressForHeader(address)
-                            
-                            // Save as named address
-                            const namedAddress = {
-                                shortAddress: `${type === 'home' ? '🏠' : '💼'} ${shortAddress}`,
-                                fullAddress: address,
-                                coordinates: { lat, lng },
-                                type: type,
-                                timestamp: Date.now()
-                            }
-                            
-                            saveLocationToAddresses(namedAddress)
-                            showLocationToast(`${type.charAt(0).toUpperCase() + type.slice(1)} address saved!`, 'success')
-                            
-                            // Refresh the saved addresses display
-                            displaySavedAddresses()
-                        } else {
-                            showLocationError(`Unable to get address for ${type} location`)
-                        }
-                    })
-                } else {
-                    showLocationError('Location service not available')
-                }
-            },
-            (error) => {
-                showLocationError(`Unable to get current location for ${type}`)
-            }
-        )
-    } else {
-        showLocationError('Geolocation is not supported by this browser')
-    }
-}
+
 
 // Show location toast notification
 function showLocationToast(message, type = 'info') {
