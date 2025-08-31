@@ -316,7 +316,7 @@ async function initializeWebsite() {
         initializeQuickView()
         
         await initializeAdvancedFilters()
-        initializeEnhancedSearch()
+        // Enhanced search removed - using URL-based search
         initializeMobileNavigation()
         initializeProductReviews()
         
@@ -861,21 +861,25 @@ function updateSlider() {
     })
 }
 
-// Search Functionality
+// Search Functionality - Dropdown suggestions + URL-based redirect
 function initializeSearch() {
     const searchInput = document.getElementById("searchInput")
     const searchBtn = document.getElementById("searchBtn")
     const searchSuggestions = document.getElementById("searchSuggestions")
 
-    searchBtn.addEventListener("click", performSearch)
+    // Handle search button click - always redirect to search page
+    searchBtn.addEventListener("click", performURLSearch)
+    
+    // Handle enter key press - redirect to search page
     searchInput.addEventListener("keypress", (e) => {
         if (e.key === "Enter") {
-            performSearch()
+            performURLSearch()
         }
     })
 
+    // Show suggestions as user types
     searchInput.addEventListener("input", function () {
-        const query = this.value.toLowerCase().trim()
+        const query = this.value.trim()
         if (query.length > 1) {
             showSearchSuggestions(query)
         } else {
@@ -891,32 +895,61 @@ function initializeSearch() {
     })
 }
 
+// Search suggestions that redirect to search page
 function showSearchSuggestions(query) {
+    console.log(`🔍 SUGGESTIONS: Searching for "${query}" in ${allProducts.length} products`);
+    
+    if (allProducts.length === 0) {
+        console.log('⚠️ No products loaded from Supabase yet');
+        hideSearchSuggestions();
+        return;
+    }
+    
+    // Enhanced search: match name, category, description, brand
     const suggestions = allProducts
-        .filter((product) => product.name.toLowerCase().includes(query) || product.category.toLowerCase().includes(query))
-        .slice(0, 5)
+        .filter((product) => {
+            const searchTerm = query.toLowerCase();
+            const productName = (product.name || '').toLowerCase();
+            const productCategory = (product.category || '').toLowerCase();
+            const productDescription = (product.description || '').toLowerCase();
+            const productBrand = (product.brand || '').toLowerCase();
+            
+            return productName.includes(searchTerm) || 
+                   productCategory.includes(searchTerm) ||
+                   productDescription.includes(searchTerm) ||
+                   productBrand.includes(searchTerm);
+        })
+        .slice(0, 6) // Show max 6 suggestions like Blinkit
 
+    console.log(`🔍 SUGGESTIONS: Found ${suggestions.length} matches for "${query}"`);
+    
     const searchSuggestions = document.getElementById("searchSuggestions")
 
     if (suggestions.length > 0) {
         searchSuggestions.innerHTML = suggestions
-            .map(
-                (product) => `
-            <div class="p-3 hover:bg-gray-100 cursor-pointer border-b border-gray-100 last:border-b-0" onclick="showQuickViewFromSearch('${product.id}')">
-                <div class="flex items-center space-x-3">
-                    <img src="${product.image}" alt="${product.name}" class="w-10 h-10 rounded-full object-cover">
-                    <div>
-                        <p class="font-semibold text-gray-800">${product.name}</p>
-                        <p class="text-sm text-gray-600">${product.price}</p>
+            .map((product) => `
+                <div class="p-3 hover:bg-gray-100 cursor-pointer border-b border-gray-100 last:border-b-0" 
+                     onclick="selectSearchSuggestion('${query}')">
+                    <div class="flex items-center space-x-3">
+                        <img src="${product.image || 'https://via.placeholder.com/40'}" 
+                             alt="${product.name}" 
+                             class="w-10 h-10 rounded-lg object-cover flex-shrink-0">
+                        <div class="flex-1 min-w-0">
+                            <p class="font-semibold text-gray-800 truncate">${product.name}</p>
+                            <div class="flex items-center justify-between mt-1">
+                                <p class="text-sm text-gray-600">${product.price || 'Price on request'}</p>
+                                <span class="text-xs text-gray-500 bg-gray-100 px-2 py-1 rounded">${product.category || 'General'}</span>
+                            </div>
+                        </div>
                     </div>
                 </div>
-            </div>
-        `,
-            )
+            `)
             .join("")
         searchSuggestions.classList.remove("hidden")
+        console.log(`✅ SUGGESTIONS: Displayed ${suggestions.length} suggestions`);
     } else {
         hideSearchSuggestions()
+        console.log(`❌ SUGGESTIONS: No matches found for "${query}"`);
     }
 }
 
@@ -924,31 +957,31 @@ function hideSearchSuggestions() {
     document.getElementById("searchSuggestions").classList.add("hidden")
 }
 
+// When user clicks on a suggestion, redirect to search page with that product name
 function selectSearchSuggestion(productName) {
+    // Set the search input to the selected product
     document.getElementById("searchInput").value = productName
+    // Hide suggestions
     hideSearchSuggestions()
-    performSearch()
+    // Redirect to search page with the product name
+    const searchURL = `search.html?q=${encodeURIComponent(productName)}`
+    console.log(`🔍 SUGGESTION DEBUG: Redirecting to: ${searchURL}`)
+    window.location.href = searchURL
 }
 
-function performSearch() {
-    const query = document.getElementById("searchInput").value.toLowerCase().trim()
+// New URL-based search function like Blinkit/DealShare
+function performURLSearch() {
+    const query = document.getElementById("searchInput").value.trim()
     if (query) {
-        const filteredProducts = allProducts.filter(
-            (product) =>
-                product.name.toLowerCase().includes(query) ||
-                product.category.toLowerCase().includes(query) ||
-                product.description.toLowerCase().includes(query),
-        )
-
-        displayedProducts = filteredProducts
-        currentPage = 1
-        renderProducts()
-
-        if (!isPageInitializing) {
-            document.getElementById("productsSection").scrollIntoView({ behavior: "smooth" })
-        }
+        // Create URL similar to Blinkit format: search.html?q=product
+        const searchURL = `search.html?q=${encodeURIComponent(query)}`
+        
+        console.log(`🔍 SEARCH DEBUG: Redirecting to: ${searchURL}`)
+        console.log(`🔍 SEARCH DEBUG: Current location: ${window.location.href}`)
+        
+        // Redirect to search page
+        window.location.href = searchURL
     }
-    hideSearchSuggestions()
 }
 
 // Categories Functionality
@@ -2868,102 +2901,9 @@ function clearAllFilters() {
     showNotification('All filters cleared', 'info')
 }
 
-// Enhanced Search Functionality
-function initializeEnhancedSearch() {
-    const searchInput = document.getElementById('searchInput')
-    const mobileSearchInput = document.getElementById('mobileSearchInput')
+// Enhanced Search Functionality removed - now using URL-based search
 
-    // Debounced search function
-    let searchTimeout
-    const debouncedSearch = (query) => {
-        clearTimeout(searchTimeout)
-        searchTimeout = setTimeout(() => {
-            performEnhancedSearch(query)
-        }, 300)
-    }
-
-    // Desktop search
-    searchInput.addEventListener('input', (e) => {
-        const query = e.target.value.trim()
-        if (query.length > 0) {
-            debouncedSearch(query)
-            showSearchSuggestions(query)
-        } else {
-            hideSearchSuggestions()
-            hideAdvancedSearchFilters()
-        }
-    })
-
-    // Mobile search
-    if (mobileSearchInput) {
-        mobileSearchInput.addEventListener('input', (e) => {
-            const query = e.target.value.trim()
-            if (query.length > 0) {
-                debouncedSearch(query)
-            }
-        })
-    }
-
-    // Advanced search filters
-    document.getElementById('applyFilters').addEventListener('click', () => {
-        applySearchFilters()
-    })
-
-    document.getElementById('clearFilters').addEventListener('click', () => {
-        clearSearchFilters()
-    })
-
-    // Search suggestions - now handled by inline onclick handlers for quick view
-}
-
-function performEnhancedSearch(query) {
-    if (!query) {
-        displayedProducts = [...allProducts]
-        renderProducts()
-        return
-    }
-
-    const searchTerm = query.toLowerCase()
-    const filtered = allProducts.filter(product => {
-        return product.name.toLowerCase().includes(searchTerm) ||
-               product.description.toLowerCase().includes(searchTerm) ||
-               product.category.toLowerCase().includes(searchTerm)
-    })
-
-    displayedProducts = filtered
-    currentPage = 1
-    renderProducts()
-
-    // Update search suggestions
-    updateSearchSuggestions(query)
-}
-
-function updateSearchSuggestions(query) {
-    const searchTerm = query.toLowerCase()
-    const suggestions = allProducts.filter(product =>
-        product.name.toLowerCase().includes(searchTerm)
-    ).slice(0, 5)
-
-    const suggestionsContainer = document.getElementById('searchSuggestions')
-
-    if (suggestions.length > 0) {
-        const suggestionsHTML = suggestions.map(product => `
-            <div class="search-suggestion-item flex items-center p-3 hover:bg-gray-100 cursor-pointer" data-product-id="${product.id}" onclick="showQuickViewFromSearch('${product.id}')">
-                <img src="${product.image}" alt="${product.name}" class="w-10 h-10 object-cover rounded mr-3">
-                <div>
-                    <div class="font-medium text-gray-800">${product.name}</div>
-                    <div class="text-sm text-gray-500">${product.price}</div>
-                </div>
-            </div>
-        `).join('')
-
-        suggestionsContainer.innerHTML = suggestionsHTML
-        suggestionsContainer.classList.remove('hidden')
-    } else {
-        suggestionsContainer.innerHTML = '<div class="p-3 text-gray-500">No products found</div>'
-        suggestionsContainer.classList.remove('hidden')
-    }
-}
+// Enhanced search functions removed - now using URL-based search
 
 function applySearchFilters() {
     const minPrice = parseInt(document.getElementById('minPrice').value) || 0
