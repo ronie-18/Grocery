@@ -1,12 +1,14 @@
-// Enhanced Checkout Logic - checkout.js
+// Enhanced Checkout Logic - checkout.js (Updated for Near & Now)
 
-// Configuration
+// Configuration matching Near & Now branding
 const CONFIG = {
-    DELIVERY_FEE: 50,
+    DELIVERY_FEE: 50, // Fixed delivery fee for all orders
     HANDLING_CHARGE: 20,
     GST_RATE: 0.18,
     AUTO_HIDE_STATUS_DELAY: 5000,
-    FORM_AUTO_SAVE_KEY: 'checkoutFormData'
+    FORM_AUTO_SAVE_KEY: 'nearNowCheckoutFormData',
+    MIN_ORDER_AMOUNT: 0, // No minimum order requirement
+    CURRENCY_SYMBOL: '₹'
 };
 
 // State management
@@ -38,7 +40,7 @@ const getElements = () => ({
 });
 
 // Utility functions
-const formatCurrency = (amount) => `₹${parseFloat(amount).toFixed(2)}`;
+const formatCurrency = (amount) => `${CONFIG.CURRENCY_SYMBOL}${parseFloat(amount).toFixed(0)}`;
 
 const parsePrice = (price) => {
     if (price === undefined || price === null) return 0;
@@ -130,8 +132,13 @@ const validateField = (fieldId, validationType = 'required') => {
 
     const { isValid, message } = validator(value);
 
-    // Update UI
+    // Update UI with Near & Now styling
     field.classList.toggle('input-error', !isValid);
+    if (!isValid) {
+        field.classList.add('border-red-500', 'bg-red-50');
+    } else {
+        field.classList.remove('border-red-500', 'bg-red-50');
+    }
 
     if (errorElement) {
         errorElement.textContent = message;
@@ -175,16 +182,16 @@ const validateAllFields = () => {
     return isFormValid;
 };
 
-// Status and error handling
+// Status and error handling with Near & Now styling
 const showStatus = (msg, type = 'info', autoHide = true) => {
     const { orderStatus } = getElements();
     if (!orderStatus) return;
 
     const typeClasses = {
-        success: 'text-green-600 bg-green-50 border-green-200',
-        error: 'text-red-600 bg-red-50 border-red-200',
-        warning: 'text-orange-600 bg-orange-50 border-orange-200',
-        info: 'text-blue-600 bg-blue-50 border-blue-200'
+        success: 'text-green-700 bg-gradient-to-r from-green-50 to-emerald-100 border-green-300 shadow-lg',
+        error: 'text-red-700 bg-gradient-to-r from-red-50 to-pink-100 border-red-300 shadow-lg',
+        warning: 'text-orange-700 bg-gradient-to-r from-orange-50 to-yellow-100 border-orange-300 shadow-lg',
+        info: 'text-blue-700 bg-gradient-to-r from-blue-50 to-indigo-100 border-blue-300 shadow-lg'
     };
 
     // Clear existing classes
@@ -192,9 +199,14 @@ const showStatus = (msg, type = 'info', autoHide = true) => {
         classes.split(' ').forEach(cls => orderStatus.classList.remove(cls));
     });
 
-    // Add new classes
-    orderStatus.className = `w-full text-center py-3 px-4 font-semibold border transition-all duration-300 ${typeClasses[type] || typeClasses.info}`;
-    orderStatus.textContent = msg;
+    // Add new classes with enhanced styling
+    orderStatus.className = `w-full text-center py-4 px-6 font-semibold border-2 transition-all duration-300 rounded-xl ${typeClasses[type] || typeClasses.info}`;
+    orderStatus.innerHTML = `
+        <div class="flex items-center justify-center">
+            <i class="fas fa-${type === 'success' ? 'check-circle' : type === 'error' ? 'exclamation-triangle' : type === 'warning' ? 'exclamation-circle' : 'info-circle'} mr-3 text-xl"></i>
+            <span>${msg}</span>
+        </div>
+    `;
     orderStatus.classList.remove('hidden');
 
     if (autoHide && type !== 'error') {
@@ -265,7 +277,8 @@ const calculateOrderTotal = (cartItems) => {
         subtotal += price * quantity;
     });
 
-    const deliveryFee = CONFIG.DELIVERY_FEE;
+    // Fixed charges - no free delivery
+    const deliveryFee = CONFIG.DELIVERY_FEE; // Always apply delivery fee
     const handlingCharge = CONFIG.HANDLING_CHARGE;
     const gstAmount = subtotal * CONFIG.GST_RATE;
     const total = subtotal + deliveryFee + handlingCharge + gstAmount;
@@ -276,49 +289,57 @@ const calculateOrderTotal = (cartItems) => {
         handlingCharge,
         gstAmount,
         total,
-        itemCount: cartItems.length
+        itemCount: cartItems.reduce((count, item) => count + (parseInt(item.quantity) || 1), 0)
     };
 };
 
-// Order summary rendering
+// Enhanced order summary rendering with compact, shuttle design
 const renderOrderSummary = () => {
-    console.log('Rendering order summary...');
+    console.log('Rendering compact order summary for Near & Now...');
 
-    const { orderSummary, orderTotal } = getElements();
+    const orderSummary = document.getElementById('orderSummary');
+    const orderTotal = document.getElementById('orderTotal');
+    const orderBreakdown = document.getElementById('orderBreakdown');
+
     if (!orderSummary || !orderTotal) {
         console.error('Order summary elements not found');
         return;
     }
 
-    // Show loading state
+    // Show loading state with Near & Now branding
     orderSummary.innerHTML = `
-        <div class="text-center py-8">
-            <div class="animate-spin rounded-full h-8 w-8 border-b-2 border-primary mx-auto mb-4"></div>
-            <p class="text-gray-500">Loading your cart...</p>
+        <div class="text-center py-6">
+            <div class="relative mx-auto mb-4 w-12 h-12">
+                <div class="absolute inset-0 border-3 border-primary border-opacity-20 rounded-full"></div>
+                <div class="absolute inset-0 border-3 border-primary border-t-transparent rounded-full animate-spin"></div>
+                <i class="fas fa-shopping-basket text-primary text-lg absolute inset-0 flex items-center justify-center"></i>
+            </div>
+            <p class="text-gray-600 font-medium">Loading cart...</p>
         </div>
     `;
 
     const cartItems = getCartItems();
 
-    // Handle empty cart
+    // Handle empty cart with compact design
     if (cartItems.length === 0) {
         orderSummary.innerHTML = `
             <div class="text-center py-8">
-                <div class="w-16 h-16 mx-auto mb-4 bg-gray-100 rounded-full flex items-center justify-center">
-                    <i class="fas fa-shopping-cart text-gray-400 text-2xl"></i>
+                <div class="w-16 h-16 mx-auto mb-4 bg-gradient-to-r from-primary/20 to-accent/20 rounded-full flex items-center justify-center">
+                    <i class="fas fa-shopping-cart text-primary text-2xl"></i>
                 </div>
-                <p class="text-gray-500 mb-2 font-semibold">Your cart is empty</p>
-                <p class="text-sm text-gray-400 mb-4">Add some items to your cart to continue</p>
-                <a href="index.html" class="inline-block bg-primary text-white px-6 py-3 rounded-lg hover:bg-secondary transition-colors font-semibold shadow-lg">
-                    <i class="fas fa-plus mr-2"></i>Start Shopping
+                <h3 class="text-lg font-bold text-gray-800 mb-2">Cart is empty</h3>
+                <p class="text-sm text-gray-600 mb-4">Add fresh groceries to continue</p>
+                <a href="index.html" class="inline-block bg-gradient-to-r from-primary to-accent text-white px-6 py-3 rounded-xl font-bold hover:shadow-lg transition-all duration-300 transform hover:scale-105">
+                    <i class="fas fa-leaf mr-2"></i>Shop Now
                 </a>
             </div>
         `;
+        if (orderBreakdown) orderBreakdown.innerHTML = '';
         orderTotal.textContent = formatCurrency(0);
         return;
     }
 
-    // Render cart items
+    // Render cart items in compact, shuttle format
     let summaryHTML = '';
     cartItems.forEach((item, index) => {
         try {
@@ -326,48 +347,42 @@ const renderOrderSummary = () => {
             const quantity = parseInt(item.quantity) || 1;
             const itemTotal = price * quantity;
 
-            const itemImage = item.image || item.img || `https://images.unsplash.com/photo-1560806887-1e4cd0b6cbd6?w=64&h=64&fit=crop&crop=center`;
+            const itemImage = item.image || item.img || `https://images.unsplash.com/photo-1560806887-1e4cd0b6cbd6?w=48&h=48&fit=crop&crop=center`;
             const itemName = item.name || item.title || 'Unknown Item';
 
             summaryHTML += `
-                <div class="cart-item flex items-center justify-between py-4 border-b border-gray-100 rounded-lg px-2 hover:bg-gray-50 transition-colors">
+                <div class="cart-item flex items-center justify-between py-3 px-3 mb-2 bg-white rounded-lg border border-gray-200 hover:border-primary/50 transition-all duration-200 group">
                     <div class="flex items-center flex-1 min-w-0">
                         <div class="relative flex-shrink-0">
                             <img src="${itemImage}" alt="${itemName}"
-                                 class="w-16 h-16 rounded-lg object-cover shadow-sm border border-gray-200"
-                                 onerror="this.src='https://via.placeholder.com/64x64/f3f4f6/9ca3af?text=No+Image'">
-                            <div class="absolute -top-2 -right-2 bg-primary text-white text-xs rounded-full w-6 h-6 flex items-center justify-center font-bold shadow-lg">
+                                 class="w-12 h-12 rounded-lg object-cover border border-gray-200 group-hover:border-primary transition-colors duration-200"
+                                 onerror="this.src='https://via.placeholder.com/48x48/059669/ffffff?text=N&N'">
+                            <div class="absolute -top-1 -right-1 bg-gradient-to-r from-primary to-accent text-white text-xs rounded-full w-5 h-5 flex items-center justify-center font-bold text-xs">
                                 ${quantity}
                             </div>
                         </div>
                         <div class="ml-3 flex-1 min-w-0">
-                            <h4 class="font-semibold text-sm text-gray-800 truncate" title="${itemName}">${itemName}</h4>
-                            <p class="text-xs text-gray-500">${formatCurrency(price)} each</p>
-                            <div class="flex items-center mt-2">
-                                <div class="flex items-center bg-gray-50 rounded-lg border shadow-sm">
-                                    <button onclick="updateItemQuantity(${index}, -1)"
-                                            class="quantity-btn p-2 hover:bg-primary hover:text-white rounded-l-lg transition-colors text-xs ${quantity <= 1 ? 'opacity-50 cursor-not-allowed' : ''}"
-                                            ${quantity <= 1 ? 'disabled' : ''}
-                                            title="Decrease quantity">
-                                        <i class="fas fa-minus"></i>
-                                    </button>
-                                    <span class="px-3 py-1 text-sm font-medium min-w-[2.5rem] text-center bg-white">${quantity}</span>
-                                    <button onclick="updateItemQuantity(${index}, 1)"
-                                            class="quantity-btn p-2 hover:bg-primary hover:text-white rounded-r-lg transition-colors text-xs"
-                                            title="Increase quantity">
-                                        <i class="fas fa-plus"></i>
-                                    </button>
-                                </div>
-                            </div>
+                            <h4 class="font-semibold text-sm text-gray-800 truncate group-hover:text-primary transition-colors duration-200" title="${itemName}">${itemName}</h4>
+                            <p class="text-xs text-gray-500">${formatCurrency(price)} × ${quantity}</p>
                         </div>
                     </div>
-                    <div class="text-right ml-3 flex-shrink-0">
-                        <div class="font-bold text-primary text-lg">${formatCurrency(itemTotal)}</div>
-                        <button onclick="removeItem(${index})"
-                                class="text-xs text-red-500 hover:text-red-700 transition-colors mt-1 hover:bg-red-50 px-2 py-1 rounded-lg"
-                                title="Remove item">
-                            <i class="fas fa-trash mr-1"></i>Remove
-                        </button>
+                    <div class="flex items-center space-x-2">
+                        <div class="text-right">
+                            <div class="font-bold text-primary text-sm">${formatCurrency(itemTotal)}</div>
+                        </div>
+                        <div class="flex flex-col space-y-1">
+                            <button onclick="updateItemQuantity(${index}, 1)"
+                                    class="w-6 h-6 bg-primary/10 hover:bg-primary hover:text-white rounded-full transition-all duration-200 flex items-center justify-center text-xs border border-primary/20"
+                                    title="Increase quantity">
+                                <i class="fas fa-plus"></i>
+                            </button>
+                            <button onclick="updateItemQuantity(${index}, -1)"
+                                    class="w-6 h-6 bg-red-50 hover:bg-red-500 hover:text-white rounded-full transition-all duration-200 flex items-center justify-center text-xs border border-red-200 ${quantity <= 1 ? 'opacity-50 cursor-not-allowed' : ''}"
+                                    ${quantity <= 1 ? 'disabled' : ''}
+                                    title="Decrease quantity">
+                                <i class="fas fa-minus"></i>
+                            </button>
+                        </div>
                     </div>
                 </div>
             `;
@@ -376,47 +391,51 @@ const renderOrderSummary = () => {
         }
     });
 
-    // Calculate totals
+    orderSummary.innerHTML = summaryHTML;
+
+    // Calculate totals and render breakdown
     const totals = calculateOrderTotal(cartItems);
 
-    // Add order breakdown
-    summaryHTML += `
-        <div class="py-4 space-y-3 bg-gradient-to-r from-gray-50 to-blue-50 rounded-lg p-4 mt-4 border border-gray-200">
-            <h3 class="font-semibold text-gray-800 mb-3 flex items-center">
-                <i class="fas fa-calculator text-primary mr-2"></i>Order Breakdown
-            </h3>
+    if (orderBreakdown) {
+        orderBreakdown.innerHTML = `
             <div class="space-y-2">
-                <div class="flex justify-between text-sm">
-                    <span class="text-gray-600">Subtotal (${totals.itemCount} ${totals.itemCount === 1 ? 'item' : 'items'})</span>
+                <div class="flex justify-between">
+                    <span class="text-gray-600">Subtotal (${totals.itemCount} items)</span>
                     <span class="font-semibold">${formatCurrency(totals.subtotal)}</span>
                 </div>
-                <div class="flex justify-between text-sm">
-                    <span class="text-gray-600">Delivery Fee</span>
-                    <span class="font-semibold">${formatCurrency(totals.deliveryFee)}</span>
+                <div class="flex justify-between">
+                    <span class="text-gray-600 flex items-center">
+                        Delivery Fee
+                        <i class="fas fa-truck ml-1 text-orange-500 text-xs"></i>
+                    </span>
+                    <span class="font-semibold text-orange-600">${formatCurrency(totals.deliveryFee)}</span>
                 </div>
-                <div class="flex justify-between text-sm">
+                <div class="flex justify-between">
                     <span class="text-gray-600">Handling Charges</span>
                     <span class="font-semibold">${formatCurrency(totals.handlingCharge)}</span>
                 </div>
-                <div class="flex justify-between text-sm">
+                <div class="flex justify-between">
                     <span class="text-gray-600">GST (18%)</span>
                     <span class="font-semibold">${formatCurrency(totals.gstAmount)}</span>
                 </div>
+                <div class="border-t border-gray-300 pt-2 mt-3">
+                    <div class="bg-orange-50 p-2 rounded-lg border border-orange-200">
+                        <div class="flex items-center text-xs text-orange-800">
+                            <i class="fas fa-info-circle mr-2"></i>
+                            <span class="font-medium">₹${CONFIG.DELIVERY_FEE} delivery fee applies to all orders</span>
+                        </div>
+                    </div>
+                </div>
             </div>
-        </div>
-        <div class="flex justify-between items-center text-lg font-bold pt-4 border-t-2 border-primary mt-4 bg-primary bg-opacity-5 p-3 rounded-lg">
-            <span class="text-gray-800">Grand Total</span>
-            <span class="text-primary text-xl">${formatCurrency(totals.total)}</span>
-        </div>
-    `;
+        `;
+    }
 
-    orderSummary.innerHTML = summaryHTML;
     orderTotal.textContent = formatCurrency(totals.total);
 
-    console.log('Order summary rendered successfully');
+    console.log('Compact order summary rendered successfully');
 };
 
-// Cart item management
+// Enhanced cart item management
 const updateItemQuantity = (itemIndex, change) => {
     try {
         const cartItems = getCartItems();
@@ -426,7 +445,7 @@ const updateItemQuantity = (itemIndex, change) => {
         }
 
         const currentQuantity = parseInt(cartItems[itemIndex].quantity) || 1;
-        const newQuantity = Math.max(1, Math.min(99, currentQuantity + change)); // Limit to 99
+        const newQuantity = Math.max(1, Math.min(99, currentQuantity + change));
 
         if (newQuantity === currentQuantity) {
             if (newQuantity === 1 && change < 0) {
@@ -461,10 +480,10 @@ const removeItem = (itemIndex) => {
             return;
         }
 
-        // Show confirmation for expensive items
         const item = cartItems[itemIndex];
         const itemPrice = parsePrice(item.price) * (parseInt(item.quantity) || 1);
 
+        // Show confirmation for expensive items
         if (itemPrice > 500) {
             if (!confirm(`Are you sure you want to remove "${item.name || 'this item'}" (${formatCurrency(itemPrice)}) from your cart?`)) {
                 return;
@@ -547,15 +566,16 @@ const loadFormData = () => {
     }
 };
 
-// Form submission
+// Enhanced form submission with Near & Now branding
 const resetSubmitButton = () => {
     const { submitButton, submitButtonText, submitSpinner } = getElements();
     if (submitButton) {
         submitButton.disabled = false;
+        submitButton.classList.remove('opacity-75', 'cursor-not-allowed');
         isSubmitting = false;
     }
     if (submitButtonText) {
-        submitButtonText.textContent = 'Place Order';
+        submitButtonText.textContent = 'Place Order Now';
     }
     if (submitSpinner) {
         submitSpinner.classList.add('hidden');
@@ -566,6 +586,7 @@ const setSubmitLoading = (message = 'Processing...') => {
     const { submitButton, submitButtonText, submitSpinner } = getElements();
     if (submitButton) {
         submitButton.disabled = true;
+        submitButton.classList.add('opacity-75', 'cursor-not-allowed');
         isSubmitting = true;
     }
     if (submitButtonText) {
@@ -587,26 +608,54 @@ const processOrder = async (orderData) => {
 
         switch (paymentMethod) {
             case 'razorpay':
-                showStatus('Redirecting to payment gateway...', 'info');
-                setSubmitLoading('Redirecting...');
+                showStatus('Redirecting to secure payment gateway...', 'info');
+                setSubmitLoading('Redirecting to payment...');
                 // Integrate with actual payment gateway here
                 setTimeout(() => {
-                    showSuccess('Payment gateway integration needed');
+                    showSuccess('Payment gateway integration will be implemented here');
                     resetSubmitButton();
                 }, 1500);
                 break;
 
             case 'other':
                 showStatus('Redirecting to payment options...', 'info');
-                setSubmitLoading('Redirecting...');
+                setSubmitLoading('Loading payment options...');
                 setTimeout(() => {
-                    showSuccess('Alternative payment integration needed');
+                    showSuccess('Alternative payment methods will be implemented here');
                     resetSubmitButton();
                 }, 1500);
                 break;
 
             default: // Cash on Delivery
-                showSuccess('Order placed successfully! You will receive a confirmation email shortly.');
+                showSuccess('🎉 Order placed successfully! Your fresh groceries will be delivered within 30-60 minutes.');
+
+                // Update progress bar to show completion
+                const progressCircles = document.querySelectorAll('.progress-circle');
+                const progressLabels = document.querySelectorAll('.progress-label');
+                const progressLines = document.querySelectorAll('.progress-line');
+
+                if (progressCircles.length >= 3 && progressLabels.length >= 3) {
+                    // Complete first two steps
+                    progressCircles[0].classList.add('completed');
+                    progressCircles[0].classList.remove('active');
+                    progressLabels[0].classList.add('completed');
+                    progressLabels[0].classList.remove('active');
+
+                    progressCircles[1].classList.add('completed');
+                    progressLabels[1].classList.add('completed');
+
+                    progressCircles[2].classList.add('completed');
+                    progressLabels[2].classList.add('completed');
+                    progressLabels[2].textContent = 'Order Confirmed!';
+
+                    // Complete progress lines
+                    progressLines.forEach(line => line.classList.add('completed'));
+
+                    // Update icons
+                    progressCircles[0].innerHTML = '<i class="fas fa-check"></i>';
+                    progressCircles[1].innerHTML = '<i class="fas fa-check"></i>';
+                    progressCircles[2].innerHTML = '<i class="fas fa-check-double"></i>';
+                }
 
                 // Clear form data and cart
                 localStorage.removeItem(CONFIG.FORM_AUTO_SAVE_KEY);
@@ -614,7 +663,7 @@ const processOrder = async (orderData) => {
                     clearCart();
                     // Could redirect to order confirmation page
                     // window.location.href = 'order-confirmation.html';
-                }, 2000);
+                }, 3000);
                 break;
         }
     } catch (error) {
@@ -622,7 +671,9 @@ const processOrder = async (orderData) => {
         showError('An error occurred while processing your order. Please try again.');
     } finally {
         if (orderData.paymentMethod === 'cod') {
-            resetSubmitButton();
+            setTimeout(() => {
+                resetSubmitButton();
+            }, 3000);
         }
     }
 };
@@ -651,6 +702,13 @@ const setupEventListeners = () => {
                 return;
             }
 
+            // Get selected payment method
+            const selectedPayment = document.querySelector('input[name="paymentMethod"]:checked');
+            if (!selectedPayment) {
+                showError('Please select a payment method.');
+                return;
+            }
+
             // Collect order data
             const orderData = {
                 // Personal details
@@ -672,12 +730,16 @@ const setupEventListeners = () => {
                 // Preferences
                 useAsBilling: document.getElementById('useAsBilling').checked,
                 isGift: document.getElementById('giftOrder').checked,
-                paymentMethod: document.querySelector('input[name="paymentMethod"]:checked').value,
+                paymentMethod: selectedPayment.value,
 
                 // Order details
                 items: cartItems,
                 totals: calculateOrderTotal(cartItems),
-                timestamp: new Date().toISOString()
+                timestamp: new Date().toISOString(),
+
+                // Near & Now specific
+                source: 'Near & Now Checkout',
+                deliveryNote: 'Digital Dukan, Local Dil Se'
             };
 
             await processOrder(orderData);
@@ -703,12 +765,13 @@ const setupEventListeners = () => {
                     if (field.classList.contains('input-error')) {
                         validateField(fieldId, rule);
                     }
+                    // Auto-save as user types
+                    saveFormData();
                 });
             }
         });
 
-        // Auto-save form data
-        addressForm.addEventListener('input', saveFormData);
+        // Auto-save form data on change
         addressForm.addEventListener('change', saveFormData);
     }
 
@@ -725,21 +788,55 @@ const setupEventListeners = () => {
         renderOrderSummary();
     });
 
-    // Prevent form submission on Enter key in input fields (except submit button)
+    // Enhanced keyboard navigation
     document.addEventListener('keydown', (e) => {
         if (e.key === 'Enter' && e.target.tagName === 'INPUT' && e.target.type !== 'submit') {
             e.preventDefault();
             const form = e.target.closest('form');
             if (form) {
-                const inputs = Array.from(form.querySelectorAll('input, select, textarea'));
+                const inputs = Array.from(form.querySelectorAll('input:not([type="hidden"]):not([type="radio"]):not([type="checkbox"]), select, textarea'));
                 const currentIndex = inputs.indexOf(e.target);
                 const nextInput = inputs[currentIndex + 1];
                 if (nextInput) {
                     nextInput.focus();
+                } else {
+                    // If it's the last field, focus on submit button
+                    const submitBtn = form.querySelector('button[type="submit"]');
+                    if (submitBtn) {
+                        submitBtn.focus();
+                    }
                 }
             }
         }
     });
+
+    // Phone number formatting
+    const phoneInput = document.getElementById('orderPhone');
+    if (phoneInput) {
+        phoneInput.addEventListener('input', (e) => {
+            // Remove non-numeric characters
+            let value = e.target.value.replace(/\D/g, '');
+            // Limit to 10 digits
+            if (value.length > 10) {
+                value = value.slice(0, 10);
+            }
+            e.target.value = value;
+        });
+    }
+
+    // PIN code formatting
+    const zipInput = document.getElementById('zipCode');
+    if (zipInput) {
+        zipInput.addEventListener('input', (e) => {
+            // Remove non-numeric characters
+            let value = e.target.value.replace(/\D/g, '');
+            // Limit to 6 digits
+            if (value.length > 6) {
+                value = value.slice(0, 6);
+            }
+            e.target.value = value;
+        });
+    }
 };
 
 // Public API
@@ -747,14 +844,16 @@ const updateCart = (items) => {
     if (Array.isArray(items)) {
         saveCartItems(items);
         renderOrderSummary();
+        showSuccess('Cart updated successfully');
     } else {
         console.error('Invalid items passed to updateCart:', items);
+        showError('Failed to update cart');
     }
 };
 
-// Initialization
+// Enhanced initialization
 const initializeCheckout = () => {
-    console.log('Initializing checkout...');
+    console.log('Initializing Near & Now checkout...');
 
     // Load saved form data
     loadFormData();
@@ -765,7 +864,35 @@ const initializeCheckout = () => {
     // Setup event listeners
     setupEventListeners();
 
-    console.log('Checkout initialized successfully');
+    // Pre-fill user data if available
+    const currentUser = getCurrentUser();
+    if (currentUser) {
+        const firstNameField = document.getElementById('firstName');
+        const phoneField = document.getElementById('orderPhone');
+
+        if (firstNameField && !firstNameField.value && currentUser.name) {
+            const nameParts = currentUser.name.split(' ');
+            firstNameField.value = nameParts[0] || '';
+
+            const lastNameField = document.getElementById('lastName');
+            if (lastNameField && nameParts.length > 1) {
+                lastNameField.value = nameParts.slice(1).join(' ');
+            }
+        }
+
+        if (phoneField && !phoneField.value && currentUser.mobile) {
+            phoneField.value = currentUser.mobile;
+        }
+    }
+
+    // Show welcome message for logged-in users
+    if (currentUser) {
+        setTimeout(() => {
+            showSuccess(`Welcome back, ${currentUser.name}! Complete your order below.`);
+        }, 500);
+    }
+
+    console.log('Near & Now checkout initialized successfully');
 };
 
 // Initialize when DOM is ready
@@ -775,9 +902,20 @@ if (document.readyState === 'loading') {
     initializeCheckout();
 }
 
-// Expose public functions
+// Expose public functions to global scope
 window.updateCart = updateCart;
 window.clearCart = clearCart;
 window.renderOrderSummary = renderOrderSummary;
 window.updateItemQuantity = updateItemQuantity;
 window.removeItem = removeItem;
+
+// Near & Now specific utility functions
+window.NearNowCheckout = {
+    formatCurrency,
+    calculateOrderTotal,
+    getCurrentUser,
+    validateAllFields,
+    showSuccess,
+    showError,
+    showWarning
+};

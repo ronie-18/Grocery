@@ -4,26 +4,47 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Checkout - Near & Now</title>
+    <title>Checkout - Near & Now | Digital Dukan, Local Dil Se</title>
+    <meta name="description"
+        content="Complete your order with Near & Now - Fast delivery, fresh groceries at your doorstep">
+    <link rel="icon" type="image/png" href="/favicon.png">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.7.2/css/all.min.css">
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
         :root {
-            --primary-color: #3B82F6;
-            --secondary-color: #1E40AF;
+            --primary-color: #059669;
+            --secondary-color: #047857;
+            --accent-color: #10b981;
             --success-color: #10B981;
             --warning-color: #F59E0B;
             --error-color: #EF4444;
         }
 
-        .text-primary { color: var(--primary-color); }
-        .bg-primary { background-color: var(--primary-color); }
-        .border-primary { border-color: var(--primary-color); }
-        .hover\:bg-secondary:hover { background-color: var(--secondary-color); }
-        .focus\:border-primary:focus { border-color: var(--primary-color); }
+
+
+        .text-primary {
+            color: var(--primary-color);
+        }
+
+        .bg-primary {
+            background-color: var(--primary-color);
+        }
+
+        .border-primary {
+            border-color: var(--primary-color);
+        }
+
+        .hover\:bg-secondary:hover {
+            background-color: var(--secondary-color);
+        }
+
+        .focus\:border-primary:focus {
+            border-color: var(--primary-color);
+        }
 
         body {
-            background: linear-gradient(135deg, #f0f9ff 0%, #e0f2fe 100%);
+            background: linear-gradient(135deg, #f0fdf4 0%, #ecfdf5 50%, #f0fdf4 100%);
+            min-height: 100vh;
         }
 
         .input-group {
@@ -31,33 +52,25 @@
             margin-bottom: 1.5rem;
         }
 
-        .input-group input:focus + .floating-label,
-        .input-group input:not(:placeholder-shown) + .floating-label,
-        .input-group input:valid + .floating-label {
-            transform: translateY(-2.2rem) scale(0.8);
-            color: var(--primary-color);
-            background: white;
-            z-index: 10;
+        .input-label {
+            display: block;
+            font-size: 0.875rem;
+            font-weight: 600;
+            color: #374151;
+            margin-bottom: 0.5rem;
+            padding-left: 0.25rem;
         }
 
-        .floating-label {
-            position: absolute;
-            left: 0.75rem;
-            top: 50%;
-            transform: translateY(-50%);
-            transition: all 0.3s ease;
-            pointer-events: none;
-            background: transparent;
-            padding: 0 0.5rem;
-            color: #6b7280;
-            font-size: 1rem;
-            z-index: 1;
-        }
-
-        .input-group input {
+        .input-group input,
+        .input-group select {
             background: white;
             position: relative;
             z-index: 2;
+        }
+
+        .input-group input:focus+.input-label,
+        .input-group select:focus+.input-label {
+            color: var(--primary-color);
         }
 
         .error-message {
@@ -91,46 +104,51 @@
 
         .progress-line {
             flex: 1;
-            height: 2px;
-            background-color: #e5e7eb;
+            height: 3px;
+            background: linear-gradient(90deg, #e5e7eb 0%, #d1d5db 100%);
             margin: 0 1rem;
             position: relative;
             top: -20px;
+            border-radius: 2px;
         }
 
-        .progress-line.completed { background-color: var(--success-color); }
+        .progress-line.completed {
+            background: linear-gradient(90deg, var(--primary-color) 0%, var(--accent-color) 100%);
+        }
 
         .progress-circle {
-            width: 3rem;
-            height: 3rem;
+            width: 3.5rem;
+            height: 3.5rem;
             border-radius: 50%;
             display: flex;
             align-items: center;
             justify-content: center;
-            font-size: 1rem;
+            font-size: 1.1rem;
             font-weight: bold;
-            background-color: #e5e7eb;
+            background: linear-gradient(135deg, #f3f4f6 0%, #e5e7eb 100%);
             color: #6b7280;
             border: 3px solid #e5e7eb;
             transition: all 0.3s ease;
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
         }
 
         .progress-circle.active {
-            background-color: var(--primary-color);
+            background: linear-gradient(135deg, var(--primary-color) 0%, var(--accent-color) 100%);
             color: white;
             border-color: var(--primary-color);
-            transform: scale(1.1);
-            box-shadow: 0 0 0 4px rgba(59, 130, 246, 0.2);
+            transform: scale(1.15);
+            box-shadow: 0 0 0 4px rgba(5, 150, 105, 0.2), 0 8px 16px -4px rgba(0, 0, 0, 0.2);
         }
 
         .progress-circle.completed {
-            background-color: var(--success-color);
+            background: linear-gradient(135deg, var(--success-color) 0%, #34d399 100%);
             color: white;
             border-color: var(--success-color);
+            box-shadow: 0 4px 6px -1px rgba(16, 185, 129, 0.3);
         }
 
         .progress-label {
-            margin-top: 0.75rem;
+            margin-top: 1rem;
             font-size: 0.875rem;
             font-weight: 600;
             text-align: center;
@@ -139,22 +157,96 @@
             line-height: 1.2;
         }
 
-        .progress-label.active { color: var(--primary-color); }
-        .progress-label.completed { color: var(--success-color); }
+        .progress-label.active {
+            color: var(--primary-color);
+            font-weight: 700;
+        }
 
-        .cart-item { transition: all 0.3s ease; }
-        .cart-item:hover { background-color: #f8fafc; }
+        .progress-label.completed {
+            color: var(--success-color);
+            font-weight: 700;
+        }
 
-        .quantity-btn { transition: all 0.2s ease; }
+        .cart-item {
+            transition: all 0.3s ease;
+            border: 1px solid transparent;
+        }
+
+        .cart-item:hover {
+            background: linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%);
+            border-color: rgba(5, 150, 105, 0.1);
+            transform: translateY(-1px);
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+        }
+
+        .quantity-btn {
+            transition: all 0.2s ease;
+            border: 1px solid #e5e7eb;
+        }
+
         .quantity-btn:hover:not(:disabled) {
-            background-color: var(--primary-color);
+            background: linear-gradient(135deg, var(--primary-color) 0%, var(--accent-color) 100%);
+            color: white;
+            border-color: var(--primary-color);
+            transform: scale(1.05);
+        }
+
+        /* Ensure quantity button icons inherit color and are visible on hover */
+        .quantity-btn i {
+            color: inherit;
+            transition: color 0.2s;
+        }
+
+        .quantity-btn:hover:not(:disabled) i {
             color: white;
         }
 
-        .sticky-summary { position: sticky; top: 2rem; }
+        .sticky-summary {
+            position: sticky;
+            top: 2rem;
+            max-height: calc(100vh - 4rem);
+            overflow-y: auto;
+        }
+
+        .checkout-card {
+            background: white;
+            border-radius: 1rem;
+            box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
+            border: 1px solid rgba(5, 150, 105, 0.1);
+        }
+
+        .section-header {
+            background: linear-gradient(135deg, var(--primary-color) 0%, var(--accent-color) 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        .payment-option {
+            transition: all 0.3s ease;
+            border: 2px solid transparent;
+        }
+
+        .payment-option:hover {
+            border-color: rgba(5, 150, 105, 0.3);
+            background: linear-gradient(135deg, #f0fdf4 0%, #ecfdf5 100%);
+        }
+
+        .payment-option input:checked+.payment-content {
+            border-color: var(--primary-color);
+            background: linear-gradient(135deg, #f0fdf4 0%, #ecfdf5 100%);
+        }
+
+        .delivery-info {
+            background: linear-gradient(135deg, #fef7ed 0%, #fed7aa 100%);
+            border: 2px solid #fb923c;
+        }
 
         @media (max-width: 1024px) {
-            .sticky-summary { position: static; }
+            .sticky-summary {
+                position: static;
+                max-height: none;
+            }
         }
 
         @media (max-width: 768px) {
@@ -162,284 +254,450 @@
                 max-width: 100%;
                 padding: 0 1rem;
             }
+
             .progress-circle {
-                width: 2.5rem;
-                height: 2.5rem;
-                font-size: 0.875rem;
+                width: 2.8rem;
+                height: 2.8rem;
+                font-size: 0.9rem;
             }
+
             .progress-line {
                 margin: 0 0.5rem;
-                top: -16px;
+                top: -18px;
             }
+
             .progress-label {
                 font-size: 0.75rem;
                 max-width: 100px;
+                margin-top: 0.75rem;
             }
+        }
+
+        /* Custom scrollbar for sticky summary */
+        .sticky-summary::-webkit-scrollbar {
+            width: 6px;
+        }
+
+        .sticky-summary::-webkit-scrollbar-track {
+            background: #f1f1f1;
+            border-radius: 3px;
+        }
+
+        .sticky-summary::-webkit-scrollbar-thumb {
+            background: var(--primary-color);
+            border-radius: 3px;
+        }
+
+        .sticky-summary::-webkit-scrollbar-thumb:hover {
+            background: var(--secondary-color);
         }
     </style>
 </head>
 
 <body class="bg-gray-50 min-h-screen flex flex-col">
     <!-- Header -->
-    <div class="w-full bg-white shadow-sm py-3 px-4 flex items-center justify-between">
-        <a href="index.html"
-            class="flex items-center gap-2 px-4 py-2 rounded-lg bg-primary/10 hover:bg-primary/20 text-primary font-semibold text-base transition-all duration-200 shadow-sm border border-primary hover:shadow-md hover:scale-105">
-            <i class="fas fa-arrow-left mr-1"></i>
-            <span>Back to Cart</span>
-        </a>
-        <div class="flex items-center justify-center flex-1">
-            <img src="Logo.png" alt="Near & Now" class="h-16 w-16 object-contain">
-        </div>
-        <div class="w-32"></div>
-    </div>
+    <header class="w-full bg-white shadow-lg border-b border-gray-100 sticky top-0 z-40">
+        <!-- Gradient accent bar -->
+        <div class="h-1 bg-gradient-to-r from-primary via-secondary to-primary"></div>
 
-    <!-- Order Status Message -->
-    <div id="orderStatus" class="hidden w-full text-center py-3 px-4 font-semibold transition-all duration-300"></div>
+        <div class="container mx-auto px-4 py-4">
+            <div class="flex items-center justify-between">
+                <a href="index.html"
+                    class="flex items-center gap-3 px-6 py-3 rounded-xl bg-primary/10 hover:bg-primary/20 text-primary font-bold text-lg transition-all duration-300 shadow-md hover:shadow-lg hover:scale-105 border border-primary/20">
+                    <i class="fas fa-arrow-left text-xl"></i>
+                    <span>Back to Cart</span>
+                </a>
 
-    <div class="max-w-6xl mx-auto mt-8 flex flex-col lg:flex-row gap-8 px-4">
-        <div class="flex-1 min-w-0">
-            <!-- Progress Bar -->
-            <div class="mb-8">
-                <div class="progress-container">
-                    <div class="progress-step-wrapper">
-                        <div class="progress-circle active">
-                            <i class="fas fa-shipping-fast"></i>
-                        </div>
-                        <span class="progress-label active">Shipping & Details</span>
-                    </div>
-                    <div class="progress-line"></div>
-                    <div class="progress-step-wrapper">
-                        <div class="progress-circle">
-                            <i class="fas fa-credit-card"></i>
-                        </div>
-                        <span class="progress-label">Payment</span>
-                    </div>
-                    <div class="progress-line"></div>
-                    <div class="progress-step-wrapper">
-                        <div class="progress-circle">
-                            <i class="fas fa-check-circle"></i>
-                        </div>
-                        <span class="progress-label">Confirmation</span>
+                <div class="flex items-center justify-center">
+                    <img src="Logo.png" alt="Near & Now" class="w-16 h-16 mr-3">
+                    <div>
+                        <h1 class="text-2xl font-bold text-gray-800">Near & Now</h1>
+                        <p class="text-sm text-gray-500 font-medium">Digital Dukan, Local Dil Se</p>
                     </div>
                 </div>
-            </div>
 
-            <!-- Gift Options -->
-            <div class="bg-white rounded-lg shadow-md p-6 mb-6 border-l-4 border-yellow-400">
-                <label class="flex items-center cursor-pointer">
-                    <input type="checkbox" id="giftOrder"
-                        class="mr-3 h-5 w-5 text-primary focus:ring-primary border-gray-300 rounded">
-                    <div>
-                        <span class="font-semibold text-lg">🎁 Order includes gift(s)</span>
-                        <p class="text-sm text-gray-500 mt-1">The packing slip included with your order will not display
-                            prices. Perfect for surprising your loved ones!</p>
-                    </div>
-                </label>
+                <div class="w-48"></div>
             </div>
+        </div>
+    </header>
 
-            <!-- Delivery Address -->
-            <form id="addressForm" class="bg-white rounded-lg shadow-md p-6 mb-6 border-t-4 border-primary">
-                <h2 class="text-2xl font-bold mb-6 flex items-center">
-                    <i class="fas fa-map-marker-alt text-primary mr-3"></i>
+    <!-- Order Status Message -->
+    <div id="orderStatus"
+        class="hidden w-full text-center py-4 px-4 font-semibold transition-all duration-300 mx-auto max-w-4xl mt-4 rounded-lg">
+    </div>
+
+    <div class="max-w-7xl mx-auto mt-8 flex flex-col xl:flex-row gap-8 px-4 pb-8">
+        <div class="flex-1 min-w-0">
+
+            <!-- Delivery Address Form -->
+            <form id="addressForm" class="checkout-card p-8 mb-8 border-t-4 border-primary">
+                <h2 class="text-3xl font-bold mb-8 flex items-center section-header">
+                    <i class="fas fa-map-marker-alt mr-4 text-4xl text-primary"></i>
                     Delivery Address
                 </h2>
 
-                <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
-                    <div class="input-group">
-                        <input type="text" id="firstName" placeholder=" " required
-                            class="w-full px-4 py-3 border-2 border-gray-300 rounded-lg focus:outline-none focus:border-primary transition-colors">
-                        <label class="floating-label text-gray-500">First Name *</label>
-                        <div class="error-message" id="firstName-error">First name is required</div>
-                    </div>
-                    <div class="input-group">
-                        <input type="text" id="lastName" placeholder=" " required
-                            class="w-full px-4 py-3 border-2 border-gray-300 rounded-lg focus:outline-none focus:border-primary transition-colors">
-                        <label class="floating-label text-gray-500">Last Name *</label>
-                        <div class="error-message" id="lastName-error">Last name is required</div>
-                    </div>
+                <div class="input-group mb-6">
+                    <label class="input-label">Full Name *</label>
+                    <input type="text" id="fullName" required
+                        class="w-full px-4 py-4 border-2 border-gray-300 rounded-xl focus:outline-none focus:border-primary transition-all duration-300 text-lg">
+                    <div class="error-message" id="fullName-error">Full name is required</div>
                 </div>
 
                 <div class="input-group mb-6">
-                    <input type="text" id="streetAddress" placeholder=" " required
-                        class="w-full px-4 py-3 border-2 border-gray-300 rounded-lg focus:outline-none focus:border-primary transition-colors">
-                    <label class="floating-label text-gray-500">Street Address *</label>
+                    <label class="input-label">Street Address *</label>
+                    <input type="text" id="streetAddress" required
+                        class="w-full px-4 py-4 border-2 border-gray-300 rounded-xl focus:outline-none focus:border-primary transition-all duration-300 text-lg">
                     <div class="error-message" id="streetAddress-error">Street address is required</div>
                 </div>
 
-                <div class="input-group mb-6">
-                    <input type="text" id="aptSuite" placeholder=" "
-                        class="w-full px-4 py-3 border-2 border-gray-300 rounded-lg focus:outline-none focus:border-primary transition-colors">
-                    <label class="floating-label text-gray-500">Apt/Suite/Floor</label>
-                </div>
-
-                <div class="input-group mb-6">
-                    <input type="text" id="landmark" placeholder=" "
-                        class="w-full px-4 py-3 border-2 border-gray-300 rounded-lg focus:outline-none focus:border-primary transition-colors">
-                    <label class="floating-label text-gray-500">Landmark (Optional)</label>
-                </div>
-
-                <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
                     <div class="input-group">
+                        <label class="input-label">Apt/Suite/Floor</label>
+                        <input type="text" id="aptSuite"
+                            class="w-full px-4 py-4 border-2 border-gray-300 rounded-xl focus:outline-none focus:border-primary transition-all duration-300 text-lg">
+                    </div>
+                    <div class="input-group">
+                        <label class="input-label">Landmark (Optional)</label>
+                        <input type="text" id="landmark"
+                            class="w-full px-4 py-4 border-2 border-gray-300 rounded-xl focus:outline-none focus:border-primary transition-all duration-300 text-lg">
+                    </div>
+                </div>
+
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-6">
+                    <div class="input-group">
+                        <label class="input-label">State *</label>
                         <select id="state" required
-                            class="w-full px-4 py-3 border-2 border-gray-300 rounded-lg focus:outline-none focus:border-primary transition-colors appearance-none bg-white">
-                            <option value="">Select State *</option>
-                            <option value="West Bengal">West Bengal</option>
-                            <option value="Delhi">Delhi</option>
-                            <option value="Maharashtra">Maharashtra</option>
-                            <option value="Karnataka">Karnataka</option>
-                            <option value="Tamil Nadu">Tamil Nadu</option>
-                            <option value="Gujarat">Gujarat</option>
-                            <option value="Uttar Pradesh">Uttar Pradesh</option>
-                            <option value="Rajasthan">Rajasthan</option>
-                            <option value="Haryana">Haryana</option>
-                            <option value="Punjab">Punjab</option>
+                            class="w-full px-4 py-4 border-2 border-gray-300 rounded-xl focus:outline-none focus:border-primary transition-all duration-300 appearance-none bg-white text-lg">
+                            <option value="">Select State</option>
+                            <option value="andhra-pradesh">Andhra Pradesh</option>
+                            <option value="arunachal-pradesh">Arunachal Pradesh</option>
+                            <option value="assam">Assam</option>
+                            <option value="bihar">Bihar</option>
+                            <option value="chhattisgarh">Chhattisgarh</option>
+                            <option value="goa">Goa</option>
+                            <option value="gujarat">Gujarat</option>
+                            <option value="haryana">Haryana</option>
+                            <option value="himachal-pradesh">Himachal Pradesh</option>
+                            <option value="jharkhand">Jharkhand</option>
+                            <option value="karnataka">Karnataka</option>
+                            <option value="kerala">Kerala</option>
+                            <option value="madhya-pradesh">Madhya Pradesh</option>
+                            <option value="maharashtra">Maharashtra</option>
+                            <option value="manipur">Manipur</option>
+                            <option value="meghalaya">Meghalaya</option>
+                            <option value="mizoram">Mizoram</option>
+                            <option value="nagaland">Nagaland</option>
+                            <option value="odisha">Odisha</option>
+                            <option value="punjab">Punjab</option>
+                            <option value="rajasthan">Rajasthan</option>
+                            <option value="sikkim">Sikkim</option>
+                            <option value="tamil-nadu">Tamil Nadu</option>
+                            <option value="telangana">Telangana</option>
+                            <option value="tripura">Tripura</option>
+                            <option value="uttar-pradesh">Uttar Pradesh</option>
+                            <option value="uttarakhand">Uttarakhand</option>
+                            <option value="west-bengal">West Bengal</option>
+
+                            <!-- Union Territories -->
+                            <!-- <option value="andaman-nicobar">Andaman and Nicobar Islands</option>
+                            <option value="chandigarh">Chandigarh</option>
+                            <option value="dadra-nagar-haveli-daman-diu">Dadra and Nagar Haveli and Daman and Diu
+                            </option>
+                            <option value="delhi">Delhi (NCT)</option>
+                            <option value="jammu-kashmir">Jammu and Kashmir</option>
+                            <option value="ladakh">Ladakh</option>
+                            <option value="lakshadweep">Lakshadweep</option>
+                            <option value="puducherry">Puducherry</option> -->
                         </select>
-                        <i class="fas fa-chevron-down absolute right-3 top-4 text-gray-400 pointer-events-none"></i>
+                        <i class="fas fa-chevron-down absolute right-4 top-11 text-gray-400 pointer-events-none"></i>
                         <div class="error-message" id="state-error">Please select a state</div>
                     </div>
                     <div class="input-group">
-                        <input type="text" id="city" placeholder=" " required
-                            class="w-full px-4 py-3 border-2 border-gray-300 rounded-lg focus:outline-none focus:border-primary transition-colors">
-                        <label class="floating-label text-gray-500">City *</label>
+                        <label class="input-label">City *</label>
+                        <input type="text" id="city" required
+                            class="w-full px-4 py-4 border-2 border-gray-300 rounded-xl focus:outline-none focus:border-primary transition-all duration-300 text-lg">
                         <div class="error-message" id="city-error">City is required</div>
                     </div>
                     <div class="input-group">
-                        <input type="text" id="zipCode" placeholder=" " required pattern="[0-9]{6}"
-                            class="w-full px-4 py-3 border-2 border-gray-300 rounded-lg focus:outline-none focus:border-primary transition-colors">
-                        <label class="floating-label text-gray-500">PIN Code *</label>
+                        <label class="input-label">PIN Code *</label>
+                        <input type="text" id="zipCode" required pattern="[0-9]{6}"
+                            class="w-full px-4 py-4 border-2 border-gray-300 rounded-xl focus:outline-none focus:border-primary transition-all duration-300 text-lg">
                         <div class="error-message" id="zipCode-error">Valid 6-digit PIN code is required</div>
                     </div>
                 </div>
 
                 <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
                     <div class="input-group">
-                        <input type="email" id="orderEmail" placeholder=" " required
-                            class="w-full px-4 py-3 border-2 border-gray-300 rounded-lg focus:outline-none focus:border-primary transition-colors">
-                        <label class="floating-label text-gray-500">Email Address *</label>
+                        <label class="input-label">Email Address *</label>
+                        <input type="email" id="orderEmail" required
+                            class="w-full px-4 py-4 border-2 border-gray-300 rounded-xl focus:outline-none focus:border-primary transition-all duration-300 text-lg">
                         <div class="error-message" id="orderEmail-error">Valid email is required</div>
                     </div>
                     <div class="input-group">
-                        <input type="tel" id="orderPhone" placeholder=" " required pattern="[0-9]{10}"
-                            class="w-full px-4 py-3 border-2 border-gray-300 rounded-lg focus:outline-none focus:border-primary transition-colors">
-                        <label class="floating-label text-gray-500">Phone Number *</label>
+                        <label class="input-label">Phone Number *</label>
+                        <input type="tel" id="orderPhone" required pattern="[0-9]{10}"
+                            class="w-full px-4 py-4 border-2 border-gray-300 rounded-xl focus:outline-none focus:border-primary transition-all duration-300 text-lg">
                         <div class="error-message" id="orderPhone-error">Valid 10-digit phone number is required</div>
                     </div>
                 </div>
 
-                <label class="flex items-center mb-6 cursor-pointer p-3 bg-gray-50 rounded-lg hover:bg-gray-100 transition-colors">
+                <label
+                    class="flex items-center mb-8 cursor-pointer p-4 bg-gray-50 rounded-xl hover:bg-gray-100 transition-colors border border-gray-200">
                     <input type="checkbox" id="useAsBilling"
-                        class="mr-3 h-5 w-5 text-primary focus:ring-primary border-gray-300 rounded">
-                    <span class="font-medium">Use as billing address</span>
+                        class="mr-4 h-5 w-5 text-primary focus:ring-primary border-gray-300 rounded">
+                    <span class="font-semibold text-lg">Use as billing address</span>
                 </label>
 
+                <!-- gift options end -->
+                <div class="checkout-card p-6 mb-8 border-l-4 border-yellow-400">
+                    <label class="flex items-center cursor-pointer">
+                        <input type="checkbox" id="giftOrder"
+                            class="mr-4 h-5 w-5 text-primary focus:ring-primary border-gray-300 rounded">
+                        <div>
+                            <span class="font-bold text-lg flex items-center">
+                                🎁 This order includes gift(s)
+                            </span>
+                            <p class="text-sm text-gray-600 mt-1">The packing slip will not display prices. Perfect for
+                                surprising your loved ones!</p>
+                        </div>
+                    </label>
+                </div>
+
                 <!-- Payment Method Selection -->
-                <div class="bg-gradient-to-r from-green-50 to-emerald-50 rounded-lg p-6 mb-6 border border-green-100">
-                    <h3 class="font-bold mb-4 flex items-center text-lg">
-                        <i class="fas fa-credit-card text-primary mr-3"></i>
-                        Payment Method
+                <div
+                    class="bg-gradient-to-r from-green-50 to-emerald-50 rounded-2xl p-8 mb-8 border-2 border-green-200">
+                    <h3 class="font-bold mb-6 flex items-center text-2xl section-header">
+                        <i class="fas fa-credit-card mr-4 text-3xl text-primary"></i>
+                        Choose Payment Method
                     </h3>
                     <div class="space-y-4">
-                        <label class="flex items-center cursor-pointer p-4 bg-white rounded-lg border-2 border-transparent hover:border-primary transition-colors">
-                            <input type="radio" name="paymentMethod" id="paymentCOD" value="cod"
-                                class="mr-3 h-5 w-5 text-primary focus:ring-primary border-gray-300" checked>
-                            <div class="flex items-center">
-                                <span class="text-2xl mr-3">💵</span>
-                                <div>
-                                    <span class="font-semibold">Cash on Delivery</span>
-                                    <p class="text-sm text-gray-500">Pay when your order arrives</p>
+                        <label class="payment-option flex items-center cursor-pointer">
+                            <input type="radio" name="paymentMethod" id="paymentCOD" value="cod" class="sr-only"
+                                checked>
+                            <div
+                                class="payment-content flex items-center w-full p-6 bg-white rounded-xl border-2 border-gray-200 hover:border-primary transition-all duration-300">
+                                <span class="text-3xl mr-4">💵</span>
+                                <div class="flex-1">
+                                    <span class="font-bold text-xl text-gray-800">Cash on Delivery</span>
+                                    <p class="text-gray-600 mt-1">Pay when your order arrives at your doorstep</p>
+                                    <div class="flex items-center mt-2 text-sm text-green-600">
+                                        <i class="fas fa-check-circle mr-1"></i>
+                                        <span>Most preferred payment method</span>
+                                    </div>
+                                </div>
+                                <div class="text-primary text-2xl">
+                                    <i class="fas fa-check-circle"></i>
                                 </div>
                             </div>
                         </label>
-                        <label class="flex items-center cursor-pointer p-4 bg-white rounded-lg border-2 border-transparent hover:border-primary transition-colors">
-                            <input type="radio" name="paymentMethod" value="razorpay"
-                                class="mr-3 h-5 w-5 text-primary focus:ring-primary border-gray-300">
-                            <div class="flex items-center">
-                                <span class="text-2xl mr-3">💳</span>
-                                <div>
-                                    <span class="font-semibold">Online Payment</span>
-                                    <p class="text-sm text-gray-500">Credit/Debit Card, UPI, Net Banking</p>
+
+                        <label class="payment-option flex items-center cursor-pointer">
+                            <input type="radio" name="paymentMethod" value="razorpay" class="sr-only">
+                            <div
+                                class="payment-content flex items-center w-full p-6 bg-white rounded-xl border-2 border-gray-200 hover:border-primary transition-all duration-300">
+                                <span class="text-3xl mr-4">💳</span>
+                                <div class="flex-1">
+                                    <span class="font-bold text-xl text-gray-800">Online Payment</span>
+                                    <p class="text-gray-600 mt-1">Credit/Debit Card, UPI, Net Banking, Digital Wallets
+                                    </p>
+                                    <div class="flex items-center mt-2 text-sm text-blue-600">
+                                        <i class="fas fa-shield-alt mr-1"></i>
+                                        <span>100% secure and encrypted</span>
+                                    </div>
+                                </div>
+                                <div class="text-gray-400 text-2xl">
+                                    <i class="fas fa-circle"></i>
                                 </div>
                             </div>
                         </label>
-                        <label class="flex items-center cursor-pointer p-4 bg-white rounded-lg border-2 border-transparent hover:border-primary transition-colors">
-                            <input type="radio" name="paymentMethod" value="other"
-                                class="mr-3 h-5 w-5 text-primary focus:ring-primary border-gray-300">
-                            <div class="flex items-center">
-                                <span class="text-2xl mr-3">🏦</span>
-                                <div>
-                                    <span class="font-semibold">Other Payment Options</span>
-                                    <p class="text-sm text-gray-500">Digital wallets and more</p>
+
+                        <label class="payment-option flex items-center cursor-pointer">
+                            <input type="radio" name="paymentMethod" value="other" class="sr-only">
+                            <div
+                                class="payment-content flex items-center w-full p-6 bg-white rounded-xl border-2 border-gray-200 hover:border-primary transition-all duration-300">
+                                <span class="text-3xl mr-4">🏦</span>
+                                <div class="flex-1">
+                                    <span class="font-bold text-xl text-gray-800">Other Payment Options</span>
+                                    <p class="text-gray-600 mt-1">Bank transfers, Digital wallets, and more</p>
+                                    <div class="flex items-center mt-2 text-sm text-purple-600">
+                                        <i class="fas fa-mobile-alt mr-1"></i>
+                                        <span>Flexible payment solutions</span>
+                                    </div>
+                                </div>
+                                <div class="text-gray-400 text-2xl">
+                                    <i class="fas fa-circle"></i>
                                 </div>
                             </div>
                         </label>
                     </div>
                 </div>
 
-                <button type="submit" id="submitButton"
-                    class="w-full bg-primary text-white py-4 rounded-lg font-bold hover:bg-secondary transition duration-300 text-lg shadow-lg hover:shadow-xl transform hover:scale-[1.02]">
-                    <i class="fas fa-shopping-cart mr-2"></i>
-                    <span id="submitButtonText">Place Order</span>
-                    <div id="submitSpinner" class="hidden inline-block ml-2">
-                        <i class="fas fa-spinner fa-spin"></i>
+                <!-- <button type="submit" id="submitButton"
+                    class="w-full bg-gradient-to-r from-primary to-accent text-white py-5 rounded-2xl font-bold hover:from-secondary hover:to-primary transition-all duration-300 text-xl shadow-xl hover:shadow-2xl transform hover:scale-[1.02] border-2 border-primary">
+                    <i class="fas fa-shopping-cart mr-3 text-xl"></i>
+                    <span id="submitButtonText">Place Order Now</span>
+                    <div id="submitSpinner" class="hidden inline-block ml-3">
+                        <i class="fas fa-spinner fa-spin text-xl"></i>
                     </div>
-                </button>
+                </button> -->
             </form>
         </div>
 
         <!-- Order Summary -->
-        <div class="w-full lg:w-96 bg-white rounded-2xl shadow-xl p-8 h-fit sticky-summary border-t-4 border-primary">
-            <div class="flex items-center mb-6">
-                <i class="fa-solid fa-basket-shopping text-primary text-2xl mr-3"></i>
-                <h2 class="text-2xl font-bold text-gray-800">Order Summary</h2>
-            </div>
+        <div class="w-full xl:w-96">
+            <div class="checkout-card p-6 sticky-summary border-t-4 border-primary rounded-2xl shadow-lg bg-white">
 
-            <div id="orderSummary" class="mb-6 text-gray-700">
-                <div class="flex items-center justify-center py-8">
-                    <div class="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
-                    <span class="ml-3 text-gray-500">Loading cart items...</span>
+                <!-- Header -->
+                <div class="flex items-center mb-6">
+                    <i class="fa-solid fa-basket-shopping text-primary text-2xl mr-3"></i>
+                    <h2 class="text-2xl font-extrabold text-gray-800 tracking-tight">Order Summary</h2>
                 </div>
-            </div>
 
-            <div class="flex items-center justify-between border-t-2 border-primary pt-6 mt-6">
-                <span class="font-bold text-xl">Total</span>
-                <span id="orderTotal" class="text-3xl font-bold text-primary">₹0</span>
-            </div>
+                <!-- Cart Items Section -->
+                <div class="mb-6">
+                    <div class="bg-gray-50 rounded-2xl p-5 mb-5 shadow-sm">
+                        <h3 class="font-semibold text-gray-700 mb-3 flex items-center text-lg">
+                            <i class="fas fa-shopping-bag text-primary mr-2"></i>
+                            Items in Cart
+                        </h3>
+                        <div id="orderSummary" class="text-gray-700 max-h-72 overflow-y-auto custom-scrollbar">
+                            <div class="flex items-center justify-center py-8">
+                                <div class="animate-spin rounded-full h-8 w-8 border-b-2 border-primary mr-3"></div>
+                                <span class="text-gray-500 text-sm">Loading cart items...</span>
+                            </div>
+                        </div>
+                    </div>
 
-            <!-- Quick Actions -->
-            <div class="mt-6 space-y-3">
-                <button onclick="window.location.href='index.html'"
-                    class="w-full bg-gray-100 text-gray-700 py-3 rounded-lg font-semibold hover:bg-gray-200 transition duration-300 border border-gray-300">
-                    <i class="fas fa-arrow-left mr-2"></i>
-                    Continue Shopping
+                    <!-- Price Breakdown -->
+                    <div class="bg-gradient-to-r from-green-50 to-emerald-100 rounded-2xl p-5 border border-green-300 shadow-sm">
+                        <h3 class="font-semibold text-gray-700 mb-3 flex items-center text-lg">
+                            <i class="fas fa-calculator text-primary mr-2"></i>
+                            Price Breakdown
+                        </h3>
+                        <div id="orderBreakdown" class="space-y-2 text-sm text-gray-700">
+                            <!-- JS will fill this -->
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Grand Total -->
+                <div class="flex items-center justify-between border-t-2 border-primary pt-4 mb-6 bg-gradient-to-r from-primary/5 to-accent/5 p-5 rounded-2xl shadow-sm">
+                    <span class="font-bold text-xl text-gray-800">Grand Total</span>
+                    <span id="orderTotal" class="text-3xl font-extrabold text-primary">₹0</span>
+                </div>
+
+                <!-- Quick Actions -->
+                <div class="space-y-3 mb-6">
+                    <button onclick="window.location.href='index.html'"
+                        class="w-full bg-gradient-to-r from-gray-100 to-gray-200 text-gray-700 py-3 rounded-xl font-semibold hover:from-gray-200 hover:to-gray-300 transition-all duration-300 border border-gray-300 shadow hover:shadow-md text-sm flex items-center justify-center">
+                        <i class="fas fa-arrow-left mr-2"></i>
+                        Continue Shopping
+                    </button>
+                    <button onclick="clearCart()"
+                        class="w-full bg-gradient-to-r from-red-50 to-red-100 text-red-600 py-3 rounded-xl font-semibold hover:from-red-100 hover:to-red-200 transition-all duration-300 border border-red-200 shadow hover:shadow-md text-sm flex items-center justify-center">
+                        <i class="fas fa-trash mr-2"></i>
+                        Clear Cart
+                    </button>
+                </div>
+
+                <!-- Place Order -->
+                <button type="submit" id="submitButton"
+                    class="w-full bg-gradient-to-r from-primary to-accent text-white py-5 rounded-2xl font-bold hover:from-secondary hover:to-primary transition-all duration-300 text-xl shadow-lg hover:shadow-2xl transform hover:scale-[1.03] flex items-center justify-center border-2 border-primary">
+                    <i class="fas fa-shopping-cart mr-3 text-xl"></i>
+                    <span id="submitButtonText">Place Order Now</span>
+                    <div id="submitSpinner" class="hidden inline-block ml-3">
+                        <i class="fas fa-spinner fa-spin text-xl"></i>
+                    </div>
                 </button>
-                <button onclick="clearCart()"
-                    class="w-full bg-red-50 text-red-600 py-3 rounded-lg font-semibold hover:bg-red-100 transition duration-300 border border-red-200">
-                    <i class="fas fa-trash mr-2"></i>
-                    Clear Cart
-                </button>
-            </div>
 
-            <!-- Trust Badges -->
-            <div class="mt-6 pt-6 border-t border-gray-200">
-                <div class="flex justify-center space-x-4 text-gray-400">
-                    <div class="text-center">
-                        <i class="fas fa-shield-alt text-lg mb-1"></i>
-                        <p class="text-xs">Secure</p>
+                <!-- Trust Badges -->
+                <div class="pt-5 border-t border-gray-200 mt-6">
+                    <h4 class="text-center font-semibold text-gray-700 mb-3 text-sm">Why Choose Near & Now?</h4>
+                    <div class="grid grid-cols-3 gap-4 text-center text-gray-600">
+                        <div class="flex flex-col items-center">
+                            <div class="bg-primary/10 p-3 rounded-full mb-2 shadow-sm">
+                                <i class="fas fa-shield-alt text-primary text-lg"></i>
+                            </div>
+                            <p class="text-xs font-medium">100% Secure</p>
+                        </div>
+                        <div class="flex flex-col items-center">
+                            <div class="bg-primary/10 p-3 rounded-full mb-2 shadow-sm">
+                                <i class="fas fa-truck text-primary text-lg"></i>
+                            </div>
+                            <p class="text-xs font-medium">Fast Delivery</p>
+                        </div>
+                        <div class="flex flex-col items-center">
+                            <div class="bg-primary/10 p-3 rounded-full mb-2 shadow-sm">
+                                <i class="fas fa-leaf text-primary text-lg"></i>
+                            </div>
+                            <p class="text-xs font-medium">Fresh Quality</p>
+                        </div>
                     </div>
-                    <div class="text-center">
-                        <i class="fas fa-truck text-lg mb-1"></i>
-                        <p class="text-xs">Fast Delivery</p>
-                    </div>
-                    <div class="text-center">
-                        <i class="fas fa-undo text-lg mb-1"></i>
-                        <p class="text-xs">Easy Returns</p>
-                    </div>
+                </div>
+
+                <!-- Contact Support -->
+                <div class="mt-6 text-center">
+                    <p class="text-xs text-gray-500 mb-2">Need help?</p>
+                    <a href="tel:+919876543210"
+                        class="text-primary font-semibold hover:text-secondary transition-colors text-sm flex items-center justify-center">
+                        <i class="fas fa-phone mr-1"></i>
+                        +91 98765 43210
+                    </a>
                 </div>
             </div>
         </div>
+
     </div>
 
     <script src="checkout.js"></script>
+    <script>
+
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        primary: '#059669',
+                        secondary: '#047857',
+                        accent: '#10b981'
+                    }
+                }
+            }
+        }
+        // Payment method selection handling
+        document.addEventListener('DOMContentLoaded', function () {
+            const paymentOptions = document.querySelectorAll('input[name="paymentMethod"]');
+
+            paymentOptions.forEach(option => {
+                option.addEventListener('change', function () {
+                    // Reset all payment options
+                    document.querySelectorAll('.payment-content').forEach(content => {
+                        content.classList.remove('border-primary', 'bg-gradient-to-r', 'from-green-50', 'to-emerald-50');
+                        content.classList.add('border-gray-200', 'bg-white');
+                        const icon = content.querySelector('.text-2xl:last-child i');
+                        if (icon) {
+                            icon.className = 'fas fa-circle text-gray-400';
+                        }
+                    });
+
+                    // Highlight selected option
+                    if (this.checked) {
+                        const content = this.nextElementSibling;
+                        content.classList.remove('border-gray-200', 'bg-white');
+                        content.classList.add('border-primary', 'bg-gradient-to-r', 'from-green-50', 'to-emerald-50');
+                        const icon = content.querySelector('.text-2xl:last-child i');
+                        if (icon) {
+                            icon.className = 'fas fa-check-circle text-primary';
+                        }
+                    }
+                });
+
+                // Initialize the checked option
+                if (option.checked) {
+                    option.dispatchEvent(new Event('change'));
+                }
+            });
+        });
+    </script>
 </body>
 
 </html>
