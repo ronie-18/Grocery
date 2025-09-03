@@ -873,7 +873,7 @@ function initializeSearch() {
     // Handle enter key press - redirect to search page
     searchInput.addEventListener("keypress", (e) => {
         if (e.key === "Enter") {
-            performURLSearch()
+            performURLSearch(e)
         }
     })
 
@@ -929,7 +929,7 @@ function showSearchSuggestions(query) {
         searchSuggestions.innerHTML = suggestions
             .map((product) => `
                 <div class="p-3 hover:bg-gray-100 cursor-pointer border-b border-gray-100 last:border-b-0" 
-                     onclick="selectSearchSuggestion('${query}')">
+                     onclick="selectSearchSuggestion('${product.name.replace(/'/g, '\\\'')}')">
                     <div class="flex items-center space-x-3">
                         <img src="${product.image || 'https://via.placeholder.com/40'}" 
                              alt="${product.name}" 
@@ -970,7 +970,10 @@ function selectSearchSuggestion(productName) {
 }
 
 // New URL-based search function like Blinkit/DealShare
-function performURLSearch() {
+function performURLSearch(event) {
+    if (event) {
+        event.preventDefault()
+    }
     const query = document.getElementById("searchInput").value.trim()
     if (query) {
         // Create URL similar to Blinkit format: search.html?q=product
