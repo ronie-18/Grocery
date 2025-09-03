@@ -871,7 +871,7 @@ function initializeSearch() {
     searchBtn.addEventListener("click", performURLSearch)
     
     // Handle enter key press - redirect to search page
-    searchInput.addEventListener("keypress", (e) => {
+    searchInput.addEventListener("keydown", (e) => {
         if (e.key === "Enter") {
             performURLSearch(e)
         }
@@ -974,7 +974,14 @@ function performURLSearch(event) {
     if (event) {
         event.preventDefault()
     }
-    const query = document.getElementById("searchInput").value.trim()
+    
+    // Get both desktop and mobile input values with null-checking
+    const desktop = document.getElementById("searchInput")?.value.trim()
+    const mobile = document.getElementById("mobileSearchInput")?.value.trim()
+    
+    // Prefer desktop input, fallback to mobile if desktop is empty
+    const query = desktop || mobile
+    
     if (query) {
         // Create URL similar to Blinkit format: search.html?q=product
         const searchURL = `search.html?q=${encodeURIComponent(query)}`

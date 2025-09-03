@@ -425,6 +425,9 @@
                     if (typeof initializeLocationSelector === 'function') initializeLocationSelector();
                     if (typeof initializeCart === 'function') initializeCart();
                     if (typeof updateUserDisplay === 'function') updateUserDisplay();
+                    
+                    // Attach add-to-cart listeners once during initialization
+                    attachAddToCartListeners();
                 } catch (funcError) {
                     console.log('⚠️ Some functions failed to initialize:', funcError.message);
                 }
@@ -527,7 +530,7 @@
                         <p class="text-gray-600 text-sm mb-3">${product.description || 'Fresh and high quality product'}</p>
                         <div class="flex items-center justify-between">
                             <span class="text-lg font-bold text-primary">${product.price}</span>
-                            <button data-product-id="${product.id}" class="add-to-cart-btn bg-primary text-white px-4 py-2 rounded-lg hover:bg-secondary transition-colors duration-300 text-sm">
+                            <button type="button" data-product-id="${product.id}" class="add-to-cart-btn bg-primary text-white px-4 py-2 rounded-lg hover:bg-secondary transition-colors duration-300 text-sm" aria-label="Add ${product.name} to cart">
                                 Add to Cart
                             </button>
                         </div>
@@ -538,9 +541,6 @@
             // Show results, hide no results
             searchResults.classList.remove('hidden');
             noResults.classList.add('hidden');
-            
-            // Add event delegation for add-to-cart buttons
-            attachAddToCartListeners();
         }
 
         function showNoResults() {
@@ -549,15 +549,17 @@
             document.getElementById('resultsCount').textContent = 'No products found';
         }
 
+        // Global flag to track if add-to-cart listener is already attached
+        let isAddToCartListenerAttached = false;
+
         function attachAddToCartListeners() {
+            // Early return if listener is already attached
+            if (isAddToCartListenerAttached) {
+                return;
+            }
+            
             // Use event delegation on the search results container
             const searchResults = document.getElementById('searchResults');
-            
-            // Remove any existing listeners to prevent duplicates
-            const existingListener = searchResults._addToCartListener;
-            if (existingListener) {
-                searchResults.removeEventListener('click', existingListener);
-            }
             
             // Create new listener function
             const addToCartListener = function(event) {
@@ -569,11 +571,11 @@
                 }
             };
             
-            // Store reference to listener for cleanup
-            searchResults._addToCartListener = addToCartListener;
-            
             // Add the event listener
             searchResults.addEventListener('click', addToCartListener);
+            
+            // Mark as attached
+            isAddToCartListenerAttached = true;
         }
     </script>
 </body>
