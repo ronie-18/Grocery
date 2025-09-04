@@ -109,6 +109,84 @@ window.emergencyLogout = function() {
     logoutUser()
 }
 
+// Debug function to test dropdown functionality
+window.debugDropdown = function() {
+    console.log('🐛 Debug dropdown function called')
+    
+    const userMenuTrigger = document.querySelector(".user-menu-trigger")
+    const userDropdown = document.querySelector(".user-dropdown")
+    const currentUser = localStorage.getItem('nearNowCurrentUser')
+    
+    console.log('🔍 Debug info:', {
+        'User logged in': !!currentUser,
+        'Trigger element exists': !!userMenuTrigger,
+        'Dropdown element exists': !!userDropdown,
+        'Current user data': currentUser ? JSON.parse(currentUser) : null,
+        'showOrderHistory function exists': typeof showOrderHistory === 'function',
+        'handleUserMenuAction function exists': typeof handleUserMenuAction === 'function'
+    })
+    
+    if (userDropdown) {
+        console.log('📋 Dropdown current classes:', userDropdown.className)
+        console.log('📏 Dropdown computed style:', {
+            opacity: window.getComputedStyle(userDropdown).opacity,
+            visibility: window.getComputedStyle(userDropdown).visibility,
+            display: window.getComputedStyle(userDropdown).display
+        })
+    }
+    
+    if (userMenuTrigger) {
+        console.log('🎯 Triggering click on dropdown...')
+        userMenuTrigger.click()
+    } else {
+        console.log('❌ No trigger found to click')
+    }
+}
+
+// Test order history function directly
+window.testOrderHistory = function() {
+    console.log('📦 Testing order history function directly...')
+    if (typeof showOrderHistory === 'function') {
+        showOrderHistory()
+    } else {
+        console.error('❌ showOrderHistory function not found!')
+    }
+}
+
+// Check authentication state
+window.checkAuth = function() {
+    console.log('🔐 Authentication Check:')
+    console.log('currentUser exists:', !!currentUser)
+    console.log('currentUser data:', currentUser)
+    console.log('localStorage data:', localStorage.getItem('nearNowCurrentUser'))
+    console.log('window.supabaseAuth exists:', !!window.supabaseAuth)
+    if (window.supabaseAuth) {
+        console.log('supabaseAuth.isAuthenticated():', window.supabaseAuth.isAuthenticated())
+    }
+    console.log('window.orderManager exists:', !!window.orderManager)
+}
+
+// Force re-initialize dropdown
+window.reinitDropdown = function() {
+    console.log('🔄 Forcing dropdown re-initialization...')
+    updateUserDisplay()
+}
+
+// Ensure dropdown works on page load
+document.addEventListener('DOMContentLoaded', function() {
+    console.log('📄 DOM loaded - checking user display...')
+    
+    // Small delay to ensure other scripts have loaded
+    setTimeout(() => {
+        if (window.currentUser) {
+            console.log('👤 User found on page load, updating display...')
+            updateUserDisplay()
+        } else {
+            console.log('🚫 No user found on page load')
+        }
+    }, 100)
+})
+
 // Test function for the restored dropdown
 window.testRestoredDropdown = function() {
     console.log('🧪 Testing restored dropdown functionality')
@@ -2072,19 +2150,33 @@ function initializeUserDropdown() {
     const userDropdown = document.querySelector(".user-dropdown")
     const userMenuItems = document.querySelectorAll(".user-menu-item")
 
+    console.log('🔄 initializeUserDropdown called')
+    console.log('🔍 Elements found:', { 
+        trigger: !!userMenuTrigger, 
+        dropdown: !!userDropdown, 
+        menuItems: userMenuItems.length 
+    })
+
     if (!userMenuTrigger || !userDropdown) {
-        console.log('🔍 User dropdown or trigger not found')
+        console.log('❌ User dropdown or trigger not found - exiting initialization')
         return
     }
 
-    console.log('🔄 Initializing user dropdown with trigger and', userMenuItems.length, 'menu items')
+    console.log('✅ Initializing user dropdown with trigger and', userMenuItems.length, 'menu items')
+
+    // Remove any existing event listeners to prevent duplicates
+    const newTrigger = userMenuTrigger.cloneNode(true)
+    userMenuTrigger.parentNode.replaceChild(newTrigger, userMenuTrigger)
 
     // Toggle dropdown on click
-    userMenuTrigger.addEventListener("click", (e) => {
+    newTrigger.addEventListener("click", (e) => {
+        e.preventDefault()
         e.stopPropagation()
-        console.log('🎯 User menu trigger clicked')
+        console.log('🎯 User menu trigger clicked!')
         toggleUserDropdown()
     })
+
+    console.log('🔗 Event listener attached to trigger')
 
     // Handle menu item clicks
     userMenuItems.forEach((item) => {
@@ -2132,11 +2224,19 @@ function toggleUserDropdown() {
 
 function showUserDropdown() {
     const userDropdown = document.querySelector(".user-dropdown")
-    if (!userDropdown) return
+    if (!userDropdown) {
+        console.log('❌ showUserDropdown: No dropdown element found')
+        return
+    }
 
     console.log('📱 showUserDropdown called')
+    console.log('🎨 Current dropdown classes:', userDropdown.className)
+    
     userDropdown.classList.remove("opacity-0", "invisible", "scale-95")
     userDropdown.classList.add("opacity-100", "visible", "scale-100")
+    
+    console.log('🎨 New dropdown classes:', userDropdown.className)
+    console.log('✅ Dropdown should now be visible')
 }
 
 function hideUserDropdown() {
@@ -2149,19 +2249,27 @@ function hideUserDropdown() {
 }
 
 function handleUserMenuAction(action) {
+    console.log('🎯 handleUserMenuAction called with action:', action)
+    
     switch (action) {
         case "profile":
+            console.log('👤 Profile action selected')
             showNotification("View Profile feature coming soon!", "info")
             break
         case "orders":
-            showNotification("Order History feature coming soon!", "info")
+            console.log('📦 Orders action selected - calling showOrderHistory()')
+            showOrderHistory()
             break
         case "settings":
+            console.log('⚙️ Settings action selected')
             showNotification("Settings feature coming soon!", "info")
             break
         case "logout":
+            console.log('🚪 Logout action selected')
             logoutUser() // Use the updated Supabase logout function
             break
+        default:
+            console.log('❓ Unknown action:', action)
     }
 }
 
@@ -2169,6 +2277,687 @@ function handleUserMenuAction(action) {
 function showUserMenu() {
     // This function is no longer needed as we use dropdown
     toggleUserDropdown()
+}
+
+/**
+ * Order History Functions
+ */
+
+// Show order history modal
+async function showOrderHistory() {
+    console.log('📋 Opening order history...');
+    
+    const modal = document.getElementById('orderHistoryModal');
+    const loading = document.getElementById('orderHistoryLoading');
+    const content = document.getElementById('orderHistoryContent');
+    const empty = document.getElementById('orderHistoryEmpty');
+    
+    if (!modal) {
+        console.error('Order history modal not found');
+        return;
+    }
+    
+    // Show modal with loading state
+    modal.classList.remove('hidden');
+    loading.classList.remove('hidden');
+    content.classList.add('hidden');
+    empty.classList.add('hidden');
+    
+    try {
+        // Check if user is authenticated
+        if (!currentUser) {
+            console.log('❌ No current user found');
+            showNotification('Please login to view your orders', 'error');
+            closeOrderHistory();
+            return;
+        }
+        
+        console.log('✅ User authenticated:', currentUser.name);
+        
+        // Check if order manager is available
+        if (!window.orderManager) {
+            throw new Error('Order system not available');
+        }
+        
+        console.log('📦 Fetching user orders...');
+        
+        // Get user orders
+        const orders = await window.orderManager.getUserOrders(20); // Get last 20 orders
+        
+        console.log(`✅ Found ${orders.length} orders`);
+        
+        // Hide loading
+        loading.classList.add('hidden');
+        
+        if (orders.length === 0) {
+            // Show empty state
+            empty.classList.remove('hidden');
+        } else {
+            // Show orders
+            renderOrderHistory(orders);
+            content.classList.remove('hidden');
+        }
+        
+    } catch (error) {
+        console.error('❌ Error loading orders:', error);
+        loading.classList.add('hidden');
+        showNotification('Failed to load orders. Please try again.', 'error');
+        closeOrderHistory();
+    }
+}
+
+// Close order history modal
+function closeOrderHistory() {
+    const modal = document.getElementById('orderHistoryModal');
+    if (modal) {
+        modal.classList.add('hidden');
+    }
+}
+
+// Render order history
+function renderOrderHistory(orders) {
+    const content = document.getElementById('orderHistoryContent');
+    if (!content) return;
+    
+    console.log('🎨 Rendering order history with', orders.length, 'orders');
+    
+    let html = '<div class="space-y-4">';
+    
+    orders.forEach(order => {
+        const orderDate = new Date(order.created_at).toLocaleDateString('en-IN', {
+            year: 'numeric',
+            month: 'short',
+            day: 'numeric',
+            hour: '2-digit',
+            minute: '2-digit'
+        });
+        
+        const statusColor = getOrderStatusColor(order.order_status);
+        const statusIcon = getOrderStatusIcon(order.order_status);
+        
+        html += `
+            <div class="border rounded-xl p-6 hover:shadow-lg transition-shadow bg-white">
+                <!-- Order Header -->
+                <div class="flex items-center justify-between mb-4">
+                    <div class="flex items-center">
+                        <div class="bg-primary bg-opacity-10 p-3 rounded-lg mr-4">
+                            <i class="fas fa-shopping-bag text-primary text-xl"></i>
+                        </div>
+                        <div>
+                            <h3 class="font-bold text-lg text-gray-800">Order #${order.order_number}</h3>
+                            <p class="text-gray-600 text-sm">${orderDate}</p>
+                        </div>
+                    </div>
+                    <div class="text-right">
+                        <span class="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium ${statusColor}">
+                            <i class="${statusIcon} mr-1"></i>
+                            ${order.order_status.charAt(0).toUpperCase() + order.order_status.slice(1)}
+                        </span>
+                        <p class="text-lg font-bold text-primary mt-1">₹${order.order_total}</p>
+                    </div>
+                </div>
+                
+                <!-- Order Items Preview -->
+                <div class="mb-4">
+                    <p class="text-gray-600 text-sm mb-2">${order.items.length} item(s)</p>
+                    <div class="flex flex-wrap gap-2">
+                        ${order.items.slice(0, 3).map(item => `
+                            <div class="flex items-center bg-gray-50 rounded-lg p-2 text-sm">
+                                <img src="${item.image || 'https://via.placeholder.com/30'}" 
+                                     alt="${item.name}" 
+                                     class="w-6 h-6 object-cover rounded mr-2">
+                                <span class="text-gray-700">${item.name}</span>
+                                ${item.quantity > 1 ? `<span class="text-gray-500 ml-1">x${item.quantity}</span>` : ''}
+                            </div>
+                        `).join('')}
+                        ${order.items.length > 3 ? `
+                            <div class="flex items-center text-gray-500 text-sm">
+                                +${order.items.length - 3} more items
+                            </div>
+                        ` : ''}
+                    </div>
+                </div>
+                
+                <!-- Order Actions -->
+                <div class="flex items-center justify-between pt-4 border-t">
+                    <div class="flex items-center text-sm text-gray-600">
+                        <i class="fas fa-map-marker-alt mr-1"></i>
+                        <span>${order.shipping_address.city}, ${order.shipping_address.state}</span>
+                    </div>
+                    <div class="flex gap-2">
+                        <button onclick="showOrderDetails('${order.id}')" 
+                                class="bg-primary text-white px-4 py-2 rounded-lg text-sm font-medium hover:bg-secondary transition-colors">
+                            <i class="fas fa-eye mr-1"></i>
+                            View Details
+                        </button>
+                        ${order.order_status === 'delivered' ? `
+                            <button onclick="reorderItems('${order.id}')" 
+                                    class="bg-green-500 text-white px-4 py-2 rounded-lg text-sm font-medium hover:bg-green-600 transition-colors">
+                                <i class="fas fa-redo mr-1"></i>
+                                Reorder
+                            </button>
+                        ` : ''}
+                    </div>
+                </div>
+            </div>
+        `;
+    });
+    
+    html += '</div>';
+    content.innerHTML = html;
+}
+
+// Get order status color
+function getOrderStatusColor(status) {
+    switch (status) {
+        case 'placed': return 'bg-blue-100 text-blue-800';
+        case 'confirmed': return 'bg-yellow-100 text-yellow-800';
+        case 'preparing': return 'bg-orange-100 text-orange-800';
+        case 'out_for_delivery': return 'bg-purple-100 text-purple-800';
+        case 'delivered': return 'bg-green-100 text-green-800';
+        case 'cancelled': return 'bg-red-100 text-red-800';
+        default: return 'bg-gray-100 text-gray-800';
+    }
+}
+
+// Get order status icon
+function getOrderStatusIcon(status) {
+    switch (status) {
+        case 'placed': return 'fas fa-clock';
+        case 'confirmed': return 'fas fa-check';
+        case 'preparing': return 'fas fa-utensils';
+        case 'out_for_delivery': return 'fas fa-truck';
+        case 'delivered': return 'fas fa-check-double';
+        case 'cancelled': return 'fas fa-times';
+        default: return 'fas fa-info';
+    }
+}
+
+// Show order details modal
+async function showOrderDetails(orderId) {
+    console.log('📄 Opening order details for:', orderId);
+    
+    const modal = document.getElementById('orderDetailsModal');
+    const content = document.getElementById('orderDetailsContent');
+    
+    if (!modal || !content) {
+        console.error('Order details modal not found');
+        return;
+    }
+    
+    // Show modal with loading
+    modal.classList.remove('hidden');
+    content.innerHTML = `
+        <div class="text-center py-12">
+            <div class="relative mx-auto mb-4 w-16 h-16">
+                <div class="absolute inset-0 border-4 border-blue-500 border-opacity-20 rounded-full"></div>
+                <div class="absolute inset-0 border-4 border-blue-500 border-t-transparent rounded-full animate-spin"></div>
+                <i class="fas fa-receipt text-blue-500 text-lg absolute inset-0 flex items-center justify-center"></i>
+            </div>
+            <p class="text-gray-600 font-medium">Loading order details...</p>
+        </div>
+    `;
+    
+    try {
+        // Get order details
+        const order = await window.orderManager.getOrderById(orderId);
+        
+        if (!order) {
+            throw new Error('Order not found');
+        }
+        
+        console.log('✅ Order details loaded:', order.order_number);
+        
+        // Render order details
+        renderOrderDetails(order);
+        
+    } catch (error) {
+        console.error('❌ Error loading order details:', error);
+        content.innerHTML = `
+            <div class="text-center py-12">
+                <i class="fas fa-exclamation-triangle text-4xl text-red-500 mb-4"></i>
+                <h3 class="text-lg font-semibold text-gray-800 mb-2">Failed to Load Order</h3>
+                <p class="text-gray-600 mb-4">Unable to load order details. Please try again.</p>
+                <button onclick="closeOrderDetails()" class="bg-red-500 text-white px-4 py-2 rounded-lg">
+                    Close
+                </button>
+            </div>
+        `;
+    }
+}
+
+// Close order details modal
+function closeOrderDetails() {
+    const modal = document.getElementById('orderDetailsModal');
+    if (modal) {
+        modal.classList.add('hidden');
+    }
+}
+
+// Render order details
+function renderOrderDetails(order) {
+    const content = document.getElementById('orderDetailsContent');
+    if (!content) return;
+    
+    const orderDate = new Date(order.created_at).toLocaleDateString('en-IN', {
+        year: 'numeric',
+        month: 'long',
+        day: 'numeric',
+        hour: '2-digit',
+        minute: '2-digit'
+    });
+    
+    const estimatedDelivery = order.estimated_delivery_time ? 
+        new Date(order.estimated_delivery_time).toLocaleDateString('en-IN', {
+            month: 'short',
+            day: 'numeric',
+            hour: '2-digit',
+            minute: '2-digit'
+        }) : calculateEstimatedDelivery(order.created_at, order.order_status);
+    
+    const statusColor = getOrderStatusColor(order.order_status);
+    const statusIcon = getOrderStatusIcon(order.order_status);
+    
+    let html = `
+        <!-- Order Header -->
+        <div class="bg-gradient-to-r from-gray-50 to-gray-100 rounded-xl p-6 mb-6">
+            <div class="flex items-center justify-between mb-4">
+                <div>
+                    <h2 class="text-2xl font-bold text-gray-800">Order #${order.order_number}</h2>
+                    <p class="text-gray-600">Placed on ${orderDate}</p>
+                </div>
+                <span class="inline-flex items-center px-4 py-2 rounded-full text-sm font-medium ${statusColor}">
+                    <i class="${statusIcon} mr-2"></i>
+                    ${order.order_status.charAt(0).toUpperCase() + order.order_status.slice(1)}
+                </span>
+            </div>
+            
+            <div class="grid grid-cols-2 gap-4 text-sm mb-4">
+                <div>
+                    <span class="text-gray-500">Payment Method:</span>
+                    <span class="font-medium ml-2">${order.payment_method.toUpperCase()}</span>
+                </div>
+                <div>
+                    <span class="text-gray-500">Estimated Delivery:</span>
+                    <span class="font-medium ml-2">${estimatedDelivery}</span>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Order Status Timeline -->
+        <div class="mb-6">
+            <h3 class="text-lg font-semibold text-gray-800 mb-4 flex items-center">
+                <i class="fas fa-route mr-2 text-primary"></i>
+                Order Progress
+            </h3>
+            ${renderOrderStatusTimeline(order)}
+        </div>
+        
+        <!-- Order Items -->
+        <div class="mb-6">
+            <h3 class="text-lg font-semibold text-gray-800 mb-4 flex items-center">
+                <i class="fas fa-shopping-bag mr-2 text-primary"></i>
+                Items Ordered (${order.items.length})
+            </h3>
+            <div class="space-y-3">
+    `;
+    
+    // Render each item
+    order.items.forEach(item => {
+        const itemPrice = parseFloat(item.price?.replace(/[₹,]/g, '')) || 0;
+        const itemTotal = itemPrice * (item.quantity || 1);
+        
+        html += `
+            <div class="flex items-center justify-between p-4 bg-gray-50 rounded-lg">
+                <div class="flex items-center">
+                    <img src="${item.image || 'https://via.placeholder.com/60'}" 
+                         alt="${item.name}" 
+                         class="w-12 h-12 object-cover rounded-lg mr-4">
+                    <div>
+                        <h4 class="font-medium text-gray-800">${item.name}</h4>
+                        <p class="text-sm text-gray-600">Quantity: ${item.quantity || 1}</p>
+                    </div>
+                </div>
+                <div class="text-right">
+                    <p class="font-semibold text-gray-800">₹${itemTotal.toFixed(2)}</p>
+                    <p class="text-xs text-gray-500">₹${itemPrice}/each</p>
+                </div>
+            </div>
+        `;
+    });
+    
+    html += `
+            </div>
+        </div>
+        
+        <!-- Delivery Address -->
+        <div class="mb-6">
+            <h3 class="text-lg font-semibold text-gray-800 mb-4 flex items-center">
+                <i class="fas fa-map-marker-alt mr-2 text-primary"></i>
+                Delivery Address
+            </h3>
+            <div class="bg-gray-50 rounded-lg p-4">
+                <p class="font-medium text-gray-800">${order.customer_name}</p>
+                <p class="text-gray-600">${order.shipping_address.streetAddress}</p>
+                ${order.shipping_address.aptSuite ? `<p class="text-gray-600">${order.shipping_address.aptSuite}</p>` : ''}
+                ${order.shipping_address.landmark ? `<p class="text-gray-600">Near ${order.shipping_address.landmark}</p>` : ''}
+                <p class="text-gray-600">${order.shipping_address.city}, ${order.shipping_address.state} - ${order.shipping_address.zipCode}</p>
+                <p class="text-gray-600 mt-2">
+                    <i class="fas fa-phone mr-1"></i>
+                    ${order.customer_phone}
+                </p>
+            </div>
+        </div>
+        
+        <!-- Order Summary -->
+        <div class="bg-gray-50 rounded-lg p-6">
+            <h3 class="text-lg font-semibold text-gray-800 mb-4 flex items-center">
+                <i class="fas fa-calculator mr-2 text-primary"></i>
+                Order Summary
+            </h3>
+            <div class="space-y-2">
+                <div class="flex justify-between">
+                    <span class="text-gray-600">Subtotal</span>
+                    <span class="font-medium">₹${order.subtotal}</span>
+                </div>
+                <div class="flex justify-between">
+                    <span class="text-gray-600">Delivery Fee</span>
+                    <span class="font-medium">₹${order.delivery_fee}</span>
+                </div>
+                <div class="flex justify-between">
+                    <span class="text-gray-600">Handling Charge</span>
+                    <span class="font-medium">₹${order.handling_charge}</span>
+                </div>
+                <div class="flex justify-between">
+                    <span class="text-gray-600">GST (18%)</span>
+                    <span class="font-medium">₹${order.gst_amount}</span>
+                </div>
+                <div class="border-t pt-2 mt-2">
+                    <div class="flex justify-between text-lg font-bold">
+                        <span class="text-gray-800">Total Amount</span>
+                        <span class="text-primary">₹${order.order_total}</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Action Buttons -->
+        <div class="flex gap-4 mt-6">
+            ${order.order_status === 'delivered' ? `
+                <button onclick="reorderItems('${order.id}')" 
+                        class="flex-1 bg-green-500 text-white py-3 rounded-lg font-semibold hover:bg-green-600 transition-colors">
+                    <i class="fas fa-redo mr-2"></i>
+                    Reorder Items
+                </button>
+            ` : ''}
+            <button onclick="closeOrderDetails()" 
+                    class="flex-1 bg-gray-500 text-white py-3 rounded-lg font-semibold hover:bg-gray-600 transition-colors">
+                Close
+            </button>
+        </div>
+    `;
+    
+    content.innerHTML = html;
+}
+
+// Render order status timeline
+function renderOrderStatusTimeline(order) {
+    const statusSteps = [
+        { key: 'placed', label: 'Order Placed', icon: 'fas fa-shopping-cart' },
+        { key: 'confirmed', label: 'Confirmed', icon: 'fas fa-check-circle' },
+        { key: 'preparing', label: 'Preparing', icon: 'fas fa-utensils' },
+        { key: 'out_for_delivery', label: 'Out for Delivery', icon: 'fas fa-truck' },
+        { key: 'delivered', label: 'Delivered', icon: 'fas fa-check-double' }
+    ];
+    
+    const currentStatusIndex = statusSteps.findIndex(step => step.key === order.order_status);
+    const isDelivered = order.order_status === 'delivered';
+    const isCancelled = order.order_status === 'cancelled';
+    
+    let html = '<div class="relative">';
+    
+    // Progress line
+    html += '<div class="absolute left-6 top-12 bottom-0 w-0.5 bg-gray-200"></div>';
+    if (currentStatusIndex >= 0) {
+        const progressHeight = ((currentStatusIndex + 1) / statusSteps.length) * 100;
+        html += `<div class="absolute left-6 top-12 w-0.5 bg-primary transition-all duration-1000" style="height: ${progressHeight}%"></div>`;
+    }
+    
+    // Status steps
+    statusSteps.forEach((step, index) => {
+        const isCompleted = index <= currentStatusIndex && !isCancelled;
+        const isCurrent = index === currentStatusIndex && !isCancelled;
+        const stepTime = getStatusTimestamp(order, step.key);
+        
+        let stepClass = 'bg-gray-200 text-gray-400';
+        let iconClass = 'text-gray-400';
+        
+        if (isCompleted) {
+            stepClass = 'bg-primary text-white shadow-lg';
+            iconClass = 'text-white';
+        } else if (isCurrent) {
+            stepClass = 'bg-primary text-white shadow-lg animate-pulse';
+            iconClass = 'text-white';
+        }
+        
+        html += `
+            <div class="relative flex items-center mb-8">
+                <div class="flex-shrink-0 w-12 h-12 rounded-full ${stepClass} flex items-center justify-center relative z-10 transition-all duration-300">
+                    <i class="${step.icon} ${iconClass}"></i>
+                </div>
+                <div class="ml-4 flex-1">
+                    <h4 class="font-semibold text-gray-800">${step.label}</h4>
+                    ${stepTime ? `<p class="text-sm text-gray-500">${stepTime}</p>` : ''}
+                    ${isCurrent && !isDelivered ? '<p class="text-xs text-primary font-medium">In Progress</p>' : ''}
+                </div>
+                ${isCompleted ? '<div class="ml-auto"><i class="fas fa-check text-primary"></i></div>' : ''}
+            </div>
+        `;
+    });
+    
+    // Handle cancelled orders
+    if (isCancelled) {
+        html += `
+            <div class="relative flex items-center mb-4">
+                <div class="flex-shrink-0 w-12 h-12 rounded-full bg-red-500 text-white flex items-center justify-center relative z-10">
+                    <i class="fas fa-times"></i>
+                </div>
+                <div class="ml-4 flex-1">
+                    <h4 class="font-semibold text-red-600">Order Cancelled</h4>
+                    <p class="text-sm text-gray-500">${getStatusTimestamp(order, 'cancelled') || 'Recently cancelled'}</p>
+                </div>
+            </div>
+        `;
+    }
+    
+    html += '</div>';
+    return html;
+}
+
+// Get timestamp for specific status
+function getStatusTimestamp(order, status) {
+    if (status === 'placed') {
+        return new Date(order.created_at).toLocaleDateString('en-IN', {
+            month: 'short',
+            day: 'numeric',
+            hour: '2-digit',
+            minute: '2-digit'
+        });
+    }
+    
+    // For other statuses, we'll check if status history is available
+    if (order.status_history && Array.isArray(order.status_history)) {
+        const statusEntry = order.status_history.find(entry => entry.status === status);
+        if (statusEntry) {
+            return new Date(statusEntry.created_at).toLocaleDateString('en-IN', {
+                month: 'short',
+                day: 'numeric',
+                hour: '2-digit',
+                minute: '2-digit'
+            });
+        }
+    }
+    
+    return null;
+}
+
+/**
+ * Order Status Management Functions
+ */
+
+// Update order status (admin function)
+window.updateOrderStatus = async function(orderId, newStatus, notes = '') {
+    console.log(`📋 Updating order ${orderId} to status: ${newStatus}`);
+    
+    try {
+        if (!window.orderManager) {
+            throw new Error('Order manager not available');
+        }
+        
+        // Valid statuses
+        const validStatuses = ['placed', 'confirmed', 'preparing', 'out_for_delivery', 'delivered', 'cancelled'];
+        if (!validStatuses.includes(newStatus)) {
+            throw new Error(`Invalid status: ${newStatus}. Valid statuses: ${validStatuses.join(', ')}`);
+        }
+        
+        // Update order status
+        const result = await window.orderManager.updateOrderStatus(orderId, newStatus);
+        
+        // Create status history entry
+        await window.orderManager.createOrderStatusHistory(orderId, newStatus, notes);
+        
+        console.log('✅ Order status updated successfully');
+        
+        // Show notification
+        showNotification(`Order status updated to ${newStatus}`, 'success');
+        
+        return result;
+        
+    } catch (error) {
+        console.error('❌ Error updating order status:', error);
+        showNotification('Failed to update order status', 'error');
+        throw error;
+    }
+}
+
+// Calculate estimated delivery time based on status
+function calculateEstimatedDelivery(orderDate, currentStatus) {
+    const created = new Date(orderDate);
+    const now = new Date();
+    
+    // Base delivery times in hours
+    const deliveryTimes = {
+        'placed': 48,      // 2 days
+        'confirmed': 36,   // 1.5 days  
+        'preparing': 24,   // 1 day
+        'out_for_delivery': 4, // 4 hours
+        'delivered': 0     // Already delivered
+    };
+    
+    if (currentStatus === 'delivered') {
+        return 'Delivered';
+    }
+    
+    if (currentStatus === 'cancelled') {
+        return 'Cancelled';
+    }
+    
+    const hoursToAdd = deliveryTimes[currentStatus] || 48;
+    const estimatedTime = new Date(now.getTime() + (hoursToAdd * 60 * 60 * 1000));
+    
+    return estimatedTime.toLocaleDateString('en-IN', {
+        month: 'short',
+        day: 'numeric',
+        hour: '2-digit',
+        minute: '2-digit'
+    });
+}
+
+// Quick status update functions for testing
+window.markOrderConfirmed = (orderId) => updateOrderStatus(orderId, 'confirmed', 'Order confirmed by admin');
+window.markOrderPreparing = (orderId) => updateOrderStatus(orderId, 'preparing', 'Order is being prepared');
+window.markOrderOutForDelivery = (orderId) => updateOrderStatus(orderId, 'out_for_delivery', 'Order is out for delivery');
+window.markOrderDelivered = (orderId) => updateOrderStatus(orderId, 'delivered', 'Order delivered successfully');
+window.markOrderCancelled = (orderId) => updateOrderStatus(orderId, 'cancelled', 'Order cancelled');
+
+// Get order status history
+window.getOrderStatusHistory = async function(orderId) {
+    console.log(`📋 Getting status history for order: ${orderId}`);
+    
+    try {
+        if (!window.orderManager) {
+            throw new Error('Order manager not available');
+        }
+        
+        const history = await window.orderManager.getOrderStatusHistory(orderId);
+        console.log('📊 Order status history:', history);
+        return history;
+        
+    } catch (error) {
+        console.error('❌ Error getting order status history:', error);
+        throw error;
+    }
+}
+
+// Reorder items from previous order
+async function reorderItems(orderId) {
+    console.log('🔄 Reordering items from order:', orderId);
+    
+    try {
+        // Get order details
+        const order = await window.orderManager.getOrderById(orderId);
+        
+        if (!order || !order.items) {
+            throw new Error('Order items not found');
+        }
+        
+        console.log('📦 Adding', order.items.length, 'items to cart');
+        
+        // Add each item to cart
+        let addedCount = 0;
+        order.items.forEach(item => {
+            try {
+                // Find the product in current products list
+                const product = allProducts.find(p => p.id === item.id);
+                
+                if (product) {
+                    // Add to cart using existing function
+                    for (let i = 0; i < (item.quantity || 1); i++) {
+                        addToCart(item.id);
+                    }
+                    addedCount++;
+                }
+            } catch (error) {
+                console.warn('Could not add item to cart:', item.name, error);
+            }
+        });
+        
+        // Close modals
+        closeOrderDetails();
+        closeOrderHistory();
+        
+        // Show success message
+        if (addedCount > 0) {
+            showNotification(`Added ${addedCount} items to cart from your previous order!`, 'success');
+            
+            // Open cart sidebar to show added items
+            setTimeout(() => {
+                const cartSidebar = document.getElementById('cartSidebar');
+                const modalOverlay = document.getElementById('modalOverlay');
+                if (cartSidebar && modalOverlay) {
+                    cartSidebar.classList.add('translate-x-0');
+                    cartSidebar.classList.remove('translate-x-full');
+                    modalOverlay.classList.remove('hidden');
+                }
+            }, 500);
+        } else {
+            showNotification('Some items from your previous order are no longer available', 'warning');
+        }
+        
+    } catch (error) {
+        console.error('❌ Error reordering items:', error);
+        showNotification('Failed to reorder items. Please try again.', 'error');
+    }
 }
 
 // Logout Functionality

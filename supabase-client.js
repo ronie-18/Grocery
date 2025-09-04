@@ -1200,3 +1200,271 @@ document.addEventListener('DOMContentLoaded', async function() {
 })
 
 console.log('🔐 Supabase authentication module loaded')
+
+/**
+ * Order Management Functions
+ * Handle order creation, retrieval, and status updates
+ */
+
+// Create a new order
+async function createOrder(orderData) {
+    try {
+        if (!supabaseClient) {
+            throw new Error('Supabase client not initialized')
+        }
+
+        // Get current user
+        const { data: { session }, error: sessionError } = await supabaseClient.auth.getSession()
+        
+        if (sessionError) {
+            throw new Error('Session error: ' + sessionError.message)
+        }
+
+        if (!session || !session.user) {
+            throw new Error('User must be authenticated to create orders')
+        }
+
+        console.log('📝 Creating new order for user:', session.user.id)
+
+        // Calculate totals
+        const subtotal = orderData.totals.subtotal || 0
+        const deliveryFee = orderData.totals.deliveryFee || 50
+        const handlingCharge = orderData.totals.handlingCharge || 20
+        const gstAmount = orderData.totals.gst || 0
+        const totalAmount = orderData.totals.total || 0
+
+        // Prepare order data for database
+        const dbOrderData = {
+            user_id: session.user.id,
+            customer_name: `${orderData.firstName} ${orderData.lastName}`,
+            customer_email: orderData.email,
+            customer_phone: orderData.phone,
+            
+            // Store delivery address as JSON
+            shipping_address: {
+                streetAddress: orderData.streetAddress,
+                aptSuite: orderData.aptSuite || '',
+                landmark: orderData.landmark || '',
+                city: orderData.city,
+                state: orderData.state,
+                zipCode: orderData.zipCode
+            },
+            
+            // Store billing address if different
+            billing_address: orderData.useAsBilling ? null : {
+                streetAddress: orderData.streetAddress,
+                aptSuite: orderData.aptSuite || '',
+                landmark: orderData.landmark || '',
+                city: orderData.city,
+                state: orderData.state,
+                zipCode: orderData.zipCode
+            },
+            
+            // Store cart items as JSON
+            items: orderData.items,
+            
+            // Financial details
+            subtotal: subtotal,
+            delivery_fee: deliveryFee,
+            handling_charge: handlingCharge,
+            gst_amount: gstAmount,
+            order_total: totalAmount,
+            
+            // Order details
+            order_status: 'placed',
+            payment_method: orderData.paymentMethod || 'cod',
+            payment_status: 'pending',
+            order_notes: orderData.specialInstructions || '',
+            is_gift: orderData.isGift || false,
+            source: orderData.source || 'Near & Now Checkout',
+            
+            // Estimated delivery (30-60 minutes from now)
+            estimated_delivery_time: new Date(Date.now() + 45 * 60 * 1000).toISOString()
+        }
+
+        // Insert order into database
+        const { data, error } = await supabaseClient
+            .from('orders')
+            .insert(dbOrderData)
+            .select()
+            .single()
+
+        if (error) {
+            console.error('❌ Error creating order:', error)
+            throw new Error(`Order creation failed: ${error.message}`)
+        }
+
+        console.log('✅ Order created successfully:', data.order_number)
+
+        // Create initial status history entry
+        await createOrderStatusHistory(data.id, 'placed', 'Order placed successfully')
+
+        return {
+            success: true,
+            order: data,
+            orderNumber: data.order_number
+        }
+    } catch (error) {
+        console.error('❌ Error in createOrder:', error)
+        throw error
+    }
+}
+
+// Get orders for current user
+async function getUserOrders(limit = 10) {
+    try {
+        if (!supabaseClient) {
+            throw new Error('Supabase client not initialized')
+        }
+
+        const { data: { session }, error: sessionError } = await supabaseClient.auth.getSession()
+        
+        if (sessionError || !session?.user) {
+            console.warn('User not authenticated, returning empty orders')
+            return []
+        }
+
+        const { data, error } = await supabaseClient
+            .from('orders')
+            .select('*')
+            .eq('user_id', session.user.id)
+            .order('created_at', { ascending: false })
+            .limit(limit)
+
+        if (error) {
+            console.error('❌ Error fetching orders:', error)
+            throw error
+        }
+
+        console.log(`✅ Fetched ${data?.length || 0} orders for user`)
+        return data || []
+    } catch (error) {
+        console.error('❌ Error in getUserOrders:', error)
+        return []
+    }
+}
+
+// Get single order by ID
+async function getOrderById(orderId) {
+    try {
+        if (!supabaseClient) {
+            throw new Error('Supabase client not initialized')
+        }
+
+        const { data, error } = await supabaseClient
+            .from('orders')
+            .select('*')
+            .eq('id', orderId)
+            .single()
+
+        if (error) {
+            console.error('❌ Error fetching order:', error)
+            throw error
+        }
+
+        return data
+    } catch (error) {
+        console.error('❌ Error in getOrderById:', error)
+        return null
+    }
+}
+
+// Update order status
+async function updateOrderStatus(orderId, newStatus, notes = '') {
+    try {
+        if (!supabaseClient) {
+            throw new Error('Supabase client not initialized')
+        }
+
+        // Update order status
+        const { data, error } = await supabaseClient
+            .from('orders')
+            .update({ 
+                order_status: newStatus,
+                ...(newStatus === 'delivered' && { delivered_at: new Date().toISOString() })
+            })
+            .eq('id', orderId)
+            .select()
+            .single()
+
+        if (error) {
+            console.error('❌ Error updating order status:', error)
+            throw error
+        }
+
+        // Create status history entry
+        await createOrderStatusHistory(orderId, newStatus, notes)
+
+        console.log(`✅ Order ${orderId} status updated to: ${newStatus}`)
+        return data
+    } catch (error) {
+        console.error('❌ Error in updateOrderStatus:', error)
+        throw error
+    }
+}
+
+// Create order status history entry
+async function createOrderStatusHistory(orderId, status, notes = '') {
+    try {
+        if (!supabaseClient) {
+            return false
+        }
+
+        const { data: { session } } = await supabaseClient.auth.getSession()
+
+        const { error } = await supabaseClient
+            .from('order_status_history')
+            .insert({
+                order_id: orderId,
+                status: status,
+                notes: notes,
+                updated_by: session?.user?.id || null
+            })
+
+        if (error) {
+            console.error('❌ Error creating status history:', error)
+            return false
+        }
+
+        return true
+    } catch (error) {
+        console.error('❌ Error in createOrderStatusHistory:', error)
+        return false
+    }
+}
+
+// Get order status history
+async function getOrderStatusHistory(orderId) {
+    try {
+        if (!supabaseClient) {
+            return []
+        }
+
+        const { data, error } = await supabaseClient
+            .from('order_status_history')
+            .select('*')
+            .eq('order_id', orderId)
+            .order('created_at', { ascending: true })
+
+        if (error) {
+            console.error('❌ Error fetching order status history:', error)
+            return []
+        }
+
+        return data || []
+    } catch (error) {
+        console.error('❌ Error in getOrderStatusHistory:', error)
+        return []
+    }
+}
+
+// Export order functions globally
+window.orderManager = {
+    createOrder,
+    getUserOrders,
+    getOrderById,
+    updateOrderStatus,
+    getOrderStatusHistory
+}
+
+console.log('📦 Order management functions loaded')

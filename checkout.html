@@ -649,7 +649,361 @@
 
     </div>
 
+    <!-- Supabase -->
+    <script src="https://unpkg.com/@supabase/supabase-js@2"></script>
+    
+    <!-- Load Supabase client and order management -->
+    <script src="supabase-client.js"></script>
+    
+    <!-- Load checkout functionality -->
     <script src="checkout.js"></script>
+    
+    <!-- Direct cart loader -->
+    <script>
+        // Direct cart loading without complex initialization
+        document.addEventListener('DOMContentLoaded', function() {
+            console.log('🛒 Direct cart loader starting...');
+            
+            // Wait a moment for scripts to load, then render cart
+            setTimeout(function() {
+                console.log('Checking cart data...');
+                
+                const stored = localStorage.getItem('nearNowCartItems');
+                console.log('Cart data found:', !!stored);
+                
+                if (stored) {
+                    try {
+                        const items = JSON.parse(stored);
+                        console.log('Cart items:', items);
+                        
+                        if (items && items.length > 0) {
+                            // Directly render cart items without waiting for complex initialization
+                            renderCartDirectly(items);
+                        } else {
+                            showEmptyCart();
+                        }
+                    } catch (e) {
+                        console.error('Error parsing cart:', e);
+                        showEmptyCart();
+                    }
+                } else {
+                    showEmptyCart();
+                }
+            }, 500);
+        });
+        
+        // Simple direct cart renderer
+        function renderCartDirectly(cartItems) {
+            console.log('📦 Rendering cart directly with', cartItems.length, 'items');
+            
+            const orderSummary = document.getElementById('orderSummary');
+            const orderTotal = document.getElementById('orderTotal');
+            const orderBreakdown = document.getElementById('orderBreakdown');
+            
+            if (!orderSummary) {
+                console.error('orderSummary element not found');
+                return;
+            }
+            
+            // Calculate totals
+            let subtotal = 0;
+            cartItems.forEach(item => {
+                const price = parseFloat(item.price.replace(/[₹,]/g, '')) || 0;
+                const quantity = parseInt(item.quantity) || 1;
+                subtotal += price * quantity;
+            });
+            
+            const deliveryFee = 50;
+            const handlingCharge = 20;
+            const gstAmount = subtotal * 0.18;
+            const total = subtotal + deliveryFee + handlingCharge + gstAmount;
+            
+            // Render cart items
+            let cartHTML = '<div class="space-y-3">';
+            cartItems.forEach(item => {
+                const price = parseFloat(item.price.replace(/[₹,]/g, '')) || 0;
+                const quantity = parseInt(item.quantity) || 1;
+                const itemTotal = price * quantity;
+                
+                cartHTML += `
+                    <div class="flex items-center gap-3 p-3 bg-gray-50 rounded-xl">
+                        <img src="${item.image || 'https://via.placeholder.com/60'}" 
+                             alt="${item.name}" 
+                             class="w-12 h-12 object-cover rounded-lg">
+                        <div class="flex-1 min-w-0">
+                            <h4 class="font-medium text-gray-800 text-sm truncate">${item.name}</h4>
+                            <p class="text-xs text-gray-600">Qty: ${quantity}</p>
+                        </div>
+                        <div class="text-right">
+                            <p class="font-semibold text-primary">₹${itemTotal}</p>
+                        </div>
+                    </div>
+                `;
+            });
+            cartHTML += '</div>';
+            
+            orderSummary.innerHTML = cartHTML;
+            
+            // Render price breakdown
+            if (orderBreakdown) {
+                orderBreakdown.innerHTML = `
+                    <div class="flex justify-between">
+                        <span>Subtotal (${cartItems.length} items)</span>
+                        <span>₹${subtotal.toFixed(2)}</span>
+                    </div>
+                    <div class="flex justify-between">
+                        <span>Delivery Fee</span>
+                        <span>₹${deliveryFee}</span>
+                    </div>
+                    <div class="flex justify-between">
+                        <span>Handling Charge</span>
+                        <span>₹${handlingCharge}</span>
+                    </div>
+                    <div class="flex justify-between">
+                        <span>GST (18%)</span>
+                        <span>₹${gstAmount.toFixed(2)}</span>
+                    </div>
+                `;
+            }
+            
+            // Update total
+            if (orderTotal) {
+                orderTotal.textContent = `₹${total.toFixed(2)}`;
+            }
+            
+            console.log('✅ Cart rendered successfully');
+        }
+        
+        function showEmptyCart() {
+            console.log('📭 Showing empty cart message');
+            
+            const orderSummary = document.getElementById('orderSummary');
+            const orderTotal = document.getElementById('orderTotal');
+            
+            if (orderSummary) {
+                orderSummary.innerHTML = `
+                    <div class="text-center py-8">
+                        <i class="fas fa-shopping-cart text-4xl text-gray-300 mb-3"></i>
+                        <p class="text-gray-500">Your cart is empty</p>
+                        <a href="index.html" class="text-primary text-sm hover:underline">Continue shopping</a>
+                    </div>
+                `;
+            }
+            
+            if (orderTotal) {
+                orderTotal.textContent = '₹0';
+            }
+        }
+        
+        // Multiple event handlers to ensure button works
+        document.addEventListener('DOMContentLoaded', function() {
+            console.log('🔗 Setting up comprehensive form submission handlers...');
+            
+            const form = document.getElementById('addressForm');
+            const submitButton = document.getElementById('submitButton');
+            
+            console.log('🔍 Elements check:', {
+                form: !!form,
+                submitButton: !!submitButton,
+                formId: form?.id,
+                buttonId: submitButton?.id,
+                buttonType: submitButton?.type
+            });
+            
+            if (form && submitButton) {
+                console.log('✅ Form and button found, attaching multiple event listeners');
+                
+                // Method 1: Form submit event
+                form.addEventListener('submit', function(e) {
+                    e.preventDefault();
+                    console.log('🚀 Form submit event triggered!');
+                    handleOrderSubmission();
+                });
+                
+                // Method 2: Button click event  
+                submitButton.addEventListener('click', function(e) {
+                    e.preventDefault();
+                    console.log('🚀 Button click event triggered!');
+                    handleOrderSubmission();
+                });
+                
+                // Method 3: Fallback - check for any click on button area
+                submitButton.addEventListener('mousedown', function(e) {
+                    console.log('🖱️ Button mousedown detected');
+                });
+                
+                console.log('✅ All event listeners attached successfully');
+                
+            } else {
+                console.error('❌ Critical elements missing:');
+                console.log('- Form element:', form);
+                console.log('- Submit button:', submitButton);
+                
+                // Try to find elements by alternative methods
+                const altForm = document.querySelector('form');
+                const altButton = document.querySelector('button[type="submit"]');
+                console.log('- Alternative form found:', !!altForm);
+                console.log('- Alternative button found:', !!altButton);
+            }
+        });
+        
+        // Centralized order submission handler
+        function handleOrderSubmission() {
+            console.log('📋 Starting order submission process...');
+            
+            try {
+                // Collect form data - using actual field IDs from the form
+                const fullName = document.getElementById('fullName')?.value || '';
+                const nameParts = fullName.trim().split(' ');
+                const firstName = nameParts[0] || '';
+                const lastName = nameParts.slice(1).join(' ') || nameParts[0] || '';
+                
+                const orderData = {
+                    firstName: firstName,
+                    lastName: lastName,
+                    email: document.getElementById('orderEmail')?.value || '',
+                    phone: document.getElementById('orderPhone')?.value || '',
+                    streetAddress: document.getElementById('streetAddress')?.value || '',
+                    aptSuite: document.getElementById('aptSuite')?.value || '',
+                    landmark: document.getElementById('landmark')?.value || '',
+                    city: document.getElementById('city')?.value || '',
+                    state: document.getElementById('state')?.value || '',
+                    zipCode: document.getElementById('zipCode')?.value || '',
+                    paymentMethod: document.querySelector('input[name="paymentMethod"]:checked')?.value || 'cod',
+                    useAsBilling: document.getElementById('useAsBilling')?.checked || false,
+                    isGift: document.getElementById('giftOrder')?.checked || false,
+                    items: JSON.parse(localStorage.getItem('nearNowCartItems') || '[]'),
+                    totals: calculateSimpleTotals()
+                };
+                
+                console.log('📝 Order data collected:', orderData);
+                
+                // Basic validation
+                if (!fullName.trim()) {
+                    throw new Error('Please fill in your full name');
+                }
+                
+                if (!orderData.streetAddress || !orderData.city) {
+                    throw new Error('Please fill in your address');
+                }
+                
+                if (!orderData.items || orderData.items.length === 0) {
+                    throw new Error('Your cart is empty');
+                }
+                
+                console.log('✅ Validation passed, processing order...');
+                
+                // Process the order
+                processOrderDirect(orderData);
+                
+            } catch (error) {
+                console.error('❌ Error in handleOrderSubmission:', error);
+                alert('Error: ' + error.message);
+            }
+        }
+        
+        // Simple totals calculation
+        function calculateSimpleTotals() {
+            const cartItems = JSON.parse(localStorage.getItem('nearNowCartItems') || '[]');
+            let subtotal = 0;
+            
+            cartItems.forEach(item => {
+                const price = parseFloat(item.price.replace(/[₹,]/g, '')) || 0;
+                const quantity = parseInt(item.quantity) || 1;
+                subtotal += price * quantity;
+            });
+            
+            const deliveryFee = 50;
+            const handlingCharge = 20;
+            const gst = subtotal * 0.18;
+            const total = subtotal + deliveryFee + handlingCharge + gst;
+            
+            return {
+                subtotal,
+                deliveryFee,
+                handlingCharge,
+                gst,
+                total
+            };
+        }
+        
+        // Direct order processing
+        async function processOrderDirect(orderData) {
+            try {
+                console.log('🔄 Processing order directly...');
+                
+                // Show loading
+                const submitButton = document.getElementById('submitButton');
+                const submitText = document.getElementById('submitButtonText');
+                const submitSpinner = document.getElementById('submitSpinner');
+                
+                if (submitText) submitText.textContent = 'Processing...';
+                if (submitSpinner) submitSpinner.classList.remove('hidden');
+                if (submitButton) submitButton.disabled = true;
+                
+                // Detailed debugging
+                console.log('🔍 Debugging authentication and order system:');
+                console.log('- window.supabaseAuth exists:', !!window.supabaseAuth);
+                console.log('- window.supabaseAuth.isAuthenticated():', window.supabaseAuth?.isAuthenticated());
+                console.log('- window.orderManager exists:', !!window.orderManager);
+                console.log('- window.supabaseClient exists:', !!window.supabaseClient);
+                
+                // Check authentication with session verification
+                if (!window.supabaseAuth) {
+                    throw new Error('Supabase authentication not loaded. Please refresh the page.');
+                }
+                
+                // Try to get session directly from Supabase
+                const { data: { session }, error } = await window.supabaseClient.auth.getSession();
+                console.log('Direct session check:', session ? 'Session found' : 'No session');
+                console.log('Session user:', session?.user?.id);
+                
+                if (!session || !session.user) {
+                    throw new Error('Please login to place an order. Go to the main page and login first.');
+                }
+                
+                console.log('✅ User authenticated:', session.user.id);
+                
+                // Check if order manager is available
+                if (!window.orderManager) {
+                    throw new Error('Order system not ready. Please refresh and try again.');
+                }
+                
+                console.log('✅ All checks passed, creating order...');
+                
+                // Create order
+                const result = await window.orderManager.createOrder(orderData);
+                
+                if (result.success) {
+                    console.log('🎉 Order created successfully:', result.orderNumber);
+                    
+                    // Show success message
+                    alert(`🎉 Order placed successfully!\nOrder Number: ${result.orderNumber}\n\nYour groceries will be delivered within 30-60 minutes.`);
+                    
+                    // Clear cart and redirect
+                    localStorage.removeItem('nearNowCartItems');
+                    setTimeout(() => {
+                        window.location.href = 'index.html';
+                    }, 2000);
+                } else {
+                    throw new Error('Failed to create order');
+                }
+                
+            } catch (error) {
+                console.error('❌ Order processing failed:', error);
+                alert(`Order failed: ${error.message}\nPlease try again.`);
+                
+                // Reset button
+                const submitText = document.getElementById('submitButtonText');
+                const submitSpinner = document.getElementById('submitSpinner');
+                const submitButton = document.getElementById('submitButton');
+                
+                if (submitText) submitText.textContent = 'Place Order Now';
+                if (submitSpinner) submitSpinner.classList.add('hidden');
+                if (submitButton) submitButton.disabled = false;
+            }
+        }
+    </script>
     <script>
 
         tailwind.config = {

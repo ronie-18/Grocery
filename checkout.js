@@ -228,12 +228,17 @@ const showWarning = (msg) => showStatus(msg, 'warning');
 // Cart management
 const getCartItems = () => {
     try {
+        console.log('🛒 Getting cart items...');
+        
         const keys = ['nearNowCartItems', 'cartItems'];
         for (const key of keys) {
             const stored = localStorage.getItem(key);
+            console.log(`- Checking ${key}:`, stored ? 'found' : 'not found');
             if (stored) {
                 const parsed = JSON.parse(stored);
+                console.log(`- Parsed ${key}:`, parsed);
                 if (Array.isArray(parsed) && parsed.length > 0) {
+                    console.log(`✅ Found ${parsed.length} items in ${key}`);
                     return parsed;
                 }
             }
@@ -241,13 +246,17 @@ const getCartItems = () => {
 
         // Check sessionStorage as fallback
         const sessionCart = sessionStorage.getItem('cartItems');
+        console.log('- Checking sessionStorage cartItems:', sessionCart ? 'found' : 'not found');
         if (sessionCart) {
             const parsed = JSON.parse(sessionCart);
+            console.log('- Parsed sessionStorage:', parsed);
             if (Array.isArray(parsed) && parsed.length > 0) {
+                console.log(`✅ Found ${parsed.length} items in sessionStorage`);
                 return parsed;
             }
         }
 
+        console.log('❌ No cart items found');
         return [];
     } catch (error) {
         console.error('Error getting cart items:', error);
@@ -599,10 +608,37 @@ const setSubmitLoading = (message = 'Processing...') => {
 
 const processOrder = async (orderData) => {
     try {
+        console.log('🚀 Starting order process...');
         setSubmitLoading('Processing your order...');
 
-        // Simulate API call
-        await new Promise(resolve => setTimeout(resolve, 2000));
+        // Debug: Check what's available
+        console.log('🔍 Debug info:');
+        console.log('- supabaseAuth available:', !!window.supabaseAuth);
+        console.log('- supabaseAuth.isAuthenticated:', window.supabaseAuth?.isAuthenticated());
+        console.log('- orderManager available:', !!window.orderManager);
+        console.log('- orderData:', orderData);
+
+        // Check if user is authenticated
+        if (!window.supabaseAuth?.isAuthenticated()) {
+            throw new Error('Please login to place an order');
+        }
+
+        // Check if order management functions are available
+        if (!window.orderManager) {
+            throw new Error('Order system not initialized. Please refresh and try again.');
+        }
+
+        console.log('📝 Processing order with data:', orderData);
+
+        // Save order to database
+        setSubmitLoading('Saving your order...');
+        const orderResult = await window.orderManager.createOrder(orderData);
+
+        if (!orderResult.success) {
+            throw new Error('Failed to save order');
+        }
+
+        console.log('✅ Order saved successfully:', orderResult.orderNumber);
 
         const paymentMethod = orderData.paymentMethod;
 
@@ -610,7 +646,7 @@ const processOrder = async (orderData) => {
             case 'razorpay':
                 showStatus('Redirecting to secure payment gateway...', 'info');
                 setSubmitLoading('Redirecting to payment...');
-                // Integrate with actual payment gateway here
+                // TODO: Integrate with actual payment gateway here
                 setTimeout(() => {
                     showSuccess('Payment gateway integration will be implemented here');
                     resetSubmitButton();
@@ -627,7 +663,7 @@ const processOrder = async (orderData) => {
                 break;
 
             default: // Cash on Delivery
-                showSuccess('🎉 Order placed successfully! Your fresh groceries will be delivered within 30-60 minutes.');
+                showSuccess(`🎉 Order placed successfully! Order Number: ${orderResult.orderNumber}. Your fresh groceries will be delivered within 30-60 minutes.`);
 
                 // Update progress bar to show completion
                 const progressCircles = document.querySelectorAll('.progress-circle');
@@ -657,18 +693,30 @@ const processOrder = async (orderData) => {
                     progressCircles[2].innerHTML = '<i class="fas fa-check-double"></i>';
                 }
 
+                // Store order info for potential redirect
+                localStorage.setItem('lastOrderNumber', orderResult.orderNumber);
+                localStorage.setItem('lastOrderId', orderResult.order.id);
+
                 // Clear form data and cart
                 localStorage.removeItem(CONFIG.FORM_AUTO_SAVE_KEY);
                 setTimeout(() => {
                     clearCart();
-                    // Could redirect to order confirmation page
-                    // window.location.href = 'order-confirmation.html';
+                    // TODO: Could redirect to order confirmation page
+                    // window.location.href = `order-confirmation.html?order=${orderResult.orderNumber}`;
                 }, 3000);
                 break;
         }
     } catch (error) {
         console.error('Order processing error:', error);
-        showError('An error occurred while processing your order. Please try again.');
+        
+        // Show specific error messages
+        if (error.message.includes('authenticated')) {
+            showError('Please login to place an order.');
+        } else if (error.message.includes('Order system not initialized')) {
+            showError('Order system not ready. Please refresh the page and try again.');
+        } else {
+            showError(`Order failed: ${error.message}. Please try again.`);
+        }
     } finally {
         if (orderData.paymentMethod === 'cod') {
             setTimeout(() => {
@@ -851,9 +899,22 @@ const updateCart = (items) => {
     }
 };
 
-// Enhanced initialization
-const initializeCheckout = () => {
-    console.log('Initializing Near & Now checkout...');
+// Enhanced initialization with retry logic
+const initializeCheckout = (attempt = 1) => {
+    console.log(`🔄 Initializing Near & Now checkout... (attempt ${attempt})`);
+    
+    // Debug: Check if required scripts are loaded
+    console.log('🔍 Script loading status:');
+    console.log('- Supabase client available:', !!window.supabaseClient);
+    console.log('- Supabase auth available:', !!window.supabaseAuth);
+    console.log('- Order manager available:', !!window.orderManager);
+
+    // If Supabase isn't ready yet and we haven't tried too many times, wait and retry
+    if ((!window.supabaseClient || !window.orderManager) && attempt < 20) {
+        console.log(`⏳ Supabase not ready, retrying in 500ms... (attempt ${attempt}/20)`);
+        setTimeout(() => initializeCheckout(attempt + 1), 500);
+        return;
+    }
 
     // Load saved form data
     loadFormData();
