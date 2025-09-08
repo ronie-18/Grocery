@@ -15,22 +15,25 @@ const CONFIG = {
 // Function to load secure configuration
 async function loadSecureConfig() {
     try {
-        // In development, try to load from a secure endpoint or local config
-        // In production, this should load from your backend API
-        const response = await fetch('/api/config')
-        if (response.ok) {
-            const secureConfig = await response.json()
-            CONFIG.GOOGLE_MAPS_API_KEY = secureConfig.GOOGLE_MAPS_API_KEY
+        // Check if we're in production (live website)
+        const isProduction = window.location.hostname !== 'localhost' && 
+                           window.location.hostname !== '127.0.0.1' &&
+                           !window.location.hostname.includes('localhost')
+        
+        if (isProduction) {
+            // For production, use the API key directly
+            // TODO: Replace with your actual production API key
+            CONFIG.GOOGLE_MAPS_API_KEY = 'AIzaSyCIyizHk4GySPlZBNvcGEXVydsENNC4NjQ'
+            console.log('✅ Production API key loaded')
         } else {
-            // Fallback for development - load from local secure file
-            // This is temporary and should be replaced with proper backend integration
-            console.warn('Loading API key from fallback method - not recommended for production')
+            // For development, try to load from local config
+            console.log('🔧 Development mode - loading from local config')
             CONFIG.GOOGLE_MAPS_API_KEY = await loadFromSecureSource()
         }
     } catch (error) {
         console.error('Failed to load secure configuration:', error)
-        // Use a placeholder that will fail gracefully
-        CONFIG.GOOGLE_MAPS_API_KEY = 'SECURE_CONFIG_FAILED_TO_LOAD'
+        // Fallback API key for development
+        CONFIG.GOOGLE_MAPS_API_KEY = 'AIzaSyCIyizHk4GySPlZBNvcGEXVydsENNC4NjQ'
     }
 }
 

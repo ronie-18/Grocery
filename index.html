@@ -655,7 +655,22 @@
         window.gm_authFailure = function () {
             console.error('❌ Google Maps API authentication failed');
             console.error('Please check your API key configuration');
+            
+            // Show user-friendly error
+            if (typeof showLocationError === 'function') {
+                showLocationError('Google Maps authentication failed. Please contact support.');
+            }
         };
+        
+        // Handle Google Maps loading timeout
+        setTimeout(() => {
+            if (!window.google || !window.google.maps) {
+                console.error('❌ Google Maps failed to load within timeout');
+                if (typeof showLocationError === 'function') {
+                    showLocationError('Google Maps failed to load. Please check your internet connection.');
+                }
+            }
+        }, 10000); // 10 second timeout
     </script>
 </head>
 

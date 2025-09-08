@@ -3970,21 +3970,35 @@ const mockShops = [
 
 // Initialize Google Maps (callback function)
 function initializeGoogleMaps() {
-    console.log('Google Maps API loaded successfully')
+    console.log('🗺️ Google Maps API loaded successfully')
+    console.log('🌐 Current hostname:', window.location.hostname)
+    console.log('🔑 API Key status:', CONFIG.GOOGLE_MAPS_API_KEY ? 'Present' : 'Missing')
+    console.log('🔑 API Key preview:', CONFIG.GOOGLE_MAPS_API_KEY ? CONFIG.GOOGLE_MAPS_API_KEY.substring(0, 10) + '...' : 'N/A')
     
-    // Initialize geocoder and other services
-    geocoder = new google.maps.Geocoder()
-    
-    // Check if this is the first visit and handle location
-    handleLocationOnFirstVisit()
-    
-    // Initialize location services if not already done
-    if (!window.locationSelectorInitialized) {
-        console.log('🔧 Initializing location services from Google Maps callback...')
-        initializeLocationSelector()
-        updateLocationDisplay()
-        loadSavedAddresses()
-        window.locationSelectorInitialized = true
+    try {
+        // Initialize geocoder and other services
+        geocoder = new google.maps.Geocoder()
+        console.log('✅ Geocoder initialized successfully')
+        
+        // Initialize location autocomplete
+        initializeLocationAutocomplete()
+        console.log('✅ Location autocomplete initialized')
+        
+        // Check if this is the first visit and handle location
+        handleLocationOnFirstVisit()
+        
+        // Initialize location services if not already done
+        if (!window.locationSelectorInitialized) {
+            console.log('🔧 Initializing location services from Google Maps callback...')
+            initializeLocationSelector()
+            updateLocationDisplay()
+            loadSavedAddresses()
+            window.locationSelectorInitialized = true
+            console.log('✅ Location services initialized from Google Maps callback')
+        }
+    } catch (error) {
+        console.error('❌ Error initializing Google Maps:', error)
+        showLocationError('Failed to initialize location services. Please refresh the page.')
     }
     
     // Try to initialize autocomplete if dropdown is already open
@@ -4710,6 +4724,37 @@ let locationDropdownOpen = false
 let savedAddresses = []
 let locationAutocomplete = null
 
+// Function to show location error messages
+function showLocationError(message) {
+    console.error('📍 Location Error:', message)
+    
+    // Update location selector to show error
+    const locationSelector = document.getElementById('locationSelector')
+    const selectedLocation = document.getElementById('selectedLocation')
+    
+    if (locationSelector && selectedLocation) {
+        selectedLocation.textContent = 'Location service unavailable'
+        selectedLocation.style.color = '#ef4444'
+        
+        // Add error styling
+        locationSelector.style.borderColor = '#ef4444'
+        locationSelector.title = message
+        
+        // Reset after 5 seconds
+        setTimeout(() => {
+            selectedLocation.textContent = 'Select Location'
+            selectedLocation.style.color = ''
+            locationSelector.style.borderColor = ''
+            locationSelector.title = ''
+        }, 5000)
+    }
+    
+    // Show user notification
+    if (typeof showNotification === 'function') {
+        showNotification(message, 'error')
+    }
+}
+
 // Initialize location selector when DOM is loaded
 document.addEventListener('DOMContentLoaded', function() {
     console.log('🚀 DOM Content Loaded - Initializing location selector...')
@@ -4817,6 +4862,17 @@ function initializeLocationSelector() {
             // Don't trigger manual search if autocomplete is active
             if (!locationAutocomplete) {
                 debounce(handleLocationSearch, 300)(e)
+            }
+        })
+        
+        // Add Enter key handler for manual location entry
+        locationSearchInput.addEventListener('keypress', (e) => {
+            if (e.key === 'Enter') {
+                e.preventDefault()
+                const query = e.target.value.trim()
+                if (query.length >= 3) {
+                    handleManualLocationEntry(query)
+                }
             }
         })
         
@@ -5116,18 +5172,25 @@ function calculateDeliveryTime(address) {
 function initializeLocationAutocomplete() {
     const locationSearchInput = document.getElementById('locationSearchInput')
     if (!locationSearchInput) {
-        console.error('Location search input not found')
+        console.error('❌ Location search input not found')
+        showLocationError('Location search input not found')
         return
     }
 
     // Check if already initialized
     if (locationAutocomplete) {
-        console.log('Autocomplete already initialized')
+        console.log('✅ Autocomplete already initialized')
+        return
+    }
+
+    if (!google || !google.maps || !google.maps.places) {
+        console.error('❌ Google Maps Places API not loaded')
+        showLocationError('Google Maps Places API not loaded. Please check your internet connection.')
         return
     }
 
     try {
-        console.log('Creating Google Places Autocomplete for India...')
+        console.log('🔧 Creating Google Places Autocomplete for India...')
         
         // Create autocomplete instance
         locationAutocomplete = new google.maps.places.Autocomplete(locationSearchInput, {
@@ -5212,13 +5275,42 @@ function initializeLocationAutocomplete() {
         observer.observe(document.body, { childList: true, subtree: true })
         
     } catch (error) {
-        console.error('Failed to initialize Places Autocomplete:', error)
+        console.error('❌ Failed to initialize Places Autocomplete:', error)
+        showLocationError('Failed to initialize location search. Please refresh the page.')
+    }
+}
+
+// Handle manual location entry (fallback when Google Maps is not available)
+function handleManualLocationEntry(query) {
+    console.log('📍 Manual location entry:', query)
+    
+    // Create a mock location object
+    const mockLocation = {
+        shortAddress: query,
+        fullAddress: query + ', India',
+        coordinates: {
+            lat: 28.6139, // Default to Delhi coordinates
+            lng: 77.2090
+        }
+    }
+    
+    // Update location
+    selectLocation(mockLocation.shortAddress, mockLocation.fullAddress, mockLocation.coordinates)
+    
+    // Show success message
+    if (typeof showNotification === 'function') {
+        showNotification('Location set to: ' + query, 'success')
     }
 }
 
 // Handle location search (fallback for when Places API is not available)
 function handleLocationSearch(event) {
     const query = event.target.value.trim()
+    
+    if (!query) {
+        clearLocationSuggestions()
+        return
+    }
     
     console.log('🔍 Manual search triggered for:', query)
     
