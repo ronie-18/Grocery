@@ -611,12 +611,14 @@ const processOrder = async (orderData) => {
         console.log('🚀 Starting order process...');
         setSubmitLoading('Processing your order...');
 
-        // Debug: Check what's available
-        console.log('🔍 Debug info:');
+        // Debug: Check what's available (development only)
+        if (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1') {
+            console.log('🔍 Debug info:');
         console.log('- supabaseAuth available:', !!window.supabaseAuth);
         console.log('- supabaseAuth.isAuthenticated:', window.supabaseAuth?.isAuthenticated());
         console.log('- orderManager available:', !!window.orderManager);
-        console.log('- orderData:', orderData);
+            console.log('- orderData:', orderData);
+        }
 
         // Check if user is authenticated
         if (!window.supabaseAuth?.isAuthenticated()) {
@@ -646,7 +648,7 @@ const processOrder = async (orderData) => {
             case 'razorpay':
                 showStatus('Redirecting to secure payment gateway...', 'info');
                 setSubmitLoading('Redirecting to payment...');
-                // TODO: Integrate with actual payment gateway here
+                // Payment gateway integration will be implemented here
                 setTimeout(() => {
                     showSuccess('Payment gateway integration will be implemented here');
                     resetSubmitButton();
@@ -701,7 +703,7 @@ const processOrder = async (orderData) => {
                 localStorage.removeItem(CONFIG.FORM_AUTO_SAVE_KEY);
                 setTimeout(() => {
                     clearCart();
-                    // TODO: Could redirect to order confirmation page
+                    // Could redirect to order confirmation page
                     // window.location.href = `order-confirmation.html?order=${orderResult.orderNumber}`;
                 }, 3000);
                 break;

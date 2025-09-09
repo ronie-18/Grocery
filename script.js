@@ -31,17 +31,19 @@ let resendTimer = 30
 // Make userDetails globally accessible for auth integration
 window.userDetails = userDetails
 
-// Debug function to check auth state
+// Debug function to check auth state (development only)
 window.debugAuthState = function() {
-    console.log('=== AUTH DEBUG INFO ===')
-    console.log('currentUser:', window.currentUser)
-    console.log('userDetails:', window.userDetails)
-    console.log('localStorage currentUser:', JSON.parse(localStorage.getItem("nearNowCurrentUser") || "null"))
-    console.log('Supabase auth user:', window.supabaseAuth?.getCurrentUser())
-    console.log('Is authenticated:', window.supabaseAuth?.isAuthenticated())
-    console.log('Account button HTML:', document.getElementById("accountBtn")?.innerHTML)
-    console.log('User dropdown exists:', !!document.querySelector(".user-dropdown"))
-    console.log('=======================')
+    if (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1') {
+        console.log('=== AUTH DEBUG INFO ===')
+        console.log('currentUser:', window.currentUser)
+        console.log('userDetails:', window.userDetails)
+        console.log('localStorage currentUser:', JSON.parse(localStorage.getItem("nearNowCurrentUser") || "null"))
+        console.log('Supabase auth user:', window.supabaseAuth?.getCurrentUser())
+        console.log('Is authenticated:', window.supabaseAuth?.isAuthenticated())
+        console.log('Account button HTML:', document.getElementById("accountBtn")?.innerHTML)
+        console.log('User dropdown exists:', !!document.querySelector(".user-dropdown"))
+        console.log('=======================')
+    }
 }
 
 // Test function to manually show dropdown
@@ -109,9 +111,10 @@ window.emergencyLogout = function() {
     logoutUser()
 }
 
-// Debug function to test dropdown functionality
+// Debug function to test dropdown functionality (development only)
 window.debugDropdown = function() {
-    console.log('🐛 Debug dropdown function called')
+    if (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1') {
+        console.log('🐛 Debug dropdown function called')
     
     const userMenuTrigger = document.querySelector(".user-menu-trigger")
     const userDropdown = document.querySelector(".user-dropdown")
@@ -135,11 +138,12 @@ window.debugDropdown = function() {
         })
     }
     
-    if (userMenuTrigger) {
-        console.log('🎯 Triggering click on dropdown...')
-        userMenuTrigger.click()
-    } else {
-        console.log('❌ No trigger found to click')
+        if (userMenuTrigger) {
+            console.log('🎯 Triggering click on dropdown...')
+            userMenuTrigger.click()
+        } else {
+            console.log('❌ No trigger found to click')
+        }
     }
 }
 
@@ -359,13 +363,15 @@ async function initializeWebsite() {
         
         console.log(`✅ Loaded ${allProducts.length} products`)
         
-        // Debug: Log sample products to see their category values
-        if (allProducts.length > 0) {
+        // Log sample products to see their category values (development only)
+        if (allProducts.length > 0 && (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1')) {
             console.log('🔍 Sample products and their categories:')
             allProducts.slice(0, 5).forEach((product, index) => {
                 console.log(`${index + 1}. ${product.name} - category: "${product.category}"`)
             })
-            
+        }
+        
+        if (allProducts.length > 0) {
             // Get unique categories from products
             const productCategories = [...new Set(allProducts.map(p => p.category))]
             console.log('📋 Unique categories in products:', productCategories)
@@ -1043,7 +1049,9 @@ function selectSearchSuggestion(productName) {
     hideSearchSuggestions()
     // Redirect to search page with the product name
     const searchURL = `search.html?q=${encodeURIComponent(productName)}`
-    console.log(`🔍 SUGGESTION DEBUG: Redirecting to: ${searchURL}`)
+    if (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1') {
+        console.log(`🔍 SUGGESTION DEBUG: Redirecting to: ${searchURL}`)
+    }
     window.location.href = searchURL
 }
 
@@ -1064,8 +1072,10 @@ function performURLSearch(event) {
         // Create URL similar to Blinkit format: search.html?q=product
         const searchURL = `search.html?q=${encodeURIComponent(query)}`
         
-        console.log(`🔍 SEARCH DEBUG: Redirecting to: ${searchURL}`)
-        console.log(`🔍 SEARCH DEBUG: Current location: ${window.location.href}`)
+        if (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1') {
+            console.log(`🔍 SEARCH DEBUG: Redirecting to: ${searchURL}`)
+            console.log(`🔍 SEARCH DEBUG: Current location: ${window.location.href}`)
+        }
         
         // Redirect to search page
         window.location.href = searchURL

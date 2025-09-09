@@ -941,12 +941,14 @@
                 if (submitSpinner) submitSpinner.classList.remove('hidden');
                 if (submitButton) submitButton.disabled = true;
                 
-                // Detailed debugging
-                console.log('🔍 Debugging authentication and order system:');
+                // Detailed debugging (development only)
+                if (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1') {
+                    console.log('🔍 Debugging authentication and order system:');
                 console.log('- window.supabaseAuth exists:', !!window.supabaseAuth);
                 console.log('- window.supabaseAuth.isAuthenticated():', window.supabaseAuth?.isAuthenticated());
                 console.log('- window.orderManager exists:', !!window.orderManager);
-                console.log('- window.supabaseClient exists:', !!window.supabaseClient);
+                    console.log('- window.supabaseClient exists:', !!window.supabaseClient);
+                }
                 
                 // Check authentication with session verification
                 if (!window.supabaseAuth) {

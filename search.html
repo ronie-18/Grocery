@@ -92,7 +92,7 @@
                             <div class="flex-1 flex items-center" style="min-width: 0; overflow: hidden;">
                                 <div id="selectedLocation"
                                     class="text-sm font-bold text-gray-800 group-hover:text-primary transition-all duration-300 location-text w-full"
-                                    style="display: -webkit-box !important; -webkit-line-clamp: 2 !important; -webkit-box-orient: vertical !important; white-space: normal !important; word-wrap: break-word !important; overflow-wrap: break-word !important; word-break: break-word !important; line-height: 1.2 !important; max-height: 2.4rem !important; overflow: hidden !important; text-overflow: ellipsis !important;">
+                                    style="display: -webkit-box !important; -webkit-line-clamp: 2 !important; line-clamp: 2 !important; -webkit-box-orient: vertical !important; white-space: normal !important; word-wrap: break-word !important; overflow-wrap: break-word !important; word-break: break-word !important; line-height: 1.2 !important; max-height: 2.4rem !important; overflow: hidden !important; text-overflow: ellipsis !important;">
                                     Select Location
                                 </div>
                             </div>
@@ -495,9 +495,11 @@
             if (results.length > 0) {
                 console.log('🔍 SAMPLE RESULTS:', results.slice(0, 3).map(p => p.name));
                 
-                // Log categories found for debugging
-                const categories = [...new Set(results.map(p => p.category))];
-                console.log('🏷️ CATEGORIES FOUND:', categories);
+                // Log categories found for debugging (development only)
+                if (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1') {
+                    const categories = [...new Set(results.map(p => p.category))];
+                    console.log('🏷️ CATEGORIES FOUND:', categories);
+                }
             }
 
             displaySearchResults(results, query);
