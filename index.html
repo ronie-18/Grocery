@@ -625,11 +625,12 @@
             await loadSecureConfig();
 
             console.log('🗺️ Loading Google Maps API...');
-            console.log('API Key:', CONFIG.GOOGLE_MAPS_API_KEY ? CONFIG.GOOGLE_MAPS_API_KEY.substring(0, 10) + '...' : 'NOT FOUND');
+            console.log('API Key Status:', CONFIG.GOOGLE_MAPS_API_KEY ? 'Present' : 'NOT FOUND');
 
             if (!CONFIG.GOOGLE_MAPS_API_KEY || CONFIG.GOOGLE_MAPS_API_KEY.includes('FAILED') || CONFIG.GOOGLE_MAPS_API_KEY.includes('NOT_FOUND')) {
                 console.error('❌ API key not properly configured');
                 console.error('Please ensure your API key is properly set up');
+                showLocationError('Google Maps API key not configured. Please contact support.');
                 return;
             }
 
@@ -654,11 +655,15 @@
         // Global error handler for Google Maps
         window.gm_authFailure = function () {
             console.error('❌ Google Maps API authentication failed');
-            console.error('Please check your API key configuration');
+            console.error('This usually means:');
+            console.error('1. API key is invalid or expired');
+            console.error('2. Domain restrictions are blocking this site');
+            console.error('3. Required APIs are not enabled');
+            console.error('Current domain:', window.location.hostname);
             
             // Show user-friendly error
             if (typeof showLocationError === 'function') {
-                showLocationError('Google Maps authentication failed. Please contact support.');
+                showLocationError('Google Maps authentication failed. The API key may not be configured for this domain.');
             }
         };
         

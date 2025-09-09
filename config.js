@@ -1,6 +1,8 @@
 // Configuration file for API keys and settings
 // WARNING: This file should not contain actual API keys in production!
 // API keys should be loaded from environment variables or a secure config service
+// SECURITY NOTE: API keys in this file are for development only
+// In production, use environment variables or secure backend endpoints
 
 const CONFIG = {
     // Google Maps API - This will be loaded securely
@@ -22,9 +24,9 @@ async function loadSecureConfig() {
         
         if (isProduction) {
             // For production, use the API key directly
-            // TODO: Replace with your actual production API key
-            CONFIG.GOOGLE_MAPS_API_KEY = 'AIzaSyCIyizHk4GySPlZBNvcGEXVydsENNC4NjQ'
-            console.log('✅ Production API key loaded')
+            // IMPORTANT: This API key must be configured for nearandnow.in domain
+            CONFIG.GOOGLE_MAPS_API_KEY = 'AIzaSyCAP5GoSd-5z02rGtaFoTLpLllcy4b2SLM'
+            console.log('✅ Production API key loaded for:', window.location.hostname)
         } else {
             // For development, try to load from local config
             console.log('🔧 Development mode - loading from local config')
@@ -33,7 +35,7 @@ async function loadSecureConfig() {
     } catch (error) {
         console.error('Failed to load secure configuration:', error)
         // Fallback API key for development
-        CONFIG.GOOGLE_MAPS_API_KEY = 'AIzaSyCIyizHk4GySPlZBNvcGEXVydsENNC4NjQ'
+        CONFIG.GOOGLE_MAPS_API_KEY = 'AIzaSyCAP5GoSd-5z02rGtaFoTLpLllcy4b2SLM'
     }
 }
 

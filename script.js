@@ -3972,8 +3972,7 @@ const mockShops = [
 function initializeGoogleMaps() {
     console.log('🗺️ Google Maps API loaded successfully')
     console.log('🌐 Current hostname:', window.location.hostname)
-    console.log('🔑 API Key status:', CONFIG.GOOGLE_MAPS_API_KEY ? 'Present' : 'Missing')
-    console.log('🔑 API Key preview:', CONFIG.GOOGLE_MAPS_API_KEY ? CONFIG.GOOGLE_MAPS_API_KEY.substring(0, 10) + '...' : 'N/A')
+    console.log('🔑 API Key Status:', CONFIG.GOOGLE_MAPS_API_KEY ? 'Present' : 'Missing')
     
     try {
         // Initialize geocoder and other services
@@ -4876,6 +4875,9 @@ function initializeLocationSelector() {
             }
         })
         
+        // Add placeholder text to help users
+        locationSearchInput.placeholder = 'Type your location and press Enter (e.g., Delhi, Mumbai, Bangalore)'
+        
         // Clear search button
         if (clearSearchBtn) {
             clearSearchBtn.addEventListener('click', () => {
@@ -5185,6 +5187,11 @@ function initializeLocationAutocomplete() {
 
     if (!google || !google.maps || !google.maps.places) {
         console.error('❌ Google Maps Places API not loaded')
+        console.error('Google Maps status:', {
+            google: !!google,
+            maps: !!(google && google.maps),
+            places: !!(google && google.maps && google.maps.places)
+        })
         showLocationError('Google Maps Places API not loaded. Please check your internet connection.')
         return
     }
