@@ -612,7 +612,30 @@
     <script src="supabase-client.js"></script>
 
     <!-- Configuration -->
-    <script src="config.local.js"></script>
+    <script>
+        // Conditionally load configuration based on environment
+        const isProduction = window.location.hostname !== 'localhost' && 
+                           window.location.hostname !== '127.0.0.1' &&
+                           !window.location.hostname.includes('localhost');
+        
+        if (isProduction) {
+            // Load production configuration
+            const script = document.createElement('script');
+            script.src = 'production-config.js';
+            script.onerror = function() {
+                console.error('❌ Production configuration file not found');
+            };
+            document.head.appendChild(script);
+        } else {
+            // Load development configuration
+            const script = document.createElement('script');
+            script.src = 'local-config.js';
+            script.onerror = function() {
+                console.error('❌ Local configuration file not found');
+            };
+            document.head.appendChild(script);
+        }
+    </script>
     <script src="config.js"></script>
 
     <!-- Google Maps JavaScript API -->
@@ -621,14 +644,32 @@
         document.addEventListener('DOMContentLoaded', async function () {
             console.log('🚀 Loading secure configuration...');
 
+            // Test network connectivity to Google Maps
+            console.log('🌐 Testing network connectivity...');
+            try {
+                const testResponse = await fetch('https://maps.googleapis.com/maps/api/js?key=test&libraries=places,geometry', { method: 'HEAD' });
+                console.log('✅ Network connectivity to Google Maps: OK');
+                console.log('Response status:', testResponse.status);
+            } catch (error) {
+                console.error('❌ Network connectivity to Google Maps: FAILED');
+                console.error('Error:', error);
+            }
+
             // Load secure configuration first
             await loadSecureConfig();
 
             console.log('🗺️ Loading Google Maps API...');
             console.log('API Key Status:', CONFIG.GOOGLE_MAPS_API_KEY ? 'Present' : 'NOT FOUND');
+            console.log('Current hostname:', window.location.hostname);
+            console.log('Protocol:', window.location.protocol);
+            console.log('Full URL:', window.location.href);
+            console.log('User Agent:', navigator.userAgent);
+            console.log('Platform:', navigator.platform);
+            console.log('API Key (first 10 chars):', CONFIG.GOOGLE_MAPS_API_KEY ? CONFIG.GOOGLE_MAPS_API_KEY.substring(0, 10) + '...' : 'NOT FOUND');
 
             if (!CONFIG.GOOGLE_MAPS_API_KEY || CONFIG.GOOGLE_MAPS_API_KEY.includes('FAILED') || CONFIG.GOOGLE_MAPS_API_KEY.includes('NOT_FOUND')) {
                 console.error('❌ API key not properly configured');
+                console.error('API Key value:', CONFIG.GOOGLE_MAPS_API_KEY);
                 console.error('Please ensure your API key is properly set up');
                 showLocationError('Google Maps API key not configured. Please contact support.');
                 return;
@@ -640,13 +681,26 @@
             script.src = `https://maps.googleapis.com/maps/api/js?key=${CONFIG.GOOGLE_MAPS_API_KEY}&libraries=places,geometry&callback=initializeGoogleMaps`;
 
             // Add error handling
-            script.onerror = function () {
+            script.onerror = function (error) {
                 console.error('❌ Failed to load Google Maps API');
+                console.error('Error details:', error);
+                console.error('Script src:', script.src);
                 console.error('Check your API key and internet connection');
+                console.error('Platform info:', {
+                    userAgent: navigator.userAgent,
+                    platform: navigator.platform,
+                    hostname: window.location.hostname,
+                    protocol: window.location.protocol
+                });
+                showLocationError('Failed to load Google Maps. Please check your internet connection and try again.');
             };
 
             script.onload = function () {
                 console.log('✅ Google Maps script loaded successfully');
+                console.log('Google object available:', typeof google !== 'undefined');
+                if (typeof google !== 'undefined') {
+                    console.log('Google Maps API version:', google.maps.version);
+                }
             };
 
             document.head.appendChild(script);
