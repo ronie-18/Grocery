@@ -612,31 +612,7 @@
     <script src="supabase-client.js"></script>
 
     <!-- Configuration -->
-    <script>
-        // Conditionally load configuration based on environment
-        const isProduction = window.location.hostname !== 'localhost' && 
-                           window.location.hostname !== '127.0.0.1' &&
-                           !window.location.hostname.includes('localhost');
-        
-        if (isProduction) {
-            // Load production configuration
-            const script = document.createElement('script');
-            script.src = 'production-config.js';
-            script.onerror = function() {
-                console.error('❌ Production configuration file not found');
-            };
-            document.head.appendChild(script);
-        } else {
-            // Load development configuration
-            const script = document.createElement('script');
-            script.src = 'local-config.js';
-            script.onerror = function() {
-                console.error('❌ Local configuration file not found');
-            };
-            document.head.appendChild(script);
-        }
-    </script>
-    <script src="config.js"></script>
+    <script src="app-config.js"></script>
 
     <!-- Google Maps JavaScript API -->
     <script>
@@ -655,22 +631,20 @@
                 console.error('Error:', error);
             }
 
-            // Load secure configuration first
-            await loadSecureConfig();
-
             console.log('🗺️ Loading Google Maps API...');
-            console.log('API Key Status:', CONFIG.GOOGLE_MAPS_API_KEY ? 'Present' : 'NOT FOUND');
-            console.log('Current hostname:', window.location.hostname);
-            console.log('Protocol:', window.location.protocol);
-            console.log('Full URL:', window.location.href);
-            console.log('User Agent:', navigator.userAgent);
-            console.log('Platform:', navigator.platform);
-            console.log('API Key (first 10 chars):', CONFIG.GOOGLE_MAPS_API_KEY ? CONFIG.GOOGLE_MAPS_API_KEY.substring(0, 10) + '...' : 'NOT FOUND');
+            console.log('API Key Status:', APP_CONFIG.getApiKey() ? 'Present' : 'NOT FOUND');
+            console.log('🌐 Environment Info:');
+            console.log('- Hostname:', window.location.hostname);
+            console.log('- Protocol:', window.location.protocol);
+            console.log('- Full URL:', window.location.href);
+            console.log('- User Agent:', navigator.userAgent);
+            console.log('- Platform:', navigator.platform);
+            console.log('- OS:', navigator.platform.includes('Win') ? 'Windows' : navigator.platform.includes('Mac') ? 'Mac' : 'Other');
+            console.log('- Environment:', APP_CONFIG.isProduction() ? 'Production' : 'Development');
 
-            if (!CONFIG.GOOGLE_MAPS_API_KEY || CONFIG.GOOGLE_MAPS_API_KEY.includes('FAILED') || CONFIG.GOOGLE_MAPS_API_KEY.includes('NOT_FOUND')) {
+            if (!APP_CONFIG.getApiKey()) {
                 console.error('❌ API key not properly configured');
-                console.error('API Key value:', CONFIG.GOOGLE_MAPS_API_KEY);
-                console.error('Please ensure your API key is properly set up');
+                console.error('Please ensure your API key is properly set up in app-config.js');
                 showLocationError('Google Maps API key not configured. Please contact support.');
                 return;
             }
@@ -678,7 +652,8 @@
             const script = document.createElement('script');
             script.async = true;
             script.defer = true;
-            script.src = `https://maps.googleapis.com/maps/api/js?key=${CONFIG.GOOGLE_MAPS_API_KEY}&libraries=places,geometry&callback=initializeGoogleMaps`;
+            script.src = `https://maps.googleapis.com/maps/api/js?key=${APP_CONFIG.getApiKey()}&libraries=places,geometry&callback=initializeGoogleMaps`;
+            console.log('🔗 Loading Google Maps with URL:', script.src.substring(0, 100) + '...');
 
             // Add error handling
             script.onerror = function (error) {
@@ -690,7 +665,8 @@
                     userAgent: navigator.userAgent,
                     platform: navigator.platform,
                     hostname: window.location.hostname,
-                    protocol: window.location.protocol
+                    protocol: window.location.protocol,
+                    os: navigator.platform.includes('Win') ? 'Windows' : navigator.platform.includes('Mac') ? 'Mac' : 'Other'
                 });
                 showLocationError('Failed to load Google Maps. Please check your internet connection and try again.');
             };
@@ -713,11 +689,13 @@
             console.error('1. API key is invalid or expired');
             console.error('2. Domain restrictions are blocking this site');
             console.error('3. Required APIs are not enabled');
+            console.error('4. Billing is not enabled for the project');
             console.error('Current domain:', window.location.hostname);
+            console.error('Current API key:', APP_CONFIG.getApiKey() ? APP_CONFIG.getApiKey().substring(0, 10) + '...' : 'NOT FOUND');
             
             // Show user-friendly error
             if (typeof showLocationError === 'function') {
-                showLocationError('Google Maps authentication failed. The API key may not be configured for this domain.');
+                showLocationError('Google Maps authentication failed. Please check your API key configuration in Google Cloud Console.');
             }
         };
         
@@ -730,6 +708,28 @@
                 }
             }
         }, 10000); // 10 second timeout
+        
+        // Test API key validity
+        window.testGoogleMapsAPI = function() {
+            console.log('🧪 Testing Google Maps API...');
+            console.log('API Key:', APP_CONFIG.getApiKey() ? APP_CONFIG.getApiKey().substring(0, 10) + '...' : 'NOT FOUND');
+            console.log('Current domain:', window.location.hostname);
+            console.log('Protocol:', window.location.protocol);
+            
+            // Test with a simple geocoding request
+            if (window.google && window.google.maps) {
+                const geocoder = new google.maps.Geocoder();
+                geocoder.geocode({ address: 'New York, NY' }, (results, status) => {
+                    if (status === 'OK') {
+                        console.log('✅ Google Maps API is working correctly');
+                    } else {
+                        console.error('❌ Google Maps API test failed:', status);
+                    }
+                });
+            } else {
+                console.error('❌ Google Maps not loaded yet');
+            }
+        };
     </script>
 </head>
 

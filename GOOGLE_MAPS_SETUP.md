@@ -43,7 +43,7 @@ The API key is automatically loaded from your `.env` file:
 
 ```bash
 # .env file
-GOOGLE_MAPS_API_KEY=your_actual_api_key_here
+GOOGLE_MAPS_API_KEY=YOUR_GOOGLE_MAPS_API_KEY_HERE
 ```
 
 The script dynamically loads Google Maps with the API key from the configuration.
@@ -90,7 +90,7 @@ The script dynamically loads Google Maps with the API key from the configuration
 
    ```bash
    # .env file (never commit this)
-   GOOGLE_MAPS_API_KEY=your_actual_api_key_here
+   GOOGLE_MAPS_API_KEY=YOUR_GOOGLE_MAPS_API_KEY_HERE
    ```
 
 **Option 2: Secure Proxy Endpoint**

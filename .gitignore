@@ -1,10 +1,12 @@
 # API Keys and Sensitive Configuration
-config.local.js
-local-config.js
-production-config.js
+app-config.js
+
+# Environment files (if needed in future)
 .env
 .env.local
 .env.production
+.env.development
+.env.staging
 
 # Node modules
 node_modules/
