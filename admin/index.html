@@ -1,0 +1,543 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Admin Dashboard - Near & Now</title>
+    <link rel="stylesheet" href="assets/css/admin-styles.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.7.2/css/all.min.css">
+    <link rel="icon" type="image/png" href="../Logo.png">
+</head>
+<body>
+    <div class="admin-layout">
+        <!-- Sidebar -->
+        <aside class="admin-sidebar" id="adminSidebar">
+            <div class="sidebar-header">
+                <a href="#" class="sidebar-logo">
+                    <div class="sidebar-logo-icon">
+                        <i class="fas fa-shield-alt"></i>
+                    </div>
+                    <div class="sidebar-logo-text">Near & Now Admin</div>
+                </a>
+            </div>
+            
+            <nav class="sidebar-nav">
+                <div class="nav-section">
+                    <div class="nav-section-title">Main</div>
+                    <a href="#dashboard" class="nav-item active" data-section="dashboard">
+                        <i class="fas fa-tachometer-alt"></i>
+                        Dashboard
+                    </a>
+                    <a href="#orders" class="nav-item" data-section="orders">
+                        <i class="fas fa-shopping-cart"></i>
+                        Orders
+                    </a>
+                    <a href="#products" class="nav-item" data-section="products">
+                        <i class="fas fa-box"></i>
+                        Products
+                    </a>
+                    <a href="#categories" class="nav-item" data-section="categories">
+                        <i class="fas fa-tags"></i>
+                        Categories
+                    </a>
+                </div>
+                
+                <div class="nav-section">
+                    <div class="nav-section-title">Users</div>
+                    <a href="#users" class="nav-item" data-section="users">
+                        <i class="fas fa-users"></i>
+                        All Users
+                    </a>
+                    <a href="#analytics" class="nav-item" data-section="analytics">
+                        <i class="fas fa-chart-bar"></i>
+                        Analytics
+                    </a>
+                </div>
+                
+                <div class="nav-section">
+                    <div class="nav-section-title">System</div>
+                    <a href="#settings" class="nav-item" data-section="settings">
+                        <i class="fas fa-cog"></i>
+                        Settings
+                    </a>
+                    <a href="#logs" class="nav-item" data-section="logs">
+                        <i class="fas fa-file-alt"></i>
+                        Activity Logs
+                    </a>
+                </div>
+            </nav>
+        </aside>
+        
+        <!-- Main Content -->
+        <main class="admin-main">
+            <!-- Header -->
+            <header class="admin-header">
+                <div class="header-left">
+                    <button class="btn btn-secondary" id="sidebarToggle">
+                        <i class="fas fa-bars"></i>
+                    </button>
+                    <h1 class="header-title" id="pageTitle">Dashboard</h1>
+                </div>
+                
+                <div class="header-right">
+                    <div class="admin-info" id="adminInfo">
+                        <div class="admin-avatar" id="adminAvatar">
+                            A
+                        </div>
+                        <div class="admin-details">
+                            <div class="admin-name" id="adminName">Admin</div>
+                            <div class="admin-role" id="adminRole">Super Admin</div>
+                        </div>
+                    </div>
+                    
+                    <button class="btn btn-secondary btn-sm" id="changePasswordBtn">
+                        <i class="fas fa-key"></i>
+                        Change Password
+                    </button>
+                    
+                    <button class="btn btn-error btn-sm" id="logoutBtn">
+                        <i class="fas fa-sign-out-alt"></i>
+                        Logout
+                    </button>
+                </div>
+            </header>
+            
+            <!-- Content Area -->
+            <div class="admin-content">
+                <!-- Dashboard Section -->
+                <div id="dashboard-content" class="content-section active">
+                    <!-- Stats Cards -->
+                    <div class="stats-grid">
+                        <div class="stat-card">
+                            <div class="stat-header">
+                                <div class="stat-icon primary">
+                                    <i class="fas fa-shopping-cart"></i>
+                                </div>
+                            </div>
+                            <div class="stat-value" id="totalOrders">0</div>
+                            <div class="stat-label">Total Orders</div>
+                            <div class="stat-change positive" id="ordersChange">
+                                <i class="fas fa-arrow-up"></i> +12% from last month
+                            </div>
+                        </div>
+                        
+                        <div class="stat-card">
+                            <div class="stat-header">
+                                <div class="stat-icon success">
+                                    <i class="fas fa-rupee-sign"></i>
+                                </div>
+                            </div>
+                            <div class="stat-value" id="totalRevenue">₹0</div>
+                            <div class="stat-label">Total Revenue</div>
+                            <div class="stat-change positive" id="revenueChange">
+                                <i class="fas fa-arrow-up"></i> +8% from last month
+                            </div>
+                        </div>
+                        
+                        <div class="stat-card">
+                            <div class="stat-header">
+                                <div class="stat-icon warning">
+                                    <i class="fas fa-users"></i>
+                                </div>
+                            </div>
+                            <div class="stat-value" id="totalUsers">0</div>
+                            <div class="stat-label">Total Users</div>
+                            <div class="stat-change positive" id="usersChange">
+                                <i class="fas fa-arrow-up"></i> +15% from last month
+                            </div>
+                        </div>
+                        
+                        <div class="stat-card">
+                            <div class="stat-header">
+                                <div class="stat-icon error">
+                                    <i class="fas fa-box"></i>
+                                </div>
+                            </div>
+                            <div class="stat-value" id="totalProducts">0</div>
+                            <div class="stat-label">Total Products</div>
+                            <div class="stat-change positive" id="productsChange">
+                                <i class="fas fa-arrow-up"></i> +5% from last month
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Recent Orders -->
+                    <div class="card">
+                        <div class="card-header">
+                            <h2 class="card-title">Recent Orders</h2>
+                            <a href="#orders" class="btn btn-primary btn-sm">View All</a>
+                        </div>
+                        <div class="card-content">
+                            <div class="table-container">
+                                <table class="table" id="recentOrdersTable">
+                                    <thead>
+                                        <tr>
+                                            <th>Order #</th>
+                                            <th>Customer</th>
+                                            <th>Amount</th>
+                                            <th>Status</th>
+                                            <th>Date</th>
+                                            <th>Actions</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody id="recentOrdersBody">
+                                        <tr>
+                                            <td colspan="6" class="text-center">
+                                                <div class="loading"></div>
+                                                Loading recent orders...
+                                            </td>
+                                        </tr>
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Orders Section -->
+                <div id="orders-content" class="content-section">
+                    <div class="card">
+                        <div class="card-header">
+                            <h2 class="card-title">Order Management</h2>
+                            <div class="table-actions">
+                                <button class="btn btn-secondary btn-sm" id="refreshOrders">
+                                    <i class="fas fa-sync-alt"></i>
+                                    Refresh
+                                </button>
+                                <select class="form-select" id="orderStatusFilter" style="width: auto;">
+                                    <option value="">All Status</option>
+                                    <option value="placed">Placed</option>
+                                    <option value="confirmed">Confirmed</option>
+                                    <option value="preparing">Preparing</option>
+                                    <option value="out_for_delivery">Out for Delivery</option>
+                                    <option value="delivered">Delivered</option>
+                                    <option value="cancelled">Cancelled</option>
+                                </select>
+                            </div>
+                        </div>
+                        <div class="card-content">
+                            <div class="table-container">
+                                <table class="table" id="ordersTable">
+                                    <thead>
+                                        <tr>
+                                            <th>Order #</th>
+                                            <th>Customer</th>
+                                            <th>Items</th>
+                                            <th>Amount</th>
+                                            <th>Status</th>
+                                            <th>Date</th>
+                                            <th>Actions</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody id="ordersBody">
+                                        <tr>
+                                            <td colspan="7" class="text-center">
+                                                <div class="loading"></div>
+                                                Loading orders...
+                                            </td>
+                                        </tr>
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Products Section -->
+                <div id="products-content" class="content-section">
+                    <div class="card">
+                        <div class="card-header">
+                            <h2 class="card-title">Product Management</h2>
+                            <div class="table-actions">
+                                <button class="btn btn-primary btn-sm" id="addProductBtn">
+                                    <i class="fas fa-plus"></i>
+                                    Add Product
+                                </button>
+                                <button class="btn btn-secondary btn-sm" id="refreshProducts">
+                                    <i class="fas fa-sync-alt"></i>
+                                    Refresh
+                                </button>
+                            </div>
+                        </div>
+                        <div class="card-content">
+                            <div class="table-container">
+                                <table class="table" id="productsTable">
+                                    <thead>
+                                        <tr>
+                                            <th>Image</th>
+                                            <th>Name</th>
+                                            <th>Category</th>
+                                            <th>Price</th>
+                                            <th>Stock</th>
+                                            <th>Status</th>
+                                            <th>Actions</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody id="productsBody">
+                                        <tr>
+                                            <td colspan="7" class="text-center">
+                                                <div class="loading"></div>
+                                                Loading products...
+                                            </td>
+                                        </tr>
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Users Section -->
+                <div id="users-content" class="content-section">
+                    <div class="card">
+                        <div class="card-header">
+                            <h2 class="card-title">User Management</h2>
+                            <div class="table-actions">
+                                <button class="btn btn-secondary btn-sm" id="refreshUsers">
+                                    <i class="fas fa-sync-alt"></i>
+                                    Refresh
+                                </button>
+                            </div>
+                        </div>
+                        <div class="card-content">
+                            <div class="table-container">
+                                <table class="table" id="usersTable">
+                                    <thead>
+                                        <tr>
+                                            <th>User ID</th>
+                                            <th>Phone</th>
+                                            <th>Name</th>
+                                            <th>Orders</th>
+                                            <th>Total Spent</th>
+                                            <th>Joined</th>
+                                            <th>Actions</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody id="usersBody">
+                                        <tr>
+                                            <td colspan="7" class="text-center">
+                                                <div class="loading"></div>
+                                                Loading users...
+                                            </td>
+                                        </tr>
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Other sections will be added here -->
+                <div id="categories-content" class="content-section">
+                    <div class="card">
+                        <div class="card-header">
+                            <h2 class="card-title">Category Management</h2>
+                            <button class="btn btn-primary btn-sm" id="addCategoryBtn">
+                                <i class="fas fa-plus"></i>
+                                Add Category
+                            </button>
+                        </div>
+                        <div class="card-content">
+                            <p>Category management will be implemented here.</p>
+                        </div>
+                    </div>
+                </div>
+                
+                <div id="analytics-content" class="content-section">
+                    <div class="card">
+                        <div class="card-header">
+                            <h2 class="card-title">Analytics & Reports</h2>
+                        </div>
+                        <div class="card-content">
+                            <p>Analytics and reports will be implemented here.</p>
+                        </div>
+                    </div>
+                </div>
+                
+                <div id="settings-content" class="content-section">
+                    <div class="card">
+                        <div class="card-header">
+                            <h2 class="card-title">System Settings</h2>
+                        </div>
+                        <div class="card-content">
+                            <p>System settings will be implemented here.</p>
+                        </div>
+                    </div>
+                </div>
+                
+                <div id="logs-content" class="content-section">
+                    <div class="card">
+                        <div class="card-header">
+                            <h2 class="card-title">Activity Logs</h2>
+                        </div>
+                        <div class="card-content">
+                            <p>Activity logs will be implemented here.</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </main>
+    </div>
+    
+    <!-- Order Details Modal -->
+    <div class="modal-overlay" id="orderDetailsModal">
+        <div class="modal">
+            <div class="modal-header">
+                <h3 class="modal-title">Order Details</h3>
+                <button class="modal-close" id="closeOrderModal">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+            <div class="modal-content" id="orderDetailsContent">
+                <!-- Order details will be loaded here -->
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-secondary" id="closeOrderModalBtn">Close</button>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Product Modal -->
+    <div class="modal-overlay" id="productModal">
+        <div class="modal">
+            <div class="modal-header">
+                <h3 class="modal-title" id="productModalTitle">Add Product</h3>
+                <button class="modal-close" id="closeProductModal">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+            <div class="modal-content" id="productModalContent">
+                <!-- Product form will be loaded here -->
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-secondary" id="closeProductModalBtn">Cancel</button>
+                <button class="btn btn-primary" id="saveProductBtn">Save Product</button>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Password Change Modal -->
+    <div class="modal-overlay" id="passwordChangeModal">
+        <div class="modal">
+            <div class="modal-header">
+                <h3 class="modal-title">Change Password</h3>
+                <button class="modal-close" id="closePasswordModal">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+            <div class="modal-content">
+                <form id="passwordChangeForm">
+                    <div class="form-group">
+                        <label for="currentPassword" class="form-label">Current Password</label>
+                        <input type="password" id="currentPassword" class="form-input" required>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="newPassword" class="form-label">New Password</label>
+                        <input type="password" id="newPassword" class="form-input" required>
+                        <div class="password-strength" id="passwordStrength"></div>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="confirmPassword" class="form-label">Confirm New Password</label>
+                        <input type="password" id="confirmPassword" class="form-input" required>
+                        <div class="password-match" id="passwordMatch"></div>
+                    </div>
+                    
+                    <div class="password-requirements">
+                        <h4>Password Requirements:</h4>
+                        <ul id="passwordRequirements">
+                            <li id="req-length">At least 8 characters</li>
+                            <li id="req-uppercase">One uppercase letter</li>
+                            <li id="req-lowercase">One lowercase letter</li>
+                            <li id="req-number">One number</li>
+                            <li id="req-special">One special character</li>
+                        </ul>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-secondary" id="closePasswordModalBtn">Cancel</button>
+                <button class="btn btn-primary" id="savePasswordBtn" disabled>Change Password</button>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Forgot Password Modal -->
+    <div class="modal-overlay" id="forgotPasswordModal">
+        <div class="modal">
+            <div class="modal-header">
+                <h3 class="modal-title">Reset Password</h3>
+                <button class="modal-close" id="closeForgotPasswordModal">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+            <div class="modal-content">
+                <div id="forgotPasswordStep1">
+                    <p>Enter your admin username to reset your password:</p>
+                    <form id="forgotPasswordForm">
+                        <div class="form-group">
+                            <label for="resetUsername" class="form-label">Admin Username</label>
+                            <input type="text" id="resetUsername" class="form-input" placeholder="Enter your username" required>
+                        </div>
+                        <button type="submit" class="btn btn-primary">Send Reset Code</button>
+                    </form>
+                </div>
+                
+                <div id="forgotPasswordStep2" style="display: none;">
+                    <p>Enter the reset code sent to your registered email:</p>
+                    <form id="resetCodeForm">
+                        <div class="form-group">
+                            <label for="resetCode" class="form-label">Reset Code</label>
+                            <input type="text" id="resetCode" class="form-input" placeholder="Enter 6-digit code" maxlength="6" required>
+                        </div>
+                        <div class="form-group">
+                            <label for="newPasswordReset" class="form-label">New Password</label>
+                            <input type="password" id="newPasswordReset" class="form-input" required>
+                        </div>
+                        <div class="form-group">
+                            <label for="confirmPasswordReset" class="form-label">Confirm New Password</label>
+                            <input type="password" id="confirmPasswordReset" class="form-input" required>
+                        </div>
+                        <button type="submit" class="btn btn-primary">Reset Password</button>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Load Supabase -->
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="../supabase-client.js"></script>
+    
+    <!-- Load Admin Scripts -->
+    <script src="assets/js/admin-auth.js"></script>
+    <script src="assets/js/admin-dashboard.js"></script>
+    <script src="assets/js/admin-orders.js"></script>
+    <script src="assets/js/admin-products.js"></script>
+    <script src="assets/js/admin-users.js"></script>
+    <script src="assets/js/admin-password.js"></script>
+    
+    <script>
+        // Initialize admin dashboard
+        document.addEventListener('DOMContentLoaded', function() {
+            // Simple authentication check
+            const isLoggedIn = localStorage.getItem('admin_logged_in') === 'true';
+            const username = localStorage.getItem('admin_username');
+            
+            if (!isLoggedIn || !username) {
+                console.log('❌ Not authenticated, redirecting to login');
+                window.location.href = 'login.html';
+                return;
+            }
+            
+            console.log('✅ Admin authenticated:', username);
+            
+            // Initialize dashboard
+            if (window.AdminDashboard) {
+                window.adminDashboard = new AdminDashboard();
+            }
+        });
+    </script>
+</body>
+</html>
