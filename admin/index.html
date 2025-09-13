@@ -204,8 +204,8 @@
                                     <i class="fas fa-sync-alt"></i>
                                     Refresh
                                 </button>
-                                <select class="form-select" id="orderStatusFilter" style="width: auto;">
-                                    <option value="">All Status</option>
+                                <select class="form-select" id="statusFilter" style="width: auto;">
+                                    <option value="all">All Status</option>
                                     <option value="placed">Placed</option>
                                     <option value="confirmed">Confirmed</option>
                                     <option value="preparing">Preparing</option>
@@ -213,6 +213,7 @@
                                     <option value="delivered">Delivered</option>
                                     <option value="cancelled">Cancelled</option>
                                 </select>
+                                <input type="text" id="orderSearch" class="form-input" placeholder="Search orders..." style="width: 200px;">
                             </div>
                         </div>
                         <div class="card-content">
@@ -537,6 +538,29 @@
             if (window.AdminDashboard) {
                 window.adminDashboard = new AdminDashboard();
             }
+            
+            // Initialize orders manager
+            if (window.AdminOrdersManager) {
+                window.adminOrdersManager = new AdminOrdersManager();
+            }
+            
+            // Add simple test function
+            window.testOrders = async () => {
+                try {
+                    console.log('🧪 Testing orders access...');
+                    const { data, error } = await window.supabaseClient
+                        .from('orders')
+                        .select('*')
+                        .limit(5);
+                    
+                    console.log('🧪 Test result:', { data, error });
+                    return { data, error };
+                } catch (err) {
+                    console.error('🧪 Test error:', err);
+                    return { error: err };
+                }
+            };
+            
         });
     </script>
 </body>

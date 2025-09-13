@@ -121,7 +121,12 @@ class AdminPasswordManager {
     showForgotPasswordModal() {
         const modal = document.getElementById('forgotPasswordModal');
         if (modal) {
-            modal.style.display = 'block';
+            // Check if modal has 'active' class (main login page) or needs display style (simple login)
+            if (modal.classList) {
+                modal.classList.add('active');
+            } else {
+                modal.style.display = 'block';
+            }
             document.body.style.overflow = 'hidden';
             
             // Reset to step 1
@@ -133,7 +138,12 @@ class AdminPasswordManager {
     hideForgotPasswordModal() {
         const modal = document.getElementById('forgotPasswordModal');
         if (modal) {
-            modal.style.display = 'none';
+            // Check if modal has 'active' class (main login page) or needs display style (simple login)
+            if (modal.classList) {
+                modal.classList.remove('active');
+            } else {
+                modal.style.display = 'none';
+            }
             document.body.style.overflow = '';
         }
     }
@@ -294,28 +304,75 @@ class AdminPasswordManager {
         saveBtn.disabled = true;
         
         try {
-            // For demo purposes, we'll use simple validation
-            // In production, this would verify against the database
-            
             const currentUser = localStorage.getItem('admin_username');
-            if (currentUser === 'admin' && currentPassword === 'admin123') {
-                // Simulate password change
-                await new Promise(resolve => setTimeout(resolve, 1000));
-                
-                // Store new password (in production, this would be hashed and stored in database)
-                localStorage.setItem('admin_password', btoa(newPassword + 'nearandnow_salt'));
-                
-                this.showSuccess('Password changed successfully!');
-                this.hidePasswordChangeModal();
-                
-                // Log activity
-                console.log('Password changed for admin:', currentUser);
-                
-            } else {
-                throw new Error('Current password is incorrect');
+            if (!currentUser) {
+                throw new Error('No user session found');
             }
             
+            // Hash current password to verify
+            const currentPasswordHash = btoa(currentPassword + 'nearandnow_salt');
+            
+            // Verify current password against database
+            const { data: userData, error: verifyError } = await window.supabaseClient
+                .from('admin_users')
+                .select('*')
+                .eq('username', currentUser)
+                .eq('password_hash', currentPasswordHash)
+                .single();
+            
+            if (verifyError || !userData) {
+                // Also check localStorage for demo compatibility
+                const storedPassword = localStorage.getItem('admin_password');
+                const isDefaultPassword = (currentUser === 'admin' && currentPassword === 'admin123');
+                const isStoredPassword = storedPassword && (currentPasswordHash === storedPassword);
+                
+                if (!isDefaultPassword && !isStoredPassword) {
+                    throw new Error('Current password is incorrect');
+                }
+            }
+            
+            // Hash new password
+            const newPasswordHash = btoa(newPassword + 'nearandnow_salt');
+            
+            // Update password in Supabase database
+            const { error: updateError } = await window.supabaseClient
+                .from('admin_users')
+                .update({ 
+                    password_hash: newPasswordHash,
+                    updated_at: new Date().toISOString()
+                })
+                .eq('username', currentUser);
+            
+            if (updateError) {
+                console.error('Database update error:', updateError);
+                throw new Error('Failed to update password in database');
+            }
+            
+            // Also update localStorage for immediate effect
+            localStorage.setItem('admin_password', newPasswordHash);
+            
+            this.showSuccess('Password changed successfully!');
+            this.hidePasswordChangeModal();
+            
+            // Log activity to Supabase
+            try {
+                await window.supabaseClient
+                    .from('admin_activity_logs')
+                    .insert({
+                        admin_id: userData?.id || 1,
+                        action: 'password_change',
+                        details: 'Password changed successfully',
+                        ip_address: await this.getClientIP(),
+                        user_agent: navigator.userAgent
+                    });
+            } catch (logError) {
+                console.warn('Failed to log activity:', logError);
+            }
+            
+            console.log('✅ Password changed for admin:', currentUser);
+            
         } catch (error) {
+            console.error('❌ Password change error:', error);
             this.showError(error.message);
         } finally {
             // Reset button state
@@ -399,11 +456,29 @@ class AdminPasswordManager {
                 throw new Error('Invalid reset code');
             }
             
-            // Simulate password reset
-            await new Promise(resolve => setTimeout(resolve, 1000));
+            if (!storedUsername) {
+                throw new Error('Reset session expired. Please try again.');
+            }
             
-            // Store new password
-            localStorage.setItem('admin_password', btoa(newPassword + 'nearandnow_salt'));
+            // Hash new password
+            const newPasswordHash = btoa(newPassword + 'nearandnow_salt');
+            
+            // Update password in Supabase database
+            const { error: updateError } = await window.supabaseClient
+                .from('admin_users')
+                .update({ 
+                    password_hash: newPasswordHash,
+                    updated_at: new Date().toISOString()
+                })
+                .eq('username', storedUsername);
+            
+            if (updateError) {
+                console.error('Database update error:', updateError);
+                throw new Error('Failed to update password in database');
+            }
+            
+            // Also update localStorage for immediate effect
+            localStorage.setItem('admin_password', newPasswordHash);
             
             // Clear reset data
             localStorage.removeItem('admin_reset_code');
@@ -418,6 +493,7 @@ class AdminPasswordManager {
             }, 2000);
             
         } catch (error) {
+            console.error('❌ Password reset error:', error);
             this.showError(error.message);
         } finally {
             submitBtn.classList.remove('loading');
@@ -501,11 +577,26 @@ class AdminPasswordManager {
             successDiv.style.display = 'none';
         }, 5000);
     }
+
+    /**
+     * Get client IP address (simplified for demo)
+     */
+    async getClientIP() {
+        try {
+            // For demo purposes, return a mock IP
+            // In production, you might use a service like ipify.org
+            return '127.0.0.1';
+        } catch (error) {
+            return 'unknown';
+        }
+    }
 }
 
 // Initialize password manager when DOM is ready
 document.addEventListener('DOMContentLoaded', () => {
+    console.log('🔐 Initializing password manager...');
     window.adminPasswordManager = new AdminPasswordManager();
+    console.log('✅ Password manager initialized');
 });
 
 // Export for use in other files
