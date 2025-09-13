@@ -32,7 +32,7 @@
                         <i class="fas fa-shopping-cart"></i>
                         Orders
                     </a>
-                    <a href="#products" class="nav-item" data-section="products">
+                    <a href="products.html" class="nav-item">
                         <i class="fas fa-box"></i>
                         Products
                     </a>
@@ -521,6 +521,19 @@
     
     <script>
         // Initialize admin dashboard
+        // Global error handler to prevent popup errors
+        window.addEventListener('error', function(e) {
+            console.warn('⚠️ Global error caught:', e.error);
+            // Prevent default error popup
+            e.preventDefault();
+        });
+        
+        window.addEventListener('unhandledrejection', function(e) {
+            console.warn('⚠️ Unhandled promise rejection:', e.reason);
+            // Prevent default error popup
+            e.preventDefault();
+        });
+
         document.addEventListener('DOMContentLoaded', function() {
             // Simple authentication check
             const isLoggedIn = localStorage.getItem('admin_logged_in') === 'true';

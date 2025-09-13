@@ -32,7 +32,8 @@ class AdminDashboard {
             console.log('✅ Admin dashboard initialized successfully');
             
         } catch (error) {
-            console.error('❌ Error initializing dashboard:', error);
+            console.warn('⚠️ Error initializing dashboard:', error);
+            console.log('📊 Dashboard will use fallback data');
         }
     }
 
@@ -107,24 +108,44 @@ class AdminDashboard {
      * Load section-specific data when section is shown
      */
     async loadSectionData(section) {
-        switch (section) {
-            case 'orders':
-                // Load orders when orders section is shown
-                if (window.adminOrdersManager) {
-                    console.log('📦 Loading orders data...');
-                    await window.adminOrdersManager.loadOrders();
-                }
-                break;
-            case 'products':
-                // Load products when products section is shown
-                console.log('📦 Products section loaded');
-                break;
-            case 'users':
-                // Load users when users section is shown
-                console.log('👥 Users section loaded');
-                break;
-            default:
-                console.log(`No specific data loading for section: ${section}`);
+        try {
+            switch (section) {
+                case 'orders':
+                    // Load orders when orders section is shown
+                    if (window.adminOrdersManager) {
+                        console.log('📦 Loading orders data...');
+                        await window.adminOrdersManager.loadOrders();
+                    }
+                    break;
+                case 'products':
+                    // Load products when products section is shown
+                    console.log('📦 Products section loaded');
+                    console.log('🔍 AdminProductsManager available:', !!window.AdminProductsManager);
+                    console.log('🔍 adminProductsManager instance:', !!window.adminProductsManager);
+                    
+                    if (window.adminProductsManager) {
+                        console.log('📦 Loading products data...');
+                        await window.adminProductsManager.loadProducts();
+                    } else {
+                        console.log('📦 AdminProductsManager not available, initializing...');
+                        if (window.AdminProductsManager) {
+                            window.adminProductsManager = new window.AdminProductsManager();
+                            console.log('✅ AdminProductsManager initialized');
+                        } else {
+                            console.error('❌ AdminProductsManager class not found');
+                        }
+                    }
+                    break;
+                case 'users':
+                    // Load users when users section is shown
+                    console.log('👥 Users section loaded');
+                    break;
+                default:
+                    console.log(`No specific data loading for section: ${section}`);
+            }
+        } catch (error) {
+            console.warn('⚠️ Error loading section data:', error);
+            // Don't show popup errors for section loading
         }
     }
 
@@ -173,7 +194,7 @@ class AdminDashboard {
             }
             
             if (!window.supabaseClient) {
-                console.error('❌ Supabase client still not available after waiting!');
+                console.warn('⚠️ Supabase client not available, using mock data');
                 this.loadMockStats();
                 this.loadMockRecentOrders();
                 return;
@@ -193,7 +214,8 @@ class AdminDashboard {
             });
 
             if (ordersError) {
-                console.error('❌ Error loading orders data:', ordersError);
+                console.warn('⚠️ Error loading orders data:', ordersError);
+                console.log('📊 Using mock data as fallback');
                 this.loadMockStats();
                 this.loadMockRecentOrders();
                 return;
@@ -242,18 +264,30 @@ class AdminDashboard {
             // Try to get products count from dedicated products table if it exists
             let finalProductsCount = totalProducts;
             try {
+                // First try original products table
                 const { count: productsCount, error: productsError } = await window.supabaseClient
                     .from('products')
                     .select('*', { count: 'exact', head: true });
                 
                 if (!productsError && productsCount !== null) {
                     finalProductsCount = productsCount;
-                    console.log('✅ Using products count from products table:', finalProductsCount);
+                    console.log('✅ Using products count from original products table:', finalProductsCount);
                 } else {
-                    console.log('📊 Products table not found, using calculated count from orders:', finalProductsCount);
+                    // If original table fails, try enhanced table
+                    console.log('📊 Original products table not accessible, trying enhanced table...');
+                    const { count: enhancedProductsCount, error: enhancedError } = await window.supabaseClient
+                        .from('products_enhanced')
+                        .select('*', { count: 'exact', head: true });
+                    
+                    if (!enhancedError && enhancedProductsCount !== null) {
+                        finalProductsCount = enhancedProductsCount;
+                        console.log('✅ Using products count from enhanced products table:', finalProductsCount);
+                    } else {
+                        console.log('📊 Both products tables not accessible, using calculated count from orders:', finalProductsCount);
+                    }
                 }
             } catch (error) {
-                console.log('📊 Products table not accessible, using calculated count from orders:', finalProductsCount);
+                console.log('📊 Products tables not accessible, using calculated count from orders:', finalProductsCount);
             }
 
             console.log('🔍 Calculated stats:', {
@@ -275,7 +309,8 @@ class AdminDashboard {
             this.loadRecentOrdersFromData(ordersData.slice(0, 5));
 
         } catch (error) {
-            console.error('❌ Error loading orders and stats:', error);
+            console.warn('⚠️ Error loading orders and stats:', error);
+            console.log('📊 Using mock data as fallback');
             this.loadMockStats();
             this.loadMockRecentOrders();
         }

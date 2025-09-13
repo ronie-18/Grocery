@@ -1,0 +1,564 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Product Management - Near & Now Admin</title>
+    <link rel="icon" type="image/png" href="../Logo.png">
+    
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    
+    <!-- Font Awesome -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.7.2/css/all.min.css">
+    
+    <!-- Custom Admin Styles -->
+    <link rel="stylesheet" href="assets/css/admin-styles.css">
+    
+    <style>
+        /* Enhanced Product Management Styles */
+        .product-card {
+            transition: all 0.3s ease;
+            border: 1px solid #e5e7eb;
+        }
+        
+        .product-card:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1);
+            border-color: #3b82f6;
+        }
+        
+        .product-image {
+            width: 80px;
+            height: 80px;
+            object-fit: cover;
+            border-radius: 8px;
+        }
+        
+        .status-badge {
+            padding: 4px 12px;
+            border-radius: 20px;
+            font-size: 12px;
+            font-weight: 600;
+            text-transform: uppercase;
+        }
+        
+        .status-active {
+            background-color: #dcfce7;
+            color: #166534;
+        }
+        
+        .status-inactive {
+            background-color: #fef2f2;
+            color: #dc2626;
+        }
+        
+        .status-low-stock {
+            background-color: #fef3c7;
+            color: #d97706;
+        }
+        
+        .action-btn {
+            padding: 6px 12px;
+            border-radius: 6px;
+            font-size: 12px;
+            font-weight: 500;
+            transition: all 0.2s ease;
+        }
+        
+        .action-btn:hover {
+            transform: scale(1.05);
+        }
+        
+        .search-box {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            border-radius: 12px;
+            padding: 20px;
+            margin-bottom: 24px;
+        }
+        
+        .stats-card {
+            background: white;
+            border-radius: 12px;
+            padding: 20px;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
+            border: 1px solid #f1f5f9;
+        }
+        
+        .stats-icon {
+            width: 48px;
+            height: 48px;
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 20px;
+        }
+        
+        .modal-overlay {
+            background: rgba(0, 0, 0, 0.5);
+            backdrop-filter: blur(4px);
+        }
+        
+        .modal-content {
+            background: white;
+            border-radius: 16px;
+            box-shadow: 0 25px 50px rgba(0, 0, 0, 0.25);
+        }
+        
+        .form-group {
+            margin-bottom: 20px;
+        }
+        
+        .form-label {
+            display: block;
+            font-weight: 600;
+            color: #374151;
+            margin-bottom: 8px;
+        }
+        
+        .form-input {
+            width: 100%;
+            padding: 12px 16px;
+            border: 2px solid #e5e7eb;
+            border-radius: 8px;
+            font-size: 14px;
+            transition: all 0.2s ease;
+        }
+        
+        .form-input:focus {
+            outline: none;
+            border-color: #3b82f6;
+            box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+        }
+        
+        .btn-primary {
+            background: linear-gradient(135deg, #3b82f6 0%, #1d4ed8 100%);
+            color: white;
+            border: none;
+            padding: 12px 24px;
+            border-radius: 8px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+        
+        .btn-primary:hover {
+            transform: translateY(-1px);
+            box-shadow: 0 4px 12px rgba(59, 130, 246, 0.4);
+        }
+        
+        .btn-secondary {
+            background: #f8fafc;
+            color: #64748b;
+            border: 2px solid #e2e8f0;
+            padding: 12px 24px;
+            border-radius: 8px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+        
+        .btn-secondary:hover {
+            background: #e2e8f0;
+            color: #475569;
+        }
+        
+        .btn-danger {
+            background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%);
+            color: white;
+            border: none;
+            padding: 12px 24px;
+            border-radius: 8px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+        
+        .btn-danger:hover {
+            transform: translateY(-1px);
+            box-shadow: 0 4px 12px rgba(239, 68, 68, 0.4);
+        }
+        
+        .loading-spinner {
+            border: 3px solid #f3f4f6;
+            border-top: 3px solid #3b82f6;
+            border-radius: 50%;
+            width: 24px;
+            height: 24px;
+            animation: spin 1s linear infinite;
+        }
+        
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+        
+        .filter-tabs {
+            display: flex;
+            gap: 8px;
+            margin-bottom: 20px;
+        }
+        
+        .filter-tab {
+            padding: 8px 16px;
+            border-radius: 20px;
+            font-size: 14px;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            border: 2px solid transparent;
+        }
+        
+        .filter-tab.active {
+            background: #3b82f6;
+            color: white;
+        }
+        
+        .filter-tab:not(.active) {
+            background: #f8fafc;
+            color: #64748b;
+            border-color: #e2e8f0;
+        }
+        
+        .filter-tab:not(.active):hover {
+            background: #e2e8f0;
+            color: #475569;
+        }
+    </style>
+</head>
+<body class="bg-gray-50">
+    <!-- Header -->
+    <header class="bg-white shadow-sm border-b border-gray-200">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex justify-between items-center h-16">
+                <div class="flex items-center">
+                    <a href="index.html" class="flex items-center space-x-3">
+                        <img src="../Logo.png" alt="Near & Now" class="h-8 w-8">
+                        <span class="text-xl font-bold text-gray-900">Near & Now</span>
+                    </a>
+                    <span class="ml-4 text-gray-400">|</span>
+                    <h1 class="ml-4 text-lg font-semibold text-gray-700">Product Management</h1>
+                </div>
+                
+                <div class="flex items-center space-x-4">
+                    <div class="flex items-center space-x-2">
+                        <div class="w-8 h-8 bg-blue-500 rounded-full flex items-center justify-center">
+                            <i class="fas fa-user text-white text-sm"></i>
+                        </div>
+                        <span class="text-sm font-medium text-gray-700" id="adminUsername">Admin</span>
+                    </div>
+                    <button onclick="logout()" class="text-gray-500 hover:text-gray-700">
+                        <i class="fas fa-sign-out-alt"></i>
+                    </button>
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <!-- Main Content -->
+    <main class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        <!-- Stats Cards -->
+        <div class="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
+            <div class="stats-card">
+                <div class="flex items-center justify-between">
+                    <div>
+                        <p class="text-sm font-medium text-gray-600">Total Products</p>
+                        <p class="text-2xl font-bold text-gray-900" id="totalProducts">0</p>
+                    </div>
+                    <div class="stats-icon bg-blue-100 text-blue-600">
+                        <i class="fas fa-box"></i>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="stats-card">
+                <div class="flex items-center justify-between">
+                    <div>
+                        <p class="text-sm font-medium text-gray-600">Active Products</p>
+                        <p class="text-2xl font-bold text-green-600" id="activeProducts">0</p>
+                    </div>
+                    <div class="stats-icon bg-green-100 text-green-600">
+                        <i class="fas fa-check-circle"></i>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="stats-card">
+                <div class="flex items-center justify-between">
+                    <div>
+                        <p class="text-sm font-medium text-gray-600">Low Stock</p>
+                        <p class="text-2xl font-bold text-orange-600" id="lowStockProducts">0</p>
+                    </div>
+                    <div class="stats-icon bg-orange-100 text-orange-600">
+                        <i class="fas fa-exclamation-triangle"></i>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="stats-card">
+                <div class="flex items-center justify-between">
+                    <div>
+                        <p class="text-sm font-medium text-gray-600">Categories</p>
+                        <p class="text-2xl font-bold text-purple-600" id="totalCategories">0</p>
+                    </div>
+                    <div class="stats-icon bg-purple-100 text-purple-600">
+                        <i class="fas fa-tags"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Search and Filter Section -->
+        <div class="search-box">
+            <div class="flex flex-col lg:flex-row gap-4">
+                <div class="flex-1">
+                    <div class="relative">
+                        <i class="fas fa-search absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400"></i>
+                        <input type="text" id="productSearch" placeholder="Search products by name, category, or description..." 
+                               class="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent">
+                    </div>
+                </div>
+                
+                <div class="flex gap-3">
+                    <select id="categoryFilter" class="px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent">
+                        <option value="">All Categories</option>
+                    </select>
+                    
+                    <select id="statusFilter" class="px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent">
+                        <option value="">All Status</option>
+                        <option value="active">Active</option>
+                        <option value="inactive">Inactive</option>
+                        <option value="low-stock">Low Stock</option>
+                    </select>
+                    
+                    <button id="addProductBtn" class="btn-primary flex items-center space-x-2">
+                        <i class="fas fa-plus"></i>
+                        <span>Add Product</span>
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Filter Tabs -->
+        <div class="filter-tabs">
+            <button class="filter-tab active" data-filter="all">All Products</button>
+            <button class="filter-tab" data-filter="active">Active</button>
+            <button class="filter-tab" data-filter="inactive">Inactive</button>
+            <button class="filter-tab" data-filter="low-stock">Low Stock</button>
+            <button class="filter-tab" data-filter="featured">Featured</button>
+        </div>
+
+        <!-- Products Table -->
+        <div class="bg-white rounded-lg shadow-sm border border-gray-200">
+            <div class="px-6 py-4 border-b border-gray-200">
+                <div class="flex items-center justify-between">
+                    <h3 class="text-lg font-semibold text-gray-900">Products</h3>
+                    <div class="flex items-center space-x-3">
+                        <button id="bulkActionsBtn" class="btn-secondary text-sm" style="display: none;">
+                            <i class="fas fa-edit mr-2"></i>Bulk Actions
+                        </button>
+                        <button id="refreshProducts" class="btn-secondary text-sm">
+                            <i class="fas fa-sync-alt mr-2"></i>Refresh
+                        </button>
+                        <div class="flex items-center space-x-2">
+                            <span class="text-sm text-gray-600">View:</span>
+                            <button id="gridViewBtn" class="p-2 rounded-lg border border-gray-300 hover:bg-gray-50">
+                                <i class="fas fa-th"></i>
+                            </button>
+                            <button id="tableViewBtn" class="p-2 rounded-lg border border-gray-300 bg-blue-50 text-blue-600">
+                                <i class="fas fa-list"></i>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Table View -->
+            <div id="tableView" class="overflow-x-auto">
+                <table class="w-full">
+                    <thead class="bg-gray-50">
+                        <tr>
+                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                <input type="checkbox" id="selectAll" class="rounded border-gray-300">
+                            </th>
+                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Product</th>
+                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Category</th>
+                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Price</th>
+                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Stock</th>
+                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Status</th>
+                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody id="productsTableBody" class="bg-white divide-y divide-gray-200">
+                        <tr>
+                            <td colspan="7" class="px-6 py-12 text-center">
+                                <div class="loading-spinner mx-auto mb-4"></div>
+                                <p class="text-gray-500">Loading products...</p>
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+            
+            <!-- Grid View -->
+            <div id="gridView" class="p-6" style="display: none;">
+                <div id="productsGrid" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+                    <!-- Products will be loaded here -->
+                </div>
+            </div>
+        </div>
+
+        <!-- Pagination -->
+        <div class="flex items-center justify-between mt-6">
+            <div class="text-sm text-gray-700">
+                Showing <span id="showingStart">1</span> to <span id="showingEnd">10</span> of <span id="totalCount">0</span> products
+            </div>
+            <div class="flex items-center space-x-2">
+                <button id="prevPage" class="btn-secondary text-sm" disabled>
+                    <i class="fas fa-chevron-left mr-1"></i>Previous
+                </button>
+                <div id="pageNumbers" class="flex space-x-1">
+                    <!-- Page numbers will be generated here -->
+                </div>
+                <button id="nextPage" class="btn-secondary text-sm">
+                    Next<i class="fas fa-chevron-right ml-1"></i>
+                </button>
+            </div>
+        </div>
+    </main>
+
+    <!-- Add/Edit Product Modal -->
+    <div id="productModal" class="fixed inset-0 modal-overlay hidden z-50">
+        <div class="flex items-center justify-center min-h-screen p-4">
+            <div class="modal-content w-full max-w-2xl max-h-[90vh] overflow-y-auto">
+                <div class="p-6">
+                    <div class="flex items-center justify-between mb-6">
+                        <h3 id="modalTitle" class="text-xl font-semibold text-gray-900">Add Product</h3>
+                        <button id="closeModal" class="text-gray-400 hover:text-gray-600">
+                            <i class="fas fa-times text-xl"></i>
+                        </button>
+                    </div>
+                    
+                    <form id="productForm">
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                            <div class="form-group">
+                                <label class="form-label">Product Name *</label>
+                                <input type="text" id="productName" name="name" class="form-input" required>
+                            </div>
+                            
+                            <div class="form-group">
+                                <label class="form-label">Category *</label>
+                                <select id="productCategory" name="category" class="form-input" required>
+                                    <option value="">Select Category</option>
+                                </select>
+                            </div>
+                            
+                            <div class="form-group">
+                                <label class="form-label">Price (₹) *</label>
+                                <input type="number" id="productPrice" name="price" class="form-input" step="0.01" required>
+                            </div>
+                            
+                            <div class="form-group">
+                                <label class="form-label">Stock Quantity *</label>
+                                <input type="number" id="productStock" name="stock" class="form-input" required>
+                            </div>
+                            
+                            <div class="form-group">
+                                <label class="form-label">SKU</label>
+                                <input type="text" id="productSku" name="sku" class="form-input">
+                            </div>
+                            
+                            <div class="form-group">
+                                <label class="form-label">Status</label>
+                                <select id="productStatus" name="status" class="form-input">
+                                    <option value="active">Active</option>
+                                    <option value="inactive">Inactive</option>
+                                </select>
+                            </div>
+                        </div>
+                        
+                        <div class="form-group">
+                            <label class="form-label">Description</label>
+                            <textarea id="productDescription" name="description" class="form-input" rows="4"></textarea>
+                        </div>
+                        
+                        <div class="form-group">
+                            <label class="form-label">Product Images</label>
+                            <div class="border-2 border-dashed border-gray-300 rounded-lg p-6 text-center">
+                                <i class="fas fa-cloud-upload-alt text-4xl text-gray-400 mb-4"></i>
+                                <p class="text-gray-600 mb-2">Click to upload or drag and drop</p>
+                                <p class="text-sm text-gray-500">PNG, JPG, GIF up to 10MB</p>
+                                <input type="file" id="productImages" name="images" multiple accept="image/*" class="hidden">
+                            </div>
+                        </div>
+                        
+                        <div class="flex justify-end space-x-3 mt-6">
+                            <button type="button" id="cancelProduct" class="btn-secondary">Cancel</button>
+                            <button type="submit" id="saveProduct" class="btn-primary">
+                                <i class="fas fa-save mr-2"></i>Save Product
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Delete Confirmation Modal -->
+    <div id="deleteModal" class="fixed inset-0 modal-overlay hidden z-50">
+        <div class="flex items-center justify-center min-h-screen p-4">
+            <div class="modal-content w-full max-w-md">
+                <div class="p-6">
+                    <div class="text-center">
+                        <div class="mx-auto flex items-center justify-center h-12 w-12 rounded-full bg-red-100 mb-4">
+                            <i class="fas fa-exclamation-triangle text-red-600 text-xl"></i>
+                        </div>
+                        <h3 class="text-lg font-medium text-gray-900 mb-2">Delete Product</h3>
+                        <p class="text-sm text-gray-500 mb-6">Are you sure you want to delete this product? This action cannot be undone.</p>
+                        <div class="flex justify-center space-x-3">
+                            <button id="cancelDelete" class="btn-secondary">Cancel</button>
+                            <button id="confirmDelete" class="btn-danger">
+                                <i class="fas fa-trash mr-2"></i>Delete
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Scripts -->
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="supabase-client.js"></script>
+    <script src="assets/js/admin-products.js"></script>
+    
+    <script>
+        // Initialize the beautiful products page
+        document.addEventListener('DOMContentLoaded', function() {
+            // Check authentication
+            const isLoggedIn = localStorage.getItem('admin_logged_in') === 'true';
+            const username = localStorage.getItem('admin_username');
+            
+            if (!isLoggedIn || !username) {
+                window.location.href = 'login.html';
+                return;
+            }
+            
+            // Set username
+            document.getElementById('adminUsername').textContent = username;
+            
+            // Initialize products manager
+            if (window.AdminProductsManager) {
+                window.adminProductsManager = new AdminProductsManager();
+            }
+        });
+        
+        function logout() {
+            localStorage.removeItem('admin_logged_in');
+            localStorage.removeItem('admin_username');
+            window.location.href = 'login.html';
+        }
+    </script>
+</body>
+</html>
