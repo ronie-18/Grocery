@@ -126,24 +126,42 @@ class AdminOrdersManager {
     }
 
     renderOrders() {
-        const ordersBody = document.getElementById('ordersBody');
-        if (!ordersBody) return;
+        const ordersTableBody = document.getElementById('ordersTableBody');
+        const ordersGrid = document.getElementById('ordersGrid');
+        
+        if (!ordersTableBody && !ordersGrid) return;
 
         if (this.orders.length === 0) {
-            ordersBody.innerHTML = `
-                <tr>
-                    <td colspan="7" class="text-center py-8">
-                        <div class="text-gray-500">
-                            <i class="fas fa-shopping-cart text-4xl mb-4"></i>
-                            <p>No orders found</p>
-                        </div>
-                    </td>
-                </tr>
+            const emptyMessage = `
+                <div class="text-center py-12">
+                    <i class="fas fa-shopping-cart text-6xl text-gray-300 mb-4"></i>
+                    <h3 class="text-xl font-semibold text-gray-600 mb-2">No Orders Found</h3>
+                    <p class="text-gray-500 mb-4">Try adjusting your search or filter criteria</p>
+                </div>
             `;
+            
+            if (ordersTableBody) {
+                ordersTableBody.innerHTML = `<tr><td colspan="8" class="px-6 py-12">${emptyMessage}</td></tr>`;
+            }
+            if (ordersGrid) {
+                ordersGrid.innerHTML = emptyMessage;
+            }
             return;
         }
 
-        ordersBody.innerHTML = this.orders.map(order => `
+        // Update stats
+        this.updateStats();
+
+        if (ordersTableBody) {
+            ordersTableBody.innerHTML = this.orders.map(order => this.createOrderRow(order)).join('');
+        }
+        if (ordersGrid) {
+            ordersGrid.innerHTML = this.orders.map(order => this.createOrderCard(order)).join('');
+        }
+    }
+
+    createOrderRow(order) {
+        return `
             <tr class="hover:bg-gray-50">
                 <td class="px-4 py-3">
                     <div class="font-medium text-gray-900">${order.order_number || `#${order.id.slice(-8)}`}</div>
@@ -349,6 +367,88 @@ Order Details:
         console.log('Orders Success:', message);
         // You could show a toast notification here instead of alert
         console.log('✅ Success:', message);
+    }
+    createOrderCard(order) {
+        const statusClass = this.getStatusClass(order.order_status);
+        const statusText = this.getStatusText(order.order_status);
+        
+        return `
+            <div class="order-card bg-white rounded-lg shadow-md p-6">
+                <div class="flex items-center justify-between mb-4">
+                    <div>
+                        <h3 class="font-semibold text-gray-900">${order.order_number || `#${order.id.slice(-8)}`}</h3>
+                        <p class="text-sm text-gray-500">${this.formatDate(order.created_at)}</p>
+                    </div>
+                    <span class="status-badge ${statusClass}">${statusText}</span>
+                </div>
+                
+                <div class="space-y-2 mb-4">
+                    <div class="flex justify-between">
+                        <span class="text-sm text-gray-600">Customer:</span>
+                        <span class="text-sm font-medium">${order.customer_name || 'N/A'}</span>
+                    </div>
+                    <div class="flex justify-between">
+                        <span class="text-sm text-gray-600">Phone:</span>
+                        <span class="text-sm">${order.customer_phone || 'N/A'}</span>
+                    </div>
+                    <div class="flex justify-between">
+                        <span class="text-sm text-gray-600">Items:</span>
+                        <span class="text-sm">${this.getItemsCount(order.items)}</span>
+                    </div>
+                    <div class="flex justify-between">
+                        <span class="text-sm text-gray-600">Total:</span>
+                        <span class="text-sm font-semibold">₹${order.order_total || 0}</span>
+                    </div>
+                </div>
+                
+                <div class="flex space-x-2">
+                    <button onclick="viewOrderDetails('${order.id}')" class="flex-1 btn-secondary text-sm">
+                        <i class="fas fa-eye mr-1"></i>View
+                    </button>
+                    <button onclick="updateOrderStatus('${order.id}', '${order.order_status}')" class="flex-1 btn-primary text-sm">
+                        <i class="fas fa-edit mr-1"></i>Update
+                    </button>
+                </div>
+            </div>
+        `;
+    }
+
+    updateStats() {
+        const totalOrders = this.orders.length;
+        const pendingOrders = this.orders.filter(o => ['placed', 'confirmed', 'preparing', 'out_for_delivery'].includes(o.order_status)).length;
+        const completedOrders = this.orders.filter(o => o.order_status === 'delivered').length;
+        const totalRevenue = this.orders.reduce((sum, order) => sum + (order.order_total || 0), 0);
+        
+        // Update stats cards
+        const totalEl = document.getElementById('totalOrders');
+        const pendingEl = document.getElementById('pendingOrders');
+        const completedEl = document.getElementById('completedOrders');
+        const revenueEl = document.getElementById('totalRevenue');
+        
+        if (totalEl) totalEl.textContent = totalOrders;
+        if (pendingEl) pendingEl.textContent = pendingOrders;
+        if (completedEl) completedEl.textContent = completedOrders;
+        if (revenueEl) revenueEl.textContent = `₹${totalRevenue.toLocaleString()}`;
+    }
+}
+
+// Global functions for modal handling
+
+// Global functions for modal handling
+function viewOrderDetails(orderId) {
+    console.log('View order details:', orderId);
+    const modal = document.getElementById('orderModal');
+    if (modal) {
+        modal.classList.remove('hidden');
+    }
+}
+
+function updateOrderStatus(orderId, currentStatus) {
+    console.log('Update order status:', orderId, currentStatus);
+    const modal = document.getElementById('statusModal');
+    if (modal) {
+        document.getElementById('currentStatus').value = currentStatus;
+        modal.classList.remove('hidden');
     }
 }
 

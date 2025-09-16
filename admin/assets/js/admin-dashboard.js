@@ -60,12 +60,14 @@ class AdminDashboard {
         const navItems = document.querySelectorAll('.nav-item');
         navItems.forEach(item => {
             item.addEventListener('click', (e) => {
-                e.preventDefault();
                 const section = item.getAttribute('data-section');
                 if (section) {
+                    // Only prevent default for internal sections
+                    e.preventDefault();
                     this.showSection(section);
                     this.updateActiveNav(item);
                 }
+                // For external links (like products.html), let the browser handle navigation normally
             });
         });
     }
@@ -139,6 +141,10 @@ class AdminDashboard {
                 case 'users':
                     // Load users when users section is shown
                     console.log('👥 Users section loaded');
+                    break;
+                case 'categories':
+                    // Load categories when categories section is shown
+                    console.log('🏷️ Categories section loaded');
                     break;
                 default:
                     console.log(`No specific data loading for section: ${section}`);
@@ -290,11 +296,38 @@ class AdminDashboard {
                 console.log('📊 Products tables not accessible, using calculated count from orders:', finalProductsCount);
             }
 
+            // Get categories count
+            let totalCategories = 0;
+            try {
+                const { count: categoriesCount, error: categoriesError } = await window.supabaseClient
+                    .from('categories')
+                    .select('*', { count: 'exact', head: true });
+                
+                if (!categoriesError && categoriesCount !== null) {
+                    totalCategories = categoriesCount;
+                    console.log('✅ Categories count from categories table:', totalCategories);
+                } else {
+                    console.log('📊 Categories table not accessible, trying enhanced table...');
+                    // Try enhanced categories table
+                    const { count: enhancedCategoriesCount, error: enhancedCategoriesError } = await window.supabaseClient
+                        .from('categories_enhanced')
+                        .select('*', { count: 'exact', head: true });
+                    
+                    if (!enhancedCategoriesError && enhancedCategoriesCount !== null) {
+                        totalCategories = enhancedCategoriesCount;
+                        console.log('✅ Categories count from enhanced table:', totalCategories);
+                    }
+                }
+            } catch (error) {
+                console.log('📊 Categories tables not accessible');
+            }
+
             console.log('🔍 Calculated stats:', {
                 totalOrders,
                 totalRevenue,
                 totalUsers,
-                totalProducts: finalProductsCount
+                totalProducts: finalProductsCount,
+                totalCategories
             });
 
             // Update the dashboard with real data
@@ -302,6 +335,7 @@ class AdminDashboard {
             this.updateStatCard('totalRevenue', `₹${totalRevenue.toLocaleString()}`);
             this.updateStatCard('totalUsers', totalUsers);
             this.updateStatCard('totalProducts', finalProductsCount);
+            this.updateStatCard('totalCategories', totalCategories);
 
             console.log('✅ Real statistics loaded and updated in UI');
 
@@ -351,13 +385,15 @@ class AdminDashboard {
             totalOrders: 0,
             totalRevenue: 0,
             totalUsers: 0,
-            totalProducts: 0
+            totalProducts: 0,
+            totalCategories: 0
         };
         
         this.updateStatCard('totalOrders', stats.totalOrders);
         this.updateStatCard('totalRevenue', `₹${stats.totalRevenue.toLocaleString()}`);
         this.updateStatCard('totalUsers', stats.totalUsers);
         this.updateStatCard('totalProducts', stats.totalProducts);
+        this.updateStatCard('totalCategories', stats.totalCategories);
     }
 
     /**
