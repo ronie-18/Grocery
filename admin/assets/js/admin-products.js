@@ -49,6 +49,22 @@ class AdminProductsManager {
             });
         }
 
+        // Product type change handler
+        const productTypeSelect = document.getElementById('productType');
+        if (productTypeSelect) {
+            productTypeSelect.addEventListener('change', (e) => {
+                toggleLooseConfig(e.target.value === 'loose');
+            });
+        }
+
+        // Loose product category change handler
+        const looseCategorySelect = document.getElementById('looseProductCategory');
+        if (looseCategorySelect) {
+            looseCategorySelect.addEventListener('change', (e) => {
+                updateCommonSizes(e.target.value);
+            });
+        }
+
         // Add product button
         const addProductBtn = document.getElementById('addProductBtn');
         if (addProductBtn) {
@@ -195,8 +211,8 @@ class AdminProductsManager {
     createProductRow(product) {
         const primaryImage = product.primary_image_url || product.image_url || 'https://via.placeholder.com/50x50?text=No+Image';
         const categoryName = product.categories_enhanced?.name || product.category || 'Uncategorized';
-        const status = product.is_active !== undefined ? (product.is_active ? 'Active' : 'Inactive') : (product.in_stock ? 'Active' : 'Inactive');
-        const statusClass = product.is_active !== undefined ? (product.is_active ? 'badge-success' : 'badge-secondary') : (product.in_stock ? 'badge-success' : 'badge-secondary');
+        const status = product.status || (product.in_stock ? 'active' : 'inactive');
+        const statusClass = status === 'active' ? 'badge-success' : 'badge-secondary';
         const stock = product.stock_quantity || product.quantity || 0;
         const price = product.price || product.selling_price || 0;
 
@@ -208,6 +224,7 @@ class AdminProductsManager {
                 <td>
                     <div class="font-medium">${product.name}</div>
                     <div class="text-sm text-gray-500">${product.description || ''}</div>
+                    ${product.size ? `<div class="text-xs text-blue-600 font-medium mt-1"><i class="fas fa-weight-hanging mr-1"></i>${product.size}</div>` : ''}
                 </td>
                 <td>
                     <span class="badge badge-outline">${categoryName}</span>
@@ -307,6 +324,10 @@ class AdminProductsManager {
                                 <i class="fas fa-box mr-1"></i>
                                 Stock: ${product.stock_quantity || 0}
                             </span>
+                            ${product.size ? `<span class="flex items-center">
+                                <i class="fas fa-weight-hanging mr-1"></i>
+                                ${product.size}
+                            </span>` : ''}
                             <span class="flex items-center">
                                 <i class="fas fa-star mr-1"></i>
                                 ${product.rating || 0}
@@ -521,6 +542,102 @@ function deleteProduct(productId) {
     if (modal) {
         modal.classList.remove('hidden');
     }
+}
+
+// Loose Products Helper Functions
+function toggleLooseConfig(isLoose) {
+    const looseConfig = document.getElementById('looseConfig');
+    const sizeInput = document.getElementById('productSize');
+    
+    if (looseConfig) {
+        if (isLoose) {
+            looseConfig.classList.remove('hidden');
+            if (sizeInput) {
+                sizeInput.disabled = true;
+                sizeInput.placeholder = 'Size will be configured below for loose products';
+            }
+        } else {
+            looseConfig.classList.add('hidden');
+            if (sizeInput) {
+                sizeInput.disabled = false;
+                sizeInput.placeholder = 'e.g., 1kg, 500ml, 1 dozen';
+            }
+        }
+    }
+}
+
+function updateCommonSizes(productCategory) {
+    const container = document.getElementById('commonSizesContainer');
+    if (!container) return;
+
+    if (productCategory === 'solid') {
+        container.innerHTML = `
+            <div class="grid grid-cols-2 gap-2">
+                <label class="flex items-center">
+                    <input type="checkbox" value="250gm" class="mr-2"> 250gm
+                </label>
+                <label class="flex items-center">
+                    <input type="checkbox" value="500gm" class="mr-2"> 500gm
+                </label>
+                <label class="flex items-center">
+                    <input type="checkbox" value="1kg" class="mr-2"> 1kg
+                </label>
+                <label class="flex items-center">
+                    <input type="checkbox" value="2kg" class="mr-2"> 2kg
+                </label>
+                <label class="flex items-center">
+                    <input type="checkbox" value="5kg" class="mr-2"> 5kg
+                </label>
+                <label class="flex items-center">
+                    <input type="checkbox" value="10kg" class="mr-2"> 10kg
+                </label>
+            </div>
+        `;
+    } else if (productCategory === 'liquid') {
+        container.innerHTML = `
+            <div class="grid grid-cols-2 gap-2">
+                <label class="flex items-center">
+                    <input type="checkbox" value="250ml" class="mr-2"> 250ml
+                </label>
+                <label class="flex items-center">
+                    <input type="checkbox" value="500ml" class="mr-2"> 500ml
+                </label>
+                <label class="flex items-center">
+                    <input type="checkbox" value="1L" class="mr-2"> 1L
+                </label>
+                <label class="flex items-center">
+                    <input type="checkbox" value="2L" class="mr-2"> 2L
+                </label>
+                <label class="flex items-center">
+                    <input type="checkbox" value="5L" class="mr-2"> 5L
+                </label>
+                <label class="flex items-center">
+                    <input type="checkbox" value="10L" class="mr-2"> 10L
+                </label>
+            </div>
+        `;
+    }
+}
+
+function getSelectedCommonSizes() {
+    const checkboxes = document.querySelectorAll('#commonSizesContainer input[type="checkbox"]:checked');
+    return Array.from(checkboxes).map(cb => cb.value);
+}
+
+function calculateLooseProductPrice(quantity, basePrice, baseUnit) {
+    // Convert quantity to base unit and calculate price
+    const numericQuantity = parseFloat(quantity.replace(/[^\d.]/g, ''));
+    const unit = quantity.replace(/[\d.]/g, '');
+    
+    // Convert to base unit
+    let baseQuantity = numericQuantity;
+    if (baseUnit === 'kg' && unit === 'gm') {
+        baseQuantity = numericQuantity / 1000;
+    } else if (baseUnit === 'liter' && unit === 'ml') {
+        baseQuantity = numericQuantity / 1000;
+    }
+    
+    return (baseQuantity * basePrice).toFixed(2);
 }
 
 window.AdminProductsManager = AdminProductsManager;

@@ -1358,23 +1358,37 @@ function createProductCard(product) {
     const cartItem = cartItems.find(item => item.id === product.id);
     const quantityInCart = cartItem ? cartItem.quantity : 0;
 
-    // Create the cart button area - either simple Add button or quantity controls
-    const cartButtonArea = quantityInCart > 0 ? `
-        <div class="quantity-controls flex items-center bg-primary rounded-full text-white">
-            <button class="decrease-quantity-btn hover:bg-secondary px-2 py-1.5 rounded-l-full transition duration-300" data-product-id="${product.id}">
-                <i class="fas fa-minus text-xs"></i>
-            </button>
-            <span class="quantity-display px-3 py-1.5 text-sm font-semibold bg-primary">${quantityInCart}</span>
-            <button class="increase-quantity-btn hover:bg-secondary px-2 py-1.5 rounded-r-full transition duration-300" data-product-id="${product.id}">
+    // Check if this is a loose product
+    const isLoose = product.name.toLowerCase().includes('loose') || product.is_loose;
+    
+    // Debug logging for loose products
+    if (isLoose) {
+        console.log('🔍 Loose product detected:', { 
+            name: product.name, 
+            isLoose: product.is_loose, 
+            hasLooseInName: product.name.toLowerCase().includes('loose') 
+        });
+    }
+
+        // Create the cart button area - either simple Add button or quantity controls
+        const cartButtonArea = quantityInCart > 0 ? `
+            <div class="quantity-controls flex items-center bg-primary rounded-full text-white">
+                <button class="decrease-quantity-btn hover:bg-secondary px-2 py-1.5 rounded-l-full transition duration-300" data-product-id="${product.id}">
+                    <i class="fas fa-minus text-xs"></i>
+                </button>
+                <span class="quantity-display px-3 py-1.5 text-sm font-semibold bg-primary">${quantityInCart}</span>
+                <button class="increase-quantity-btn hover:bg-secondary px-2 py-1.5 rounded-r-full transition duration-300" data-product-id="${product.id}">
+                    <i class="fas fa-plus text-xs"></i>
+                </button>
+            </div>
+        ` : `
+            <button class="add-to-cart bg-primary text-white px-3 py-1.5 rounded-full hover:bg-secondary transition duration-300 flex items-center space-x-1" 
+                    data-product-id="${product.id}" 
+                    data-is-loose="${isLoose}">
                 <i class="fas fa-plus text-xs"></i>
+                <span class="text-sm">Add</span>
             </button>
-        </div>
-    ` : `
-        <button class="add-to-cart bg-primary text-white px-3 py-1.5 rounded-full hover:bg-secondary transition duration-300 flex items-center space-x-1" data-product-id="${product.id}">
-            <i class="fas fa-plus text-xs"></i>
-            <span class="text-sm">Add</span>
-        </button>
-    `;
+        `;
 
     return `
         <div class="product-card bg-white rounded-2xl shadow-lg hover:shadow-xl transition duration-300 overflow-hidden group" data-product-id="${product.id}">
@@ -1395,10 +1409,18 @@ function createProductCard(product) {
                     <span class="text-gray-500 text-xs">(${product.rating})</span>
                 </div>
                 <h3 class="font-bold text-gray-800 text-base mb-1 cursor-pointer hover:text-primary transition duration-300 product-name line-clamp-2">${product.name}</h3>
-                ${product.size ? `<p class="text-xs text-gray-500 mb-2 flex items-center"><i class="fas fa-weight-hanging mr-1"></i>${product.size}</p>` : ''}
+                    ${product.size ? `<div class="mb-2 flex items-center justify-between">
+                        <span class="text-xs text-gray-500 flex items-center"><i class="fas fa-weight-hanging mr-1"></i>Size</span>
+                        <span class="text-xs font-semibold text-gray-700 bg-gray-100 px-2 py-1 rounded-full">${product.size}</span>
+                    </div>` : ''}
+                    
+                    ${isLoose ? `<div class="mb-2">
+                        <span class="text-xs text-blue-600 flex items-center"><i class="fas fa-cog mr-1"></i>Variable quantities available</span>
+                    </div>` : ''}
+                
                 <div class="flex items-center justify-between">
                     <div class="flex items-center space-x-1.5">
-                        <span class="text-primary font-bold text-base">₹${price}</span>
+                        <span class="text-primary font-bold text-base product-price">₹${price}</span>
                         ${originalPrice ? `<span class="text-gray-400 line-through text-xs">₹${originalPrice}</span>` : ''}
                     </div>
                     ${cartButtonArea}
@@ -1435,7 +1457,24 @@ function addProductEventListeners() {
         button.addEventListener("click", function (e) {
             e.preventDefault()
             const productId = this.dataset.productId
-            addToCart(productId)
+            const isLoose = this.dataset.isLoose === 'true'
+            
+            console.log('🔍 Add to cart clicked:', { productId, isLoose, modalAvailable: !!window.looseProductModal })
+            
+            if (isLoose && window.looseProductModal) {
+                // Find the product data
+                const product = allProducts.find(p => p.id === productId)
+                console.log('🔍 Found product:', product)
+                if (product) {
+                    console.log('🚀 Opening loose product modal')
+                    window.looseProductModal.show(product)
+                } else {
+                    console.error('❌ Product not found for ID:', productId)
+                }
+            } else {
+                console.log('🛒 Adding to cart normally')
+                addToCart(productId)
+            }
         })
     })
 
@@ -1467,13 +1506,7 @@ function addProductEventListeners() {
         })
     })
 
-    // Product card click for quick view
-    document.querySelectorAll(".product-card").forEach((card) => {
-        card.addEventListener("dblclick", function () {
-            const productId = this.dataset.productId
-            showProductQuickView(productId)
-        })
-    })
+    // Product card double-click quick view removed - redundant with dedicated quick view button
 }
 
 function sortProducts() {
@@ -1594,13 +1627,31 @@ function initializeCart() {
 
     // Close cart when clicking overlay
     document.getElementById("modalOverlay").addEventListener("click", closeCartSidebar)
+    
+    // Make cart functions and products available globally for loose products modal
+    window.cartItems = cartItems;
+    window.cartCount = cartCount;
+    window.allProducts = allProducts;
+    window.saveCartToStorage = saveCartToStorage;
+    window.updateCartCount = updateCartCount;
+    window.updateCartDisplay = updateCartDisplay;
+    window.initializeCart = initializeCart;
+    
+    // Make the main cart variables accessible for direct updates
+    window.getCartCount = () => cartCount;
+    window.setCartCount = (newCount) => {
+        cartCount = newCount;
+        window.cartCount = newCount;
+    };
+    
+    console.log('🛒 Cart system initialized and global variables set');
 }
 
 function addToCart(productId) {
     const product = allProducts.find((p) => p.id === productId)
     if (!product) return
 
-    const existingItem = cartItems.find((item) => item.id === productId)
+    const existingItem = cartItems.find((item) => item.id === productId && !item.isLoose)
 
     if (existingItem) {
         existingItem.quantity += 1
@@ -1608,6 +1659,7 @@ function addToCart(productId) {
         cartItems.push({
             ...product,
             quantity: 1,
+            size: product.size || 'Standard', // Include size information
             addedAt: new Date().toISOString(),
         })
     }
@@ -1626,8 +1678,16 @@ function addToCart(productId) {
     updateSpecificProductCard(productId)
 }
 
-function removeFromCart(productId) {
-    cartItems = cartItems.filter((item) => item.id !== productId)
+function removeFromCart(productId, size = null) {
+    // For loose products, remove by both id and size
+    cartItems = cartItems.filter((item) => {
+        if (item.isLoose && size) {
+            return !(item.id === productId && item.size === size);
+        } else {
+            return item.id !== productId;
+        }
+    });
+    
     cartCount = cartItems.reduce((total, item) => total + item.quantity, 0)
     updateCartCount()
     updateCartDisplay()
@@ -1637,11 +1697,19 @@ function removeFromCart(productId) {
     updateSpecificProductCard(productId)
 }
 
-function updateCartQuantity(productId, newQuantity) {
-    const item = cartItems.find((item) => item.id === productId)
+function updateCartQuantity(productId, newQuantity, size = null) {
+    // For loose products, we need to find by both id and size
+    const item = cartItems.find((item) => {
+        if (item.isLoose && size) {
+            return item.id === productId && item.size === size;
+        } else {
+            return item.id === productId && !item.isLoose;
+        }
+    });
+    
     if (item) {
         if (newQuantity <= 0) {
-            removeFromCart(productId)
+            removeFromCart(productId, size)
         } else {
             item.quantity = newQuantity
             cartCount = cartItems.reduce((total, item) => total + item.quantity, 0)
@@ -1769,12 +1837,15 @@ function updateCartCount() {
     const cartCountElement = document.getElementById("cartCount")
     if (cartCountElement) {
         cartCountElement.textContent = cartCount
+        console.log('🔄 updateCartCount called - setting cart count to:', cartCount);
 
         // Add bounce animation
         cartCountElement.classList.add("animate-bounce")
         setTimeout(() => {
             cartCountElement.classList.remove("animate-bounce")
         }, 1000)
+    } else {
+        console.log('❌ Cart count element not found in updateCartCount');
     }
 
     // Update mobile cart count if it exists
@@ -1786,7 +1857,8 @@ function updateCartCount() {
 }
 
 function updateCartDisplay() {
-
+    console.log('🛒 updateCartDisplay called with items:', cartItems);
+    
     const cartItemsContainer = document.getElementById("cartItems")
     const cartTotal = document.getElementById("cartTotal")
 
@@ -1809,20 +1881,21 @@ function updateCartDisplay() {
             <img src="${item.image}" alt="${item.name}" class="w-16 h-16 rounded-lg object-cover">
             <div class="flex-1">
                 <h4 class="font-semibold text-gray-800">${item.name}</h4>
-                <p class="text-sm text-gray-600">₹${typeof item.price === 'string' ? item.price.replace(/^₹/, '') : item.price} each</p>
+                ${item.size ? `<p class="text-xs text-blue-600 font-medium">Size: ${item.size}</p>` : ''}
+                <p class="text-sm text-gray-600">₹${Math.round(typeof item.price === 'string' ? parseFloat(item.price.replace(/^₹/, '')) : item.price)} each</p>
                 <div class="flex items-center space-x-2 mt-2">
-                    <button class="quantity-btn bg-gray-200 text-gray-700 w-8 h-8 rounded-full hover:bg-gray-300" onclick="updateCartQuantity('${item.id}', ${item.quantity - 1})">
+                    <button class="quantity-btn bg-gray-200 text-gray-700 w-8 h-8 rounded-full hover:bg-gray-300" onclick="updateCartQuantity('${item.id}', ${item.quantity - 1}${item.size ? `, '${item.size}'` : ''})">
                         <i class="fas fa-minus text-xs"></i>
                     </button>
                     <span class="font-semibold px-3">${item.quantity}</span>
-                    <button class="quantity-btn bg-gray-200 text-gray-700 w-8 h-8 rounded-full hover:bg-gray-300" onclick="updateCartQuantity('${item.id}', ${item.quantity + 1})">
+                    <button class="quantity-btn bg-gray-200 text-gray-700 w-8 h-8 rounded-full hover:bg-gray-300" onclick="updateCartQuantity('${item.id}', ${item.quantity + 1}${item.size ? `, '${item.size}'` : ''})">
                         <i class="fas fa-plus text-xs"></i>
                     </button>
                 </div>
             </div>
             <div class="text-right">
-                <p class="font-bold text-primary">₹${(typeof item.price === 'string' ? parseFloat(item.price.replace(/^₹/, '')) : item.price) * item.quantity}</p>
-                <button class="text-red-500 hover:text-red-700 mt-2" onclick="removeFromCart('${item.id}')">
+                <p class="font-bold text-primary">₹${Math.round((typeof item.price === 'string' ? parseFloat(item.price.replace(/^₹/, '')) : item.price) * item.quantity)}</p>
+                <button class="text-red-500 hover:text-red-700 mt-2" onclick="removeFromCart('${item.id}'${item.size ? `, '${item.size}'` : ''})">
                     <i class="fas fa-trash text-sm"></i>
                 </button>
             </div>
@@ -1835,7 +1908,7 @@ function updateCartDisplay() {
         const price = typeof item.price === 'string' ? parseFloat(item.price.replace(/^₹/, '')) : item.price
         return sum + (price * item.quantity)
     }, 0)
-    cartTotal.textContent = `₹${total}`
+    cartTotal.textContent = `₹${Math.round(total)}`
 }
 
 function toggleCartSidebar() {
@@ -1870,7 +1943,7 @@ function proceedToCheckout() {
         const price = typeof item.price === 'string' ? parseFloat(item.price.replace(/^₹/, '')) : item.price
         return sum + (price * item.quantity)
     }, 0)
-    showNotification(`Proceeding to checkout with ₹${total}`, "success")
+    showNotification(`Proceeding to checkout with ₹${Math.round(total)}`, "success")
 
     // In a real application, this would redirect to checkout page
     setTimeout(() => {
@@ -1887,6 +1960,8 @@ function proceedToCheckout() {
 function saveCartToStorage() {
     localStorage.setItem("nearNowCartItems", JSON.stringify(cartItems))
 }
+
+// Global variables are now set in initializeCart() function
 
 // Wishlist Functionality
 function initializeWishlist() {
