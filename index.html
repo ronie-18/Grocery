@@ -626,6 +626,15 @@
         // Load Google Maps dynamically with API key from secure config
         document.addEventListener('DOMContentLoaded', async function () {
             console.log('🚀 Loading secure configuration...');
+            
+            // Check HTTPS requirement for production
+            if (APP_CONFIG.requiresHTTPS()) {
+                console.warn('⚠️ HTTPS required for geolocation in production');
+                console.warn('Current protocol:', window.location.protocol);
+                console.warn('Redirecting to HTTPS...');
+                window.location.href = window.location.href.replace('http:', 'https:');
+                return;
+            }
 
             // Test network connectivity to Google Maps
             console.log('🌐 Testing network connectivity...');
@@ -648,6 +657,8 @@
             console.log('- Platform:', navigator.platform);
             console.log('- OS:', navigator.platform.includes('Win') ? 'Windows' : navigator.platform.includes('Mac') ? 'Mac' : 'Other');
             console.log('- Environment:', APP_CONFIG.isProduction() ? 'Production' : 'Development');
+            console.log('- Production Domain:', APP_CONFIG.isProductionDomain() ? 'YES' : 'NO');
+            console.log('- HTTPS Required:', APP_CONFIG.requiresHTTPS() ? 'YES' : 'NO');
 
             if (!APP_CONFIG.getApiKey()) {
                 console.error('❌ API key not properly configured');
@@ -673,9 +684,18 @@
                     platform: navigator.platform,
                     hostname: window.location.hostname,
                     protocol: window.location.protocol,
-                    os: navigator.platform.includes('Win') ? 'Windows' : navigator.platform.includes('Mac') ? 'Mac' : 'Other'
+                    os: navigator.platform.includes('Win') ? 'Windows' : navigator.platform.includes('Mac') ? 'Mac' : 'Other',
+                    isProductionDomain: APP_CONFIG.isProductionDomain(),
+                    apiKeyPresent: !!APP_CONFIG.getApiKey()
                 });
-                showLocationError('Failed to load Google Maps. Please check your internet connection and try again.');
+                
+                // Show specific error message based on domain
+                let errorMessage = 'Failed to load Google Maps. Please check your internet connection and try again.';
+                if (APP_CONFIG.isProductionDomain()) {
+                    errorMessage = 'Location services temporarily unavailable. Please try again later or contact support if the issue persists.';
+                }
+                
+                showLocationError(errorMessage);
             };
 
             script.onload = function () {
@@ -697,6 +717,11 @@
             console.error('2. Domain restrictions are blocking this site');
             console.error('3. Required APIs are not enabled');
             console.error('4. Billing is not enabled for the project');
+            console.error('Current domain info:');
+            console.error('- Hostname:', window.location.hostname);
+            console.error('- Protocol:', window.location.protocol);
+            console.error('- Is Production Domain:', APP_CONFIG.isProductionDomain());
+            console.error('- API Key Present:', !!APP_CONFIG.getApiKey());
             console.error('Current domain:', window.location.hostname);
             console.error('Current API key:', APP_CONFIG.getApiKey() ? APP_CONFIG.getApiKey().substring(0, 10) + '...' : 'NOT FOUND');
             

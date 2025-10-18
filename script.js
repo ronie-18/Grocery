@@ -4128,6 +4128,31 @@ function handleLocationOnFirstVisit() {
                 },
                 (error) => {
                     console.log('Geolocation failed, prompting for PIN code:', error)
+                    console.error('Geolocation error details:', {
+                        code: error.code,
+                        message: error.message,
+                        hostname: window.location.hostname,
+                        protocol: window.location.protocol,
+                        isProduction: APP_CONFIG.isProduction(),
+                        isProductionDomain: APP_CONFIG.isProductionDomain()
+                    });
+                    
+                    // Handle specific geolocation errors
+                    switch(error.code) {
+                        case error.PERMISSION_DENIED:
+                            console.log('User denied geolocation permission');
+                            break;
+                        case error.POSITION_UNAVAILABLE:
+                            console.log('Location information unavailable');
+                            break;
+                        case error.TIMEOUT:
+                            console.log('Location request timed out');
+                            break;
+                        default:
+                            console.log('Unknown geolocation error');
+                            break;
+                    }
+                    
                     promptForPINCode()
                 },
                 {
