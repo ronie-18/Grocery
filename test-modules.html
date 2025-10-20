@@ -1,0 +1,193 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Module Test - Near & Now</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.7.2/css/all.min.css">
+</head>
+<body class="bg-gray-100 p-8">
+    <div class="max-w-4xl mx-auto bg-white rounded-lg shadow-lg p-8">
+        <h1 class="text-3xl font-bold mb-6 text-center">🧪 Module Testing Dashboard</h1>
+        
+        <div id="test-results" class="space-y-4">
+            <div class="test-item bg-gray-50 p-4 rounded-lg">
+                <h3 class="font-bold text-lg mb-2">📦 Checking Dependencies...</h3>
+                <div id="dependencies-status" class="ml-4"></div>
+            </div>
+            
+            <div class="test-item bg-gray-50 p-4 rounded-lg">
+                <h3 class="font-bold text-lg mb-2">📚 Checking Modules...</h3>
+                <div id="modules-status" class="ml-4"></div>
+            </div>
+            
+            <div class="test-item bg-gray-50 p-4 rounded-lg">
+                <h3 class="font-bold text-lg mb-2">✅ Functionality Tests</h3>
+                <div id="functionality-status" class="ml-4"></div>
+            </div>
+            
+            <div class="test-item bg-gray-50 p-4 rounded-lg">
+                <h3 class="font-bold text-lg mb-2">📊 Console Logs</h3>
+                <pre id="console-logs" class="ml-4 text-xs bg-black text-green-400 p-3 rounded overflow-auto max-h-64"></pre>
+            </div>
+        </div>
+        
+        <div class="mt-6 flex gap-4 justify-center">
+            <a href="index.html" class="bg-blue-500 text-white px-6 py-3 rounded-lg hover:bg-blue-600 font-semibold">
+                🏠 Go to Main Site
+            </a>
+            <button onclick="runTests()" class="bg-green-500 text-white px-6 py-3 rounded-lg hover:bg-green-600 font-semibold">
+                🔄 Re-run Tests
+            </button>
+        </div>
+    </div>
+
+    <!-- Load Dependencies First -->
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="supabase-client.js"></script>
+    <script src="fix-main-website-products.js"></script>
+    <script src="app-config.js"></script>
+
+    <script>
+        // Capture console logs
+        const logs = [];
+        const originalLog = console.log;
+        const originalError = console.error;
+        
+        console.log = function(...args) {
+            logs.push({ type: 'log', msg: args.join(' ') });
+            originalLog.apply(console, args);
+            updateConsoleDisplay();
+        };
+        
+        console.error = function(...args) {
+            logs.push({ type: 'error', msg: args.join(' ') });
+            originalError.apply(console, args);
+            updateConsoleDisplay();
+        };
+
+        function updateConsoleDisplay() {
+            const consoleEl = document.getElementById('console-logs');
+            consoleEl.innerHTML = logs.map(log => {
+                const color = log.type === 'error' ? 'text-red-400' : 'text-green-400';
+                return `<div class="${color}">${log.msg}</div>`;
+            }).join('');
+            consoleEl.scrollTop = consoleEl.scrollHeight;
+        }
+
+        function addStatus(elementId, text, success) {
+            const el = document.getElementById(elementId);
+            const icon = success ? '✅' : '❌';
+            const color = success ? 'text-green-600' : 'text-red-600';
+            el.innerHTML += `<div class="${color}">${icon} ${text}</div>`;
+        }
+
+        async function runTests() {
+            // Clear previous results
+            document.getElementById('dependencies-status').innerHTML = '';
+            document.getElementById('modules-status').innerHTML = '';
+            document.getElementById('functionality-status').innerHTML = '';
+            logs.length = 0;
+
+            console.log('🧪 Starting module tests...');
+
+            // Test 1: Check Dependencies
+            console.log('📦 Checking dependencies...');
+            
+            const hasSupabase = typeof supabase !== 'undefined';
+            addStatus('dependencies-status', `Supabase Library: ${hasSupabase ? 'Loaded' : 'Missing'}`, hasSupabase);
+            
+            const hasSupabaseClient = typeof window.supabaseClient !== 'undefined';
+            addStatus('dependencies-status', `Supabase Client: ${hasSupabaseClient ? 'Initialized' : 'Missing'}`, hasSupabaseClient);
+            
+            const hasGetAllProducts = typeof getAllProducts === 'function';
+            addStatus('dependencies-status', `getAllProducts(): ${hasGetAllProducts ? 'Available' : 'Missing'}`, hasGetAllProducts);
+            
+            const hasAppConfig = typeof APP_CONFIG !== 'undefined';
+            addStatus('dependencies-status', `APP_CONFIG: ${hasAppConfig ? 'Loaded' : 'Missing'}`, hasAppConfig);
+
+            // Wait a bit for modules to load
+            await new Promise(resolve => setTimeout(resolve, 1000));
+
+            // Test 2: Check Modules
+            console.log('📚 Checking modules...');
+            
+            const hasCartModule = typeof window.cartModule !== 'undefined';
+            addStatus('modules-status', `cartModule: ${hasCartModule ? 'Loaded' : 'Missing'}`, hasCartModule);
+            
+            const hasSearchModule = typeof window.searchModule !== 'undefined';
+            addStatus('modules-status', `searchModule: ${hasSearchModule ? 'Loaded' : 'Missing'}`, hasSearchModule);
+            
+            const hasProductsModule = typeof window.productsModule !== 'undefined';
+            addStatus('modules-status', `productsModule: ${hasProductsModule ? 'Loaded' : 'Missing'}`, hasProductsModule);
+            
+            const hasCategoriesModule = typeof window.categoriesModule !== 'undefined';
+            addStatus('modules-status', `categoriesModule: ${hasCategoriesModule ? 'Loaded' : 'Missing'}`, hasCategoriesModule);
+            
+            const hasAuthModule = typeof window.authModule !== 'undefined';
+            addStatus('modules-status', `authModule: ${hasAuthModule ? 'Loaded' : 'Missing'}`, hasAuthModule);
+
+            // Test 3: Check Global Functions
+            console.log('✅ Checking functionality...');
+            
+            const hasAddToCart = typeof window.addToCart === 'function';
+            addStatus('functionality-status', `addToCart(): ${hasAddToCart ? 'Available' : 'Missing'}`, hasAddToCart);
+            
+            const hasRemoveFromCart = typeof window.removeFromCart === 'function';
+            addStatus('functionality-status', `removeFromCart(): ${hasRemoveFromCart ? 'Available' : 'Missing'}`, hasRemoveFromCart);
+            
+            const hasLogoutUser = typeof window.logoutUser === 'function';
+            addStatus('functionality-status', `logoutUser(): ${hasLogoutUser ? 'Available' : 'Missing'}`, hasLogoutUser);
+            
+            const hasShowNotification = typeof window.showNotification === 'function';
+            addStatus('functionality-status', `showNotification(): ${hasShowNotification ? 'Available' : 'Missing'}`, hasShowNotification);
+
+            // Test products loading
+            if (hasGetAllProducts) {
+                try {
+                    console.log('🔄 Testing product loading...');
+                    const products = await getAllProducts();
+                    const hasProducts = products && products.length > 0;
+                    addStatus('functionality-status', `Products loaded: ${products.length} items`, hasProducts);
+                } catch (error) {
+                    console.error('Product loading failed:', error);
+                    addStatus('functionality-status', `Product loading: Failed - ${error.message}`, false);
+                }
+            }
+
+            console.log('✅ Tests complete!');
+        }
+
+        // Run tests on load
+        window.addEventListener('DOMContentLoaded', () => {
+            setTimeout(runTests, 1500);
+        });
+    </script>
+
+    <!-- Load Modular JS -->
+    <script type="module">
+        import { initializeCart, cartModule } from './js/modules/cart.js';
+        import { searchModule } from './js/modules/search.js';
+        import { productsModule } from './js/modules/products.js';
+        import { categoriesModule } from './js/modules/categories.js';
+        import { logoutUser } from './js/modules/auth.js';
+        import { showNotification } from './js/modules/ui.js';
+        
+        // Export to window
+        window.cartModule = cartModule;
+        window.searchModule = searchModule;
+        window.productsModule = productsModule;
+        window.categoriesModule = categoriesModule;
+        window.authModule = { logoutUser };
+        
+        window.addToCart = cartModule.addToCart;
+        window.removeFromCart = cartModule.removeFromCart;
+        window.logoutUser = logoutUser;
+        window.showNotification = showNotification;
+        
+        console.log('✅ All modules imported successfully');
+    </script>
+</body>
+</html>
+

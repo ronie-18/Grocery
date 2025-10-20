@@ -1,0 +1,122 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Quick Diagnostic</title>
+    <style>
+        body {
+            font-family: monospace;
+            padding: 20px;
+            background: #1a1a1a;
+            color: #0f0;
+        }
+        .status { margin: 5px 0; }
+        .pass { color: #0f0; }
+        .fail { color: #f00; }
+        .info { color: #0ff; }
+        button {
+            background: #0f0;
+            color: #000;
+            border: none;
+            padding: 10px 20px;
+            font-size: 16px;
+            cursor: pointer;
+            margin: 10px 5px;
+        }
+        button:hover { background: #0ff; }
+    </style>
+</head>
+<body>
+    <h1>🔧 Module Diagnostic</h1>
+    <div id="output"></div>
+    <br>
+    <button onclick="location.href='index.html'">→ Go to Main Site</button>
+    <button onclick="runDiagnostic()">🔄 Re-run Diagnostic</button>
+
+    <!-- Load Dependencies -->
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="supabase-client.js"></script>
+    <script src="fix-main-website-products.js"></script>
+    <script src="app-config.js"></script>
+
+    <script>
+        const output = document.getElementById('output');
+
+        function log(msg, type = 'info') {
+            const div = document.createElement('div');
+            div.className = `status ${type}`;
+            div.textContent = msg;
+            output.appendChild(div);
+        }
+
+        function clear() {
+            output.innerHTML = '';
+        }
+
+        async function runDiagnostic() {
+            clear();
+            log('═══════════════════════════════════', 'info');
+            log('  MODULE DIAGNOSTIC STARTING...', 'info');
+            log('═══════════════════════════════════', 'info');
+
+            // Check dependencies
+            log('\n📦 Checking Dependencies:', 'info');
+            check('Supabase Library', typeof supabase !== 'undefined');
+            check('Supabase Client', typeof window.supabaseClient !== 'undefined');
+            check('getAllProducts()', typeof window.getAllProducts === 'function');
+            check('APP_CONFIG', typeof window.APP_CONFIG !== 'undefined');
+
+            // Wait for modules
+            log('\n⏳ Waiting for modules to load...', 'info');
+            await new Promise(resolve => setTimeout(resolve, 1500));
+
+            // Check modules
+            log('\n📚 Checking Modules:', 'info');
+            check('cartModule', typeof window.cartModule !== 'undefined');
+            check('searchModule', typeof window.searchModule !== 'undefined');
+            check('productsModule', typeof window.productsModule !== 'undefined');
+            check('categoriesModule', typeof window.categoriesModule !== 'undefined');
+            check('authModule', typeof window.authModule !== 'undefined');
+
+            // Check functions
+            log('\n✅ Checking Functions:', 'info');
+            check('window.addToCart()', typeof window.addToCart === 'function');
+            check('window.removeFromCart()', typeof window.removeFromCart === 'function');
+            check('window.logoutUser()', typeof window.logoutUser === 'function');
+            check('window.showNotification()', typeof window.showNotification === 'function');
+            check('window.filterByCategory()', typeof window.filterByCategory === 'function');
+
+            // Test product loading
+            log('\n🔍 Testing Product Load:', 'info');
+            try {
+                const products = await window.getAllProducts();
+                check(`Products Loaded: ${products.length} items`, products && products.length > 0);
+            } catch (error) {
+                log(`✗ Product loading failed: ${error.message}`, 'fail');
+            }
+
+            log('\n═══════════════════════════════════', 'info');
+            log('  DIAGNOSTIC COMPLETE', 'info');
+            log('═══════════════════════════════════', 'info');
+        }
+
+        function check(name, condition) {
+            if (condition) {
+                log(`✓ ${name}`, 'pass');
+            } else {
+                log(`✗ ${name}`, 'fail');
+            }
+        }
+
+        // Auto-run on load
+        window.addEventListener('DOMContentLoaded', () => {
+            setTimeout(runDiagnostic, 500);
+        });
+    </script>
+
+    <!-- Load Modular JS -->
+    <script type="module" src="js/main.js?v=5.1"></script>
+</body>
+</html>
+

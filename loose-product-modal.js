@@ -367,6 +367,7 @@ class LooseProductModal {
             image: this.currentProduct.image,
             size: this.selectedSize ? this.selectedSize.size : `${this.customQuantity}${baseUnit}`,
             isLoose: true,
+            cartEntryId: `loose_${this.currentProduct.id}_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`, // Unique ID for this cart entry
             looseDetails: {
                 selectedSize: this.selectedSize,
                 customQuantity: this.customQuantity,
@@ -383,7 +384,7 @@ class LooseProductModal {
             saveCartToStorage: !!window.saveCartToStorage,
             updateCartCount: !!window.updateCartCount,
             updateCartDisplay: !!window.updateCartDisplay,
-            setCartCount: !!window.setCartCount
+            renderProducts: !!window.renderProducts
         });
         
         // Debug: Check if cart system is properly initialized
@@ -393,28 +394,13 @@ class LooseProductModal {
             return;
         }
         
-        // Try to initialize cart system if not available
-        if (!window.cartItems && typeof initializeCart === 'function') {
-            console.log('🔄 Cart system not available, trying to initialize...');
-            initializeCart();
-        }
-        
         // Add the cart item directly to the cart
         if (window.cartItems) {
-            // Check if item already exists in cart (for loose products, check by id and size)
-            const existingItem = window.cartItems.find(item => 
-                item.id === cartItem.id && 
-                item.size === cartItem.size &&
-                item.isLoose === true
-            );
-            
-            if (existingItem) {
-                existingItem.quantity += cartItem.quantity;
-                console.log('📈 Updated existing cart item quantity:', existingItem.quantity);
-            } else {
-                window.cartItems.push(cartItem);
-                console.log('➕ Added new cart item:', cartItem);
-            }
+            // For loose products: ALWAYS add as a new entry (separate entries for different sizes/quantities)
+            // This allows users to add the same product multiple times with different quantities
+            window.cartItems.push(cartItem);
+            console.log('➕ Added new loose product cart entry:', cartItem);
+            console.log('📊 Total loose entries for this product:', window.cartItems.filter(item => item.id === cartItem.id && item.isLoose).length);
             
             // Update cart count - ensure it's a number
             const newCartCount = window.cartItems.reduce((total, item) => {
@@ -422,14 +408,13 @@ class LooseProductModal {
                 return total + quantity;
             }, 0);
             
-            // Update cart count using the proper setter function
+            // Update cart count using helper if available, otherwise directly
             if (window.setCartCount) {
                 window.setCartCount(newCartCount);
-                console.log('🔢 Updated cart count using setter:', newCartCount);
             } else {
                 window.cartCount = newCartCount;
-                console.log('🔢 Updated cart count directly:', newCartCount);
             }
+            console.log('🔢 Updated cart count:', newCartCount);
             
             // Save to localStorage and update display
             if (window.saveCartToStorage) {
@@ -444,9 +429,19 @@ class LooseProductModal {
                 window.updateCartDisplay();
                 console.log('🔄 Updated cart display');
             }
+            // Re-render products to update the product card displays
+            if (window.renderProducts) {
+                window.renderProducts();
+                console.log('🔄 Re-rendered product cards');
+            }
             
             console.log('✅ Loose product added to cart successfully');
             console.log('📋 Current cart items:', window.cartItems);
+            
+            // Show success notification
+            if (window.showNotification) {
+                window.showNotification(`Added ${cartItem.name} (${cartItem.size}) to cart!`, 'success');
+            }
         } else {
             console.error('❌ Cart system not available - window.cartItems is undefined');
         }

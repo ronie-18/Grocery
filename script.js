@@ -1354,76 +1354,134 @@ function createProductCard(product) {
     const price = typeof product.price === 'string' ? product.price.replace(/^₹/, '') : product.price;
     const originalPrice = product.originalPrice ? (typeof product.originalPrice === 'string' ? product.originalPrice.replace(/^₹/, '') : product.originalPrice) : null;
     
-    // Check if product is in cart and get quantity
-    const cartItem = cartItems.find(item => item.id === product.id);
-    const quantityInCart = cartItem ? cartItem.quantity : 0;
-
     // Check if this is a loose product
     const isLoose = product.name.toLowerCase().includes('loose') || product.is_loose;
     
-    // Debug logging for loose products
+    // Calculate quantity in cart and get size details
+    let quantityInCart = 0;
+    let cartSizes = []; // Store all sizes added to cart
+    
     if (isLoose) {
-        console.log('🔍 Loose product detected:', { 
-            name: product.name, 
-            isLoose: product.is_loose, 
-            hasLooseInName: product.name.toLowerCase().includes('loose') 
-        });
+        // For loose products, get all variations and their sizes
+        const looseItems = cartItems.filter(item => item.id === product.id && item.isLoose);
+        quantityInCart = looseItems.reduce((sum, item) => sum + (parseInt(item.quantity) || 0), 0);
+        cartSizes = looseItems.map(item => item.size).filter(Boolean);
+        
+        if (looseItems.length > 0) {
+            console.log('🔍 Loose product in cart:', { 
+                name: product.name, 
+                variations: looseItems.length,
+                totalQuantity: quantityInCart,
+                sizes: cartSizes,
+                items: looseItems
+            });
+        }
+    } else {
+        // For non-loose products, get single cart entry
+        const cartItem = cartItems.find(item => item.id === product.id && !item.isLoose);
+        quantityInCart = cartItem ? cartItem.quantity : 0;
     }
 
-        // Create the cart button area - either simple Add button or quantity controls
-        const cartButtonArea = quantityInCart > 0 ? `
-            <div class="quantity-controls flex items-center bg-primary rounded-full text-white">
-                <button class="decrease-quantity-btn hover:bg-secondary px-2 py-1.5 rounded-l-full transition duration-300" data-product-id="${product.id}">
-                    <i class="fas fa-minus text-xs"></i>
-                </button>
-                <span class="quantity-display px-3 py-1.5 text-sm font-semibold bg-primary">${quantityInCart}</span>
-                <button class="increase-quantity-btn hover:bg-secondary px-2 py-1.5 rounded-r-full transition duration-300" data-product-id="${product.id}">
+        // Create the cart button area
+        // For loose products: always show button to add more, but display quantity if items in cart
+        // For non-loose products: show quantity controls if in cart, otherwise show add button
+        const cartButtonArea = isLoose ? 
+            // LOOSE PRODUCTS: Show button with quantity details below
+            (quantityInCart > 0 ? `
+                <div class="flex flex-col space-y-1.5 items-center">
+                    <button class="add-to-cart-loose bg-primary text-white px-3 py-1.5 rounded-full hover:bg-secondary transition duration-300 flex items-center space-x-1" 
+                            data-product-id="${product.id}" 
+                            data-is-loose="true">
+                        <i class="fas fa-plus text-xs"></i>
+                        <span class="text-sm font-medium">Add More</span>
+                    </button>
+                    <div class="flex flex-col items-center space-y-0.5">
+                        <div class="flex items-center space-x-1">
+                            <i class="fas fa-shopping-bag text-green-600 text-xs"></i>
+                            <span class="text-xs font-semibold text-green-700">${quantityInCart} in cart</span>
+                        </div>
+                        <span class="text-xs text-gray-600 text-center leading-tight">${cartSizes.join(', ')}</span>
+                    </div>
+                </div>
+            ` : `
+                <button class="add-to-cart-loose bg-primary text-white px-3 py-1.5 rounded-full hover:bg-secondary transition duration-300 flex items-center space-x-1" 
+                        data-product-id="${product.id}" 
+                        data-is-loose="true">
                     <i class="fas fa-plus text-xs"></i>
+                    <span class="text-sm">Add</span>
                 </button>
-            </div>
-        ` : `
-            <button class="add-to-cart bg-primary text-white px-3 py-1.5 rounded-full hover:bg-secondary transition duration-300 flex items-center space-x-1" 
-                    data-product-id="${product.id}" 
-                    data-is-loose="${isLoose}">
-                <i class="fas fa-plus text-xs"></i>
-                <span class="text-sm">Add</span>
-            </button>
-        `;
+            `)
+            :
+            // NON-LOOSE PRODUCTS: Standard quantity controls
+            (quantityInCart > 0 ? `
+                <div class="quantity-controls flex items-center bg-primary rounded-full text-white">
+                    <button class="decrease-quantity-btn hover:bg-secondary px-2 py-1.5 rounded-l-full transition duration-300" data-product-id="${product.id}">
+                        <i class="fas fa-minus text-xs"></i>
+                    </button>
+                    <span class="quantity-display px-3 py-1.5 text-sm font-semibold bg-primary">${quantityInCart}</span>
+                    <button class="increase-quantity-btn hover:bg-secondary px-2 py-1.5 rounded-r-full transition duration-300" data-product-id="${product.id}">
+                        <i class="fas fa-plus text-xs"></i>
+                    </button>
+                </div>
+            ` : `
+                <button class="add-to-cart bg-primary text-white px-3 py-1.5 rounded-full hover:bg-secondary transition duration-300 flex items-center space-x-1" 
+                        data-product-id="${product.id}" 
+                        data-is-loose="false">
+                    <i class="fas fa-plus text-xs"></i>
+                    <span class="text-sm">Add</span>
+                </button>
+            `);
 
     return `
-        <div class="product-card bg-white rounded-2xl shadow-lg hover:shadow-xl transition duration-300 overflow-hidden group" data-product-id="${product.id}">
+        <div class="product-card bg-white rounded-2xl shadow-lg hover:shadow-xl transition duration-300 overflow-hidden group flex flex-col" data-product-id="${product.id}">
             <div class="relative overflow-hidden">
-                <img src="${product.image}" alt="${product.name}" class="w-full h-48 object-cover group-hover:scale-110 transition duration-500">
-                ${product.discount > 0 ? `<div class="absolute top-3 left-3"><span class="bg-red-500 text-white px-2 py-1 rounded-full text-xs font-semibold">-${product.discount}%</span></div>` : ''}
-                <div class="absolute top-3 right-3 flex flex-col space-y-2">
+                <img src="${product.image}" alt="${product.name}" class="w-full h-40 object-cover group-hover:scale-110 transition duration-500">
+                ${product.discount > 0 ? `<div class="absolute top-2 left-2"><span class="bg-red-500 text-white px-2 py-1 rounded-full text-xs font-semibold">-${product.discount}%</span></div>` : ''}
+                <div class="absolute top-2 right-2 flex flex-col space-y-2">
                     <button class="quick-view-btn bg-white bg-opacity-90 hover:bg-opacity-100 p-1.5 rounded-full shadow-md transition duration-300 transform scale-0 group-hover:scale-100" title="Quick View">
                         <i class="fas fa-eye text-gray-600 hover:text-primary text-sm"></i>
                     </button>
                 </div>
             </div>
-            <div class="p-4">
-                <div class="flex items-center justify-between mb-1.5">
+            <div class="p-3 flex flex-col flex-grow">
+                <div class="flex items-center justify-between mb-1">
                     <div class="flex text-yellow-400 text-xs">
                         ${generateStarRating(product.rating)}
                     </div>
                     <span class="text-gray-500 text-xs">(${product.rating})</span>
                 </div>
-                <h3 class="font-bold text-gray-800 text-base mb-1 cursor-pointer hover:text-primary transition duration-300 product-name line-clamp-2">${product.name}</h3>
-                    ${product.size ? `<div class="mb-2 flex items-center justify-between">
-                        <span class="text-xs text-gray-500 flex items-center"><i class="fas fa-weight-hanging mr-1"></i>Size</span>
-                        <span class="text-xs font-semibold text-gray-700 bg-gray-100 px-2 py-1 rounded-full">${product.size}</span>
-                    </div>` : ''}
-                    
-                    ${isLoose ? `<div class="mb-2">
-                        <span class="text-xs text-blue-600 flex items-center"><i class="fas fa-cog mr-1"></i>Variable quantities available</span>
-                    </div>` : ''}
                 
-                <div class="flex items-center justify-between">
-                    <div class="flex items-center space-x-1.5">
-                        <span class="text-primary font-bold text-base product-price">₹${price}</span>
-                        ${originalPrice ? `<span class="text-gray-400 line-through text-xs">₹${originalPrice}</span>` : ''}
+                <!-- Fixed height for product name - ensures size section starts at same position -->
+                <h3 class="font-bold text-gray-800 text-sm mb-1.5 cursor-pointer hover:text-primary transition duration-300 product-name line-clamp-2" style="height: 40px; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden;">${product.name}</h3>
+                
+                <!-- Fixed height info section for consistent alignment -->
+                <div class="mb-1.5" style="min-height: 36px;">
+                    <!-- Size info row - always present for consistent positioning -->
+                    <div class="flex items-center justify-between mb-0.5" style="min-height: 16px;">
+                        ${product.size ? `
+                            <span class="text-xs text-gray-500 flex items-center"><i class="fas fa-weight-hanging mr-1"></i>Size</span>
+                            <span class="text-xs font-semibold text-gray-700 bg-gray-100 px-2 py-0.5 rounded-full">${product.size}</span>
+                        ` : `<span></span>`}
                     </div>
-                    ${cartButtonArea}
+                    
+                    <!-- Loose product badge row - always present for consistent positioning -->
+                    <div class="flex items-start" style="min-height: 16px;">
+                        ${isLoose ? `
+                            <span class="text-xs text-blue-600 flex items-center"><i class="fas fa-cog mr-1"></i>Variable quantities available</span>
+                        ` : ''}
+                    </div>
+                </div>
+                
+                <div class="mt-auto">
+                    <div class="flex items-end justify-between min-h-[56px]">
+                        <div class="flex items-center space-x-1.5 self-end">
+                            <span class="text-primary font-bold text-sm product-price">₹${price}</span>
+                            ${originalPrice ? `<span class="text-gray-400 line-through text-xs">₹${originalPrice}</span>` : ''}
+                        </div>
+                        <div class="self-end">
+                            ${cartButtonArea}
+                        </div>
+                    </div>
                 </div>
             </div>
         </div>
@@ -1452,7 +1510,7 @@ function generateStarRating(rating) {
 }
 
 function addProductEventListeners() {
-    // Add to cart buttons
+    // Add to cart buttons (non-loose products)
     document.querySelectorAll(".add-to-cart").forEach((button) => {
         button.addEventListener("click", function (e) {
             e.preventDefault()
@@ -1477,8 +1535,32 @@ function addProductEventListeners() {
             }
         })
     })
+    
+    // Add to cart buttons for LOOSE products (always open modal)
+    document.querySelectorAll(".add-to-cart-loose").forEach((button) => {
+        button.addEventListener("click", function (e) {
+            e.preventDefault()
+            const productId = this.dataset.productId
+            
+            console.log('🔍 Loose product add/add-more clicked:', { productId, modalAvailable: !!window.looseProductModal })
+            
+            if (window.looseProductModal) {
+                // Find the product data
+                const product = allProducts.find(p => p.id === productId)
+                if (product) {
+                    console.log('🚀 Opening loose product modal for:', product.name)
+                    window.looseProductModal.show(product)
+                } else {
+                    console.error('❌ Product not found for ID:', productId)
+                }
+            } else {
+                console.error('❌ Loose product modal not available')
+                alert('Loose product modal not initialized. Please refresh the page.')
+            }
+        })
+    })
 
-    // Increase quantity buttons
+    // Increase quantity buttons (non-loose products only)
     document.querySelectorAll(".increase-quantity-btn").forEach((button) => {
         button.addEventListener("click", function (e) {
             e.preventDefault()
@@ -1487,7 +1569,7 @@ function addProductEventListeners() {
         })
     })
 
-    // Decrease quantity buttons
+    // Decrease quantity buttons (non-loose products only)
     document.querySelectorAll(".decrease-quantity-btn").forEach((button) => {
         button.addEventListener("click", function (e) {
             e.preventDefault()
@@ -1642,6 +1724,7 @@ function initializeCart() {
     window.setCartCount = (newCount) => {
         cartCount = newCount;
         window.cartCount = newCount;
+        console.log('📊 Cart count synchronized:', newCount);
     };
     
     console.log('🛒 Cart system initialized and global variables set');
@@ -1695,6 +1778,25 @@ function removeFromCart(productId, size = null) {
     
     // Update the specific product card to show "Add" button
     updateSpecificProductCard(productId)
+    renderProducts() // Update all product cards
+}
+
+function removeFromCartByIndex(index) {
+    // Remove item by array index - simple and reliable for loose products
+    if (index >= 0 && index < cartItems.length) {
+        const removedItem = cartItems.splice(index, 1)[0];
+        console.log('🗑️ Removed cart item by index:', removedItem);
+        
+        cartCount = cartItems.reduce((total, item) => total + item.quantity, 0)
+        updateCartCount()
+        updateCartDisplay()
+        saveCartToStorage()
+        renderProducts() // Update all product cards
+        
+        if (window.showNotification) {
+            showNotification(`Removed ${removedItem.name}${removedItem.size ? ` (${removedItem.size})` : ''} from cart`, 'success');
+        }
+    }
 }
 
 function updateCartQuantity(productId, newQuantity, size = null) {
@@ -1876,26 +1978,31 @@ function updateCartDisplay() {
 
     cartItemsContainer.innerHTML = cartItems
         .map(
-            (item) => `
+            (item, index) => `
         <div class="flex items-center space-x-4 p-4 border-b border-gray-200">
             <img src="${item.image}" alt="${item.name}" class="w-16 h-16 rounded-lg object-cover">
             <div class="flex-1">
                 <h4 class="font-semibold text-gray-800">${item.name}</h4>
-                ${item.size ? `<p class="text-xs text-blue-600 font-medium">Size: ${item.size}</p>` : ''}
+                ${item.size ? `<p class="text-xs text-blue-600 font-medium">${item.isLoose ? '📦 ' : ''}Size: ${item.size}</p>` : ''}
+                ${item.isLoose ? `<p class="text-xs text-green-600 font-medium"><i class="fas fa-cog mr-1"></i>Variable quantity</p>` : ''}
                 <p class="text-sm text-gray-600">₹${Math.round(typeof item.price === 'string' ? parseFloat(item.price.replace(/^₹/, '')) : item.price)} each</p>
+                ${!item.isLoose ? `
                 <div class="flex items-center space-x-2 mt-2">
-                    <button class="quantity-btn bg-gray-200 text-gray-700 w-8 h-8 rounded-full hover:bg-gray-300" onclick="updateCartQuantity('${item.id}', ${item.quantity - 1}${item.size ? `, '${item.size}'` : ''})">
+                    <button class="quantity-btn bg-gray-200 text-gray-700 w-8 h-8 rounded-full hover:bg-gray-300" onclick="updateCartQuantity('${item.id}', ${item.quantity - 1})">
                         <i class="fas fa-minus text-xs"></i>
                     </button>
                     <span class="font-semibold px-3">${item.quantity}</span>
-                    <button class="quantity-btn bg-gray-200 text-gray-700 w-8 h-8 rounded-full hover:bg-gray-300" onclick="updateCartQuantity('${item.id}', ${item.quantity + 1}${item.size ? `, '${item.size}'` : ''})">
+                    <button class="quantity-btn bg-gray-200 text-gray-700 w-8 h-8 rounded-full hover:bg-gray-300" onclick="updateCartQuantity('${item.id}', ${item.quantity + 1})">
                         <i class="fas fa-plus text-xs"></i>
                     </button>
                 </div>
+                ` : `
+                <p class="text-xs text-gray-500 mt-1">Quantity: ${item.quantity}</p>
+                `}
             </div>
             <div class="text-right">
                 <p class="font-bold text-primary">₹${Math.round((typeof item.price === 'string' ? parseFloat(item.price.replace(/^₹/, '')) : item.price) * item.quantity)}</p>
-                <button class="text-red-500 hover:text-red-700 mt-2" onclick="removeFromCart('${item.id}'${item.size ? `, '${item.size}'` : ''})">
+                <button class="text-red-500 hover:text-red-700 mt-2" onclick="removeFromCartByIndex(${index})">
                     <i class="fas fa-trash text-sm"></i>
                 </button>
             </div>
