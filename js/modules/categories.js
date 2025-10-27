@@ -3,14 +3,79 @@
  * Handles category display and filtering
  */
 
-import { categories, allProducts } from './globals.js';
+import { categories, allProducts, setCategories } from './globals.js';
 import { filterByCategory } from './products.js';
 import { formatCategoryName } from './utils.js';
+
+/**
+ * Load categories from Supabase
+ */
+async function loadCategoriesFromSupabase() {
+    try {
+        console.log('📦 Loading categories from Supabase...');
+        
+        if (!window.supabaseClient) {
+            console.warn('⚠️ Supabase client not available');
+            return [];
+        }
+        
+        const { data: categoriesData, error } = await window.supabaseClient
+            .from('categories')
+            .select('*')
+            .eq('is_active', true)
+            .order('created_at', { ascending: false });
+        
+        if (error) {
+            console.error('❌ Error loading categories:', error);
+            return [];
+        }
+        
+        console.log(`✅ Loaded ${categoriesData?.length || 0} categories from Supabase`);
+        
+        // Transform Supabase categories to match frontend format
+        const transformedCategories = (categoriesData || []).map(cat => ({
+            id: cat.slug || cat.name.toLowerCase().replace(/\s+/g, '-'),
+            name: cat.name,
+            description: cat.description || 'Fresh & Quality',
+            image: cat.image || cat.image_url || `https://via.placeholder.com/300x200?text=${cat.name}`,
+            color: convertColorToGradient(cat.color || '#3b82f6')
+        }));
+        
+        setCategories(transformedCategories);
+        return transformedCategories;
+        
+    } catch (error) {
+        console.error('❌ Error in loadCategoriesFromSupabase:', error);
+        return [];
+    }
+}
+
+/**
+ * Convert hex color to Tailwind gradient class
+ */
+function convertColorToGradient(hexColor) {
+    // Map common colors to Tailwind gradients
+    const colorMap = {
+        '#3b82f6': 'from-blue-100 to-blue-200',
+        '#10b981': 'from-green-100 to-green-200',
+        '#f59e0b': 'from-yellow-100 to-yellow-200',
+        '#ef4444': 'from-red-100 to-red-200',
+        '#8b5cf6': 'from-purple-100 to-purple-200',
+        '#ec4899': 'from-pink-100 to-pink-200',
+        '#6366f1': 'from-indigo-100 to-indigo-200',
+    };
+    
+    return colorMap[hexColor] || 'from-gray-100 to-gray-200';
+}
 
 /**
  * Initialize categories
  */
 export async function initializeCategories() {
+    // Load categories from Supabase first
+    await loadCategoriesFromSupabase();
+    
+    // Then render them
     renderCategories();
     populateHeaderCategoryDropdown();
 }
@@ -93,8 +158,19 @@ export function populateHeaderCategoryDropdown() {
     console.log(`✅ Populated dropdown with ${categoriesToShow.length} categories`);
 }
 
+/**
+ * Refresh categories from Supabase
+ */
+export async function refreshCategories() {
+    console.log('🔄 Refreshing categories...');
+    await loadCategoriesFromSupabase();
+    renderCategories();
+    populateHeaderCategoryDropdown();
+}
+
 // Export for global access
 export const categoriesModule = {
-    filterByCategory
+    filterByCategory,
+    refreshCategories
 };
 

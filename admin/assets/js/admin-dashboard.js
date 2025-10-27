@@ -57,109 +57,259 @@ class AdminDashboard {
     }
 
     setupNavigation() {
-        const navItems = document.querySelectorAll('.nav-item');
-        navItems.forEach(item => {
-            item.addEventListener('click', (e) => {
-                const section = item.getAttribute('data-section');
-                if (section) {
-                    // Only prevent default for internal sections
-                    e.preventDefault();
-                    this.showSection(section);
-                    this.updateActiveNav(item);
-                }
-                // For external links (like products.html), let the browser handle navigation normally
-            });
-        });
-    }
-
-    showSection(sectionName) {
-        const sections = document.querySelectorAll('.content-section');
-        sections.forEach(section => section.classList.remove('active'));
-        
-        const targetSection = document.getElementById(`${sectionName}-content`);
-        if (targetSection) {
-            targetSection.classList.add('active');
-            this.currentSection = sectionName;
-            this.updatePageTitle(sectionName);
-            
-            // Load section-specific data when section is shown
-            this.loadSectionData(sectionName);
-        }
-    }
-
-    updateActiveNav(activeItem) {
-        const navItems = document.querySelectorAll('.nav-item');
-        navItems.forEach(item => item.classList.remove('active'));
-        activeItem.classList.add('active');
-    }
-
-    updatePageTitle(section) {
-        const titleElement = document.getElementById('pageTitle');
-        if (titleElement) {
-            const titles = {
-                'dashboard': 'Dashboard',
-                'orders': 'Order Management',
-                'products': 'Product Management',
-                'users': 'User Management'
-            };
-            titleElement.textContent = titles[section] || 'Admin Panel';
-        }
-    }
-
-    /**
-     * Load section-specific data when section is shown
-     */
-    async loadSectionData(section) {
-        try {
-            switch (section) {
-                case 'orders':
-                    // Load orders when orders section is shown
-                    if (window.adminOrdersManager) {
-                        console.log('📦 Loading orders data...');
-                        await window.adminOrdersManager.loadOrders();
-                    }
-                    break;
-                case 'products':
-                    // Load products when products section is shown
-                    console.log('📦 Products section loaded');
-                    console.log('🔍 AdminProductsManager available:', !!window.AdminProductsManager);
-                    console.log('🔍 adminProductsManager instance:', !!window.adminProductsManager);
-                    
-                    if (window.adminProductsManager) {
-                        console.log('📦 Loading products data...');
-                        await window.adminProductsManager.loadProducts();
-                    } else {
-                        console.log('📦 AdminProductsManager not available, initializing...');
-                        if (window.AdminProductsManager) {
-                            window.adminProductsManager = new window.AdminProductsManager();
-                            console.log('✅ AdminProductsManager initialized');
-                        } else {
-                            console.error('❌ AdminProductsManager class not found');
-                        }
-                    }
-                    break;
-                case 'users':
-                    // Load users when users section is shown
-                    console.log('👥 Users section loaded');
-                    break;
-                case 'categories':
-                    // Load categories when categories section is shown
-                    console.log('🏷️ Categories section loaded');
-                    break;
-                default:
-                    console.log(`No specific data loading for section: ${section}`);
-            }
-        } catch (error) {
-            console.warn('⚠️ Error loading section data:', error);
-            // Don't show popup errors for section loading
-        }
+        // Navigation is handled by regular links to separate pages
+        // No section switching needed in dashboard
+        console.log('✅ Navigation setup - using separate pages');
     }
 
     async loadDashboardData() {
         console.log('📊 Loading dashboard data...');
-        // Load orders data once and use it for both recent orders and stats
+        // Load all dashboard sections
         await this.loadOrdersAndStats();
+        await this.loadAllOrders();
+        await this.loadDashboardProducts();
+        await this.loadDashboardCategories();
+        await this.loadDashboardUsers();
         console.log('📊 Dashboard data loaded');
+    }
+    
+    async loadAllOrders() {
+        try {
+            console.log('📦 Loading all orders for dashboard...');
+            
+            if (!window.supabaseClient) {
+                console.warn('⚠️ Supabase client not available');
+                return;
+            }
+            
+            const { data: orders, error } = await window.supabaseClient
+                .from('orders')
+                .select('*')
+                .order('created_at', { ascending: false })
+                .limit(5); // Show latest 5 orders
+            
+            if (error) {
+                console.warn('⚠️ Error loading all orders:', error);
+                return;
+            }
+            
+            const tbody = document.getElementById('allOrdersTableBody');
+            if (!tbody) return;
+            
+            if (!orders || orders.length === 0) {
+                tbody.innerHTML = '<tr><td colspan="6" class="text-center">No orders found</td></tr>';
+                return;
+            }
+            
+            tbody.innerHTML = orders.map(order => `
+                <tr>
+                    <td>#${order.id.slice(-8)}</td>
+                    <td>${order.customer_name || 'N/A'}</td>
+                    <td>${this.getItemsCount(order.items)}</td>
+                    <td>₹${(order.order_total || 0).toLocaleString()}</td>
+                    <td><span class="badge badge-${this.getStatusClass(order.order_status)}">${this.formatStatus(order.order_status)}</span></td>
+                    <td>${this.formatDate(order.created_at)}</td>
+                </tr>
+            `).join('');
+            
+            console.log('✅ All orders loaded');
+        } catch (error) {
+            console.warn('⚠️ Error in loadAllOrders:', error);
+        }
+    }
+    
+    async loadDashboardProducts() {
+        try {
+            console.log('📦 Loading products for dashboard...');
+            
+            if (!window.supabaseClient) {
+                console.warn('⚠️ Supabase client not available');
+                return;
+            }
+            
+            // Try enhanced table first
+            let { data: products, error } = await window.supabaseClient
+                .from('products_enhanced')
+                .select('*')
+                .limit(5);
+            
+            if (error || !products || products.length === 0) {
+                // Fallback to original table
+                const result = await window.supabaseClient
+                    .from('products')
+                    .select('*')
+                    .limit(5);
+                products = result.data;
+            }
+            
+            const tbody = document.getElementById('dashboardProductsTableBody');
+            if (!tbody) return;
+            
+            if (!products || products.length === 0) {
+                tbody.innerHTML = '<tr><td colspan="5" class="text-center">No products found</td></tr>';
+                return;
+            }
+            
+            tbody.innerHTML = products.map(product => `
+                <tr>
+                    <td>${product.name}</td>
+                    <td>${product.category || 'N/A'}</td>
+                    <td>₹${(product.price || product.selling_price || 0).toLocaleString()}</td>
+                    <td>${product.stock_quantity || product.quantity || 0}</td>
+                    <td><span class="badge badge-${(product.in_stock !== false && product.is_active !== false) ? 'success' : 'secondary'}">${(product.in_stock !== false && product.is_active !== false) ? 'Active' : 'Inactive'}</span></td>
+                </tr>
+            `).join('');
+            
+            console.log('✅ Products loaded');
+        } catch (error) {
+            console.warn('⚠️ Error in loadDashboardProducts:', error);
+        }
+    }
+    
+    async loadDashboardCategories() {
+        try {
+            console.log('🏷️ Loading categories for dashboard...');
+            
+            if (!window.supabaseClient) {
+                console.warn('⚠️ Supabase client not available');
+                return;
+            }
+            
+            // Load categories
+            let { data: categories, error } = await window.supabaseClient
+                .from('categories_enhanced')
+                .select('*')
+                .limit(5);
+            
+            if (error || !categories || categories.length === 0) {
+                // Fallback to original table
+                const result = await window.supabaseClient
+                    .from('categories')
+                    .select('*')
+                    .limit(5);
+                categories = result.data;
+            }
+            
+            const grid = document.getElementById('dashboardCategoriesGrid');
+            if (!grid) return;
+            
+            if (!categories || categories.length === 0) {
+                grid.innerHTML = '<div style="text-align: center; padding: 2rem; grid-column: 1 / -1;">No categories found</div>';
+                return;
+            }
+            
+            // Load products to count per category
+            let { data: products, error: productsError } = await window.supabaseClient
+                .from('products_enhanced')
+                .select('category');
+            
+            if (productsError || !products) {
+                // Fallback to original products table
+                const result = await window.supabaseClient
+                    .from('products')
+                    .select('category');
+                products = result.data || [];
+            }
+            
+            // Count products per category
+            const productCounts = {};
+            if (products && products.length > 0) {
+                products.forEach(product => {
+                    const category = product.category || 'Uncategorized';
+                    productCounts[category] = (productCounts[category] || 0) + 1;
+                });
+            }
+            
+            console.log('📊 Product counts by category:', productCounts);
+            
+            grid.innerHTML = categories.map(cat => {
+                const icon = cat.icon || 'fas fa-tag';
+                const color = cat.color || '#3b82f6';
+                const count = productCounts[cat.name] || 0;
+                return `
+                    <div style="background: white; border: 1px solid #e5e7eb; border-radius: 8px; padding: 1rem; text-align: center;">
+                        <div style="width: 50px; height: 50px; background: ${color}; border-radius: 8px; display: flex; align-items: center; justify-content: center; margin: 0 auto 0.5rem; color: white;">
+                            <i class="${icon}"></i>
+                        </div>
+                        <div style="font-weight: 600; color: #1f2937;">${cat.name}</div>
+                        <div style="font-size: 0.75rem; color: #6b7280; margin-top: 0.25rem;">${count} products</div>
+                    </div>
+                `;
+            }).join('');
+            
+            console.log('✅ Categories loaded with product counts');
+        } catch (error) {
+            console.warn('⚠️ Error in loadDashboardCategories:', error);
+        }
+    }
+    
+    async loadDashboardUsers() {
+        try {
+            console.log('👥 Loading users for dashboard...');
+            
+            if (!window.supabaseClient) {
+                console.warn('⚠️ Supabase client not available');
+                return;
+            }
+            
+            const { data: ordersData, error } = await window.supabaseClient
+                .from('orders')
+                .select('customer_name, customer_phone, customer_email, created_at, order_total')
+                .order('created_at', { ascending: false });
+            
+            if (error) {
+                console.warn('⚠️ Error loading orders for users:', error);
+                return;
+            }
+            
+            // Aggregate users from orders
+            const userMap = new Map();
+            ordersData.forEach(order => {
+                const phone = order.customer_phone;
+                if (phone && !userMap.has(phone)) {
+                    userMap.set(phone, {
+                        name: order.customer_name || 'Unknown',
+                        phone: phone,
+                        email: order.customer_email || '',
+                        total_orders: 1,
+                        total_spent: order.order_total || 0
+                    });
+                } else if (phone) {
+                    const user = userMap.get(phone);
+                    user.total_orders += 1;
+                    user.total_spent += (order.order_total || 0);
+                }
+            });
+            
+            const users = Array.from(userMap.values()).slice(0, 5); // Top 5 users
+            
+            const tbody = document.getElementById('dashboardUsersTableBody');
+            if (!tbody) return;
+            
+            if (users.length === 0) {
+                tbody.innerHTML = '<tr><td colspan="5" class="text-center">No users found</td></tr>';
+                return;
+            }
+            
+            tbody.innerHTML = users.map(user => `
+                <tr>
+                    <td>${user.name}</td>
+                    <td>${user.phone}</td>
+                    <td>${user.total_orders}</td>
+                    <td>₹${user.total_spent.toLocaleString()}</td>
+                    <td><span class="badge badge-${user.total_spent > 5000 ? 'info' : 'success'}">${user.total_spent > 5000 ? 'VIP' : 'Active'}</span></td>
+                </tr>
+            `).join('');
+            
+            console.log('✅ Users loaded');
+        } catch (error) {
+            console.warn('⚠️ Error in loadDashboardUsers:', error);
+        }
+    }
+    
+    getItemsCount(items) {
+        if (!items || !Array.isArray(items)) return 0;
+        return items.reduce((total, item) => total + (item.quantity || 0), 0);
     }
 
     async loadStats() {

@@ -467,8 +467,9 @@
 
     <!-- Scripts -->
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-    <script src="supabase-client.js"></script>
+    <script src="../supabase-client.js"></script>
     <script src="assets/js/admin-orders.js"></script>
+    <script src="assets/js/admin-modal-fix.js"></script>
     
     <script>
         // Initialize the beautiful orders page
@@ -486,12 +487,21 @@
             document.getElementById('adminUsername').textContent = username;
             document.getElementById('adminAvatar').textContent = username.charAt(0).toUpperCase();
             
-            // Initialize orders manager
-            if (window.AdminOrdersManager) {
-                window.adminOrdersManager = new AdminOrdersManager();
-                // Load orders immediately since this is a dedicated page
-                window.adminOrdersManager.loadOrders();
+            // Wait for Supabase to initialize before loading orders
+            function initializeOrdersManager() {
+                console.log('🔄 Checking Supabase initialization...');
+                if (window.supabaseClient && window.AdminOrdersManager) {
+                    console.log('✅ Supabase ready, initializing orders manager');
+                    window.adminOrdersManager = new AdminOrdersManager();
+                    // Load orders immediately since this is a dedicated page
+                    window.adminOrdersManager.loadOrders();
+                } else {
+                    console.log('⏳ Waiting for Supabase...');
+                    setTimeout(initializeOrdersManager, 100);
+                }
             }
+            
+            initializeOrdersManager();
         });
         
         function logout() {

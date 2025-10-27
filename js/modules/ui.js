@@ -61,14 +61,23 @@ export function showErrorMessage(message) {
         document.body.insertBefore(errorBanner, document.body.firstChild);
     }
     
-    errorBanner.innerHTML = `
-        <div class="container mx-auto flex items-center justify-between">
-            <span>${message}</span>
-            <button onclick="this.parentElement.parentElement.style.display='none'" class="ml-4 text-white hover:text-gray-200">
-                <i class="fas fa-times"></i>
-            </button>
-        </div>
-    `;
+    const container = document.createElement('div');
+    container.className = 'container mx-auto flex items-center justify-between';
+    
+    const messageSpan = document.createElement('span');
+    messageSpan.textContent = message;
+    
+    const closeButton = document.createElement('button');
+    closeButton.className = 'ml-4 text-white hover:text-gray-200';
+    closeButton.innerHTML = '<i class="fas fa-times"></i>';
+    closeButton.addEventListener('click', () => errorBanner.style.display = 'none');
+    
+    container.appendChild(messageSpan);
+    container.appendChild(closeButton);
+    
+    errorBanner.innerHTML = '';
+    errorBanner.appendChild(container);
+    
     errorBanner.style.display = 'block';
     
     // Auto-hide after 10 seconds
@@ -208,6 +217,15 @@ function navigateToSection(section) {
 export function initializeLazyLoading() {
     const images = document.querySelectorAll('img[data-src]');
     
+    // Fallback for browsers that don't support IntersectionObserver
+    if (!('IntersectionObserver' in window)) {
+        images.forEach(img => {
+            img.src = img.dataset.src;
+            img.removeAttribute('data-src');
+        });
+        return;
+    }
+    
     const imageObserver = new IntersectionObserver((entries, observer) => {
         entries.forEach(entry => {
             if (entry.isIntersecting) {
@@ -244,10 +262,28 @@ export function initializeMobileFeatures() {
 }
 
 /**
- * Call shop phone number
- */
-export function callShop(phoneNumber) {
-    window.location.href = `tel:${phoneNumber}`;
+export function getDirections(lat, lng) {
+    // Validate coordinates
+    const latNum = parseFloat(lat);
+    const lngNum = parseFloat(lng);
+    
+    if (isNaN(latNum) || isNaN(lngNum) || latNum < -90 || latNum > 90 || lngNum < -180 || lngNum > 180) {
+        showNotification('Invalid coordinates', 'error');
+        return;
+    }
+    
+    const userLocation = JSON.parse(localStorage.getItem('userLocation'));
+    if (userLocation) {
+        if (!userLocation.lat || !userLocation.lng) {
+            showNotification('Invalid user location data', 'error');
+            return;
+        }
+        const origin = `${userLocation.lat},${userLocation.lng}`;
+        const destination = `${latNum},${lngNum}`;
+        window.open(`https://www.google.com/maps/dir/?api=1&origin=${origin}&destination=${destination}`, '_blank');
+    } else {
+        showNotification('Please enable location services first', 'warning');
+    }
 }
 
 /**

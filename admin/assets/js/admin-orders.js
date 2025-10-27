@@ -194,7 +194,7 @@ class AdminOrdersManager {
                     </div>
                 </td>
             </tr>
-        `).join('');
+        `;
     }
 
     getItemsCount(items) {

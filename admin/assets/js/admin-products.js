@@ -16,6 +16,8 @@ class AdminProductsManager {
         this.currentFilter = 'all';
         this.searchQuery = '';
         this.selectedProducts = [];
+        this.totalProductsCount = 0;
+        this.allProducts = [];
         this.init();
     }
 
@@ -23,7 +25,11 @@ class AdminProductsManager {
         try {
             console.log('🚀 Initializing Admin Products Manager...');
             this.setupEventListeners();
-            await this.loadProducts();
+            // Don't auto-load products in dashboard context - let the dashboard call loadProducts when needed
+            const isStandalonePage = window.location.pathname.includes('products.html');
+            if (isStandalonePage) {
+                await this.loadProducts();
+            }
             console.log('✅ Admin Products Manager initialized successfully');
         } catch (error) {
             console.error('❌ Error initializing Admin Products Manager:', error);
@@ -92,79 +98,101 @@ class AdminProductsManager {
                 return;
             }
             
+            // DIAGNOSTIC: Check what tables exist and their counts
+            console.log('🔍 DIAGNOSTIC: Checking Supabase tables...');
+            try {
+                // Check products table
+                const { count: productsCount, error: productsError } = await window.supabaseClient
+                    .from('products')
+                    .select('*', { count: 'exact', head: true });
+                console.log('📊 products table count:', productsCount, productsError ? `(Error: ${productsError.message})` : '');
+                
+                // Check products_enhanced table
+                const { count: enhancedCount, error: enhancedError } = await window.supabaseClient
+                    .from('products_enhanced')
+                    .select('*', { count: 'exact', head: true });
+                console.log('📊 products_enhanced table count:', enhancedCount, enhancedError ? `(Error: ${enhancedError.message})` : '');
+            } catch (diagError) {
+                console.warn('⚠️ Diagnostic check failed:', diagError);
+            }
+            
             this.showLoadingState();
 
-            // Build query parameters - try enhanced table first, then fallback to original
-            let query = window.supabaseClient
-                .from('products_enhanced')
-                .select(`
-                    *,
-                    categories_enhanced(name, slug)
-                `);
+            // USE PRODUCTS TABLE FROM SUPABASE DIRECTLY
+            console.log('📦 Loading from Supabase products table...');
+            
+            // First get total count from products table
+            const { count: totalCount, error: countError } = await window.supabaseClient
+                .from('products')
+                .select('*', { count: 'exact', head: true });
+            
+            if (countError) {
+                console.error('❌ Error getting product count:', countError);
+                this.showError('Failed to get product count from Supabase.');
+                return;
+            }
+            
+            this.totalProductsCount = totalCount || 0;
+            console.log(`📊 Total products in Supabase: ${this.totalProductsCount}`);
+            
+            // Get ALL products for stats calculation (no filters, no pagination)
+            const { data: allProducts, error: allError } = await window.supabaseClient
+                .from('products')
+                .select('*')
+                .order('created_at', { ascending: false });
+            
+            if (allError) {
+                console.error('❌ Error loading all products:', allError);
+            } else {
+                this.allProducts = allProducts || [];
+                console.log(`✅ Loaded ${this.allProducts.length} total products for stats`);
+            }
+            
+            // Build query for paginated display
+            let displayQuery = window.supabaseClient
+                .from('products')
+                .select('*');
 
             // Apply filters
             if (this.currentFilter !== 'all') {
                 switch (this.currentFilter) {
                     case 'active':
-                        query = query.eq('status', 'active');
+                        displayQuery = displayQuery.eq('in_stock', true);
                         break;
                     case 'inactive':
-                        query = query.eq('status', 'inactive');
+                        displayQuery = displayQuery.eq('in_stock', false);
                         break;
                     case 'out_of_stock':
-                        query = query.eq('in_stock', false);
-                        break;
-                    case 'featured':
-                        query = query.eq('featured', true);
-                        break;
-                    case 'legacy':
-                        query = query.not('legacy_product_id', 'is', null);
+                        displayQuery = displayQuery.eq('in_stock', false);
                         break;
                 }
             }
 
             // Apply search
             if (this.searchQuery) {
-                query = query.or(`name.ilike.%${this.searchQuery}%,sku.ilike.%${this.searchQuery}%,description.ilike.%${this.searchQuery}%`);
+                displayQuery = displayQuery.or(`name.ilike.%${this.searchQuery}%,category.ilike.%${this.searchQuery}%`);
             }
 
-            // Apply sorting and pagination
-            query = query.order('created_at', { ascending: false });
+            // Apply sorting and pagination for display
+            displayQuery = displayQuery.order('created_at', { ascending: false });
             const from = (this.currentPage - 1) * this.productsPerPage;
             const to = from + this.productsPerPage - 1;
-            query = query.range(from, to);
+            displayQuery = displayQuery.range(from, to);
 
-            const { data: products, error } = await query;
+            const { data: displayProducts, error: displayError } = await displayQuery;
 
-            if (error) {
-                console.error('❌ Error loading products:', error);
-                this.showError('Failed to load products. Please try again.');
+            if (displayError) {
+                console.error('❌ Error loading products for display:', displayError);
+                this.showError('Failed to load products from Supabase. Please try again.');
                 return;
             }
 
-            console.log(`✅ Loaded ${products?.length || 0} products from enhanced table`);
-
-            // If no products in enhanced table, try original products table
-            if (!products || products.length === 0) {
-                console.log('📦 No products in enhanced table, trying original products table...');
-                try {
-                    const { data: originalProducts, error: originalError } = await window.supabaseClient
-                        .from('products')
-                        .select('*')
-                        .eq('in_stock', true)
-                        .order('created_at', { ascending: false });
-
-                    if (!originalError && originalProducts && originalProducts.length > 0) {
-                        console.log(`✅ Loaded ${originalProducts.length} products from original table`);
-                        this.renderProducts(originalProducts);
-                        return;
-                    }
-                } catch (fallbackError) {
-                    console.warn('⚠️ Fallback to original products table failed:', fallbackError);
-                }
+            console.log(`✅ Loaded ${displayProducts?.length || 0} products for display (page ${this.currentPage})`);
+            if (displayProducts && displayProducts.length > 0) {
+                console.log('📊 Sample product:', displayProducts[0]);
             }
 
-            this.renderProducts(products || []);
+            this.renderProducts(displayProducts || []);
 
         } catch (error) {
             console.error('❌ Error in loadProducts:', error);
@@ -209,7 +237,12 @@ class AdminProductsManager {
     }
 
     createProductRow(product) {
-        const primaryImage = product.primary_image_url || product.image_url || 'https://via.placeholder.com/50x50?text=No+Image';
+        // Try multiple possible image field names
+        const primaryImage = product.primary_image_url || 
+                            product.image_url || 
+                            product.image || 
+                            product.img || 
+                            'https://via.placeholder.com/50x50?text=No+Image';
         const categoryName = product.categories_enhanced?.name || product.category || 'Uncategorized';
         const status = product.status || (product.in_stock ? 'active' : 'inactive');
         const statusClass = status === 'active' ? 'badge-success' : 'badge-secondary';
@@ -249,9 +282,14 @@ class AdminProductsManager {
     }
 
     updateStats(products) {
-        const totalProducts = products.length;
-        const activeProducts = products.filter(p => p.is_active !== false && p.in_stock !== false).length;
-        const lowStockProducts = products.filter(p => (p.stock_quantity || p.quantity || 0) < 10).length;
+        // Use all products for stats, not just current page
+        const statsProducts = this.allProducts.length > 0 ? this.allProducts : products;
+        
+        const totalProducts = this.totalProductsCount || statsProducts.length;
+        const activeProducts = statsProducts.filter(p => p.is_active !== false && p.in_stock !== false).length;
+        const lowStockProducts = statsProducts.filter(p => (p.stock_quantity || p.quantity || 0) < 10).length;
+        
+        console.log(`📊 Stats: Total=${totalProducts}, Active=${activeProducts}, Low Stock=${lowStockProducts}`);
         
         // Update stats cards
         const totalEl = document.getElementById('totalProducts');
@@ -283,8 +321,13 @@ class AdminProductsManager {
     }
 
     createProductCard(product) {
-        const primaryImage = product.primary_image_url || 'https://via.placeholder.com/300x200?text=No+Image';
-        const categoryName = product.categories_enhanced?.name || 'Uncategorized';
+        // Try multiple possible image field names
+        const primaryImage = product.primary_image_url || 
+                            product.image_url || 
+                            product.image || 
+                            product.img || 
+                            'https://via.placeholder.com/300x200?text=No+Image';
+        const categoryName = product.categories_enhanced?.name || product.category || 'Uncategorized';
         const isLegacy = !!product.legacy_product_id;
 
         return `
@@ -493,10 +536,12 @@ class AdminProductsManager {
     }
 }
 
-// Initialize when DOM is loaded (only on admin pages)
+// Initialize when DOM is loaded (only on standalone products page)
 document.addEventListener('DOMContentLoaded', function() {
-    // Only initialize on admin pages
-    if (window.location.pathname.includes('/admin/') && window.AdminProductsManager) {
+    // Only initialize on standalone products page, not dashboard
+    const isProductsPage = window.location.pathname.includes('/admin/') && 
+                           window.location.pathname.includes('products.html');
+    if (isProductsPage && window.AdminProductsManager) {
         window.adminProductsManager = new AdminProductsManager();
     }
 });

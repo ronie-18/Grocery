@@ -24,7 +24,7 @@
             <nav class="sidebar-nav">
                 <div class="nav-section">
                     <div class="nav-section-title">Main</div>
-                    <a href="#dashboard" class="nav-item active" data-section="dashboard">
+                    <a href="index.html" class="nav-item active">
                         <i class="fas fa-tachometer-alt"></i>
                         Dashboard
                     </a>
@@ -211,184 +211,123 @@
                 </div>
                 
                 <!-- Orders Section -->
-                <div id="orders-content" class="content-section">
-                    <div class="card">
-                        <div class="card-header">
-                            <h2 class="card-title">Order Management</h2>
-                            <div class="table-actions">
-                                <button class="btn btn-secondary btn-sm" id="refreshOrders">
-                                    <i class="fas fa-sync-alt"></i>
-                                    Refresh
-                                </button>
-                                <select class="form-select" id="statusFilter" style="width: auto;">
-                                    <option value="all">All Status</option>
-                                    <option value="placed">Placed</option>
-                                    <option value="confirmed">Confirmed</option>
-                                    <option value="preparing">Preparing</option>
-                                    <option value="out_for_delivery">Out for Delivery</option>
-                                    <option value="delivered">Delivered</option>
-                                    <option value="cancelled">Cancelled</option>
-                                </select>
-                                <input type="text" id="orderSearch" class="form-input" placeholder="Search orders..." style="width: 200px;">
-                            </div>
-                        </div>
-                        <div class="card-content">
-                            <div class="table-container">
-                                <table class="table" id="ordersTable">
-                                    <thead>
-                                        <tr>
-                                            <th>Order #</th>
-                                            <th>Customer</th>
-                                            <th>Items</th>
-                                            <th>Amount</th>
-                                            <th>Status</th>
-                                            <th>Date</th>
-                                            <th>Actions</th>
-                                        </tr>
-                                    </thead>
-                                    <tbody id="ordersBody">
-                                        <tr>
-                                            <td colspan="7" class="text-center">
-                                                <div class="loading"></div>
-                                                Loading orders...
-                                            </td>
-                                        </tr>
-                                    </tbody>
-                                </table>
-                            </div>
+                <div class="card" style="margin-top: 2rem;">
+                    <div class="card-header">
+                        <h2 class="card-title">All Orders</h2>
+                        <a href="orders.html" class="btn btn-primary btn-sm">
+                            <i class="fas fa-arrow-right"></i>
+                            View All Orders
+                        </a>
+                    </div>
+                    <div class="card-content">
+                        <div class="table-container">
+                            <table class="table" id="allOrdersTable">
+                                <thead>
+                                    <tr>
+                                        <th>Order #</th>
+                                        <th>Customer</th>
+                                        <th>Items</th>
+                                        <th>Amount</th>
+                                        <th>Status</th>
+                                        <th>Date</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="allOrdersTableBody">
+                                    <tr>
+                                        <td colspan="6" class="text-center">
+                                            <div class="loading"></div>
+                                            Loading orders...
+                                        </td>
+                                    </tr>
+                                </tbody>
+                            </table>
                         </div>
                     </div>
                 </div>
                 
                 <!-- Products Section -->
-                <div id="products-content" class="content-section">
-                    <div class="card">
-                        <div class="card-header">
-                            <h2 class="card-title">Product Management</h2>
-                            <div class="table-actions">
-                                <button class="btn btn-primary btn-sm" id="addProductBtn">
-                                    <i class="fas fa-plus"></i>
-                                    Add Product
-                                </button>
-                                <button class="btn btn-secondary btn-sm" id="refreshProducts">
-                                    <i class="fas fa-sync-alt"></i>
-                                    Refresh
-                                </button>
-                            </div>
+                <div class="card" style="margin-top: 2rem;">
+                    <div class="card-header">
+                        <h2 class="card-title">Products</h2>
+                        <a href="products.html" class="btn btn-primary btn-sm">
+                            <i class="fas fa-arrow-right"></i>
+                            Manage Products
+                        </a>
+                    </div>
+                    <div class="card-content">
+                        <div class="table-container">
+                            <table class="table" id="dashboardProductsTable">
+                                <thead>
+                                    <tr>
+                                        <th>Name</th>
+                                        <th>Category</th>
+                                        <th>Price</th>
+                                        <th>Stock</th>
+                                        <th>Status</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="dashboardProductsTableBody">
+                                    <tr>
+                                        <td colspan="5" class="text-center">
+                                            <div class="loading"></div>
+                                            Loading products...
+                                        </td>
+                                    </tr>
+                                </tbody>
+                            </table>
                         </div>
-                        <div class="card-content">
-                            <div class="table-container">
-                                <table class="table" id="productsTable">
-                                    <thead>
-                                        <tr>
-                                            <th>Image</th>
-                                            <th>Name</th>
-                                            <th>Category</th>
-                                            <th>Price</th>
-                                            <th>Stock</th>
-                                            <th>Status</th>
-                                            <th>Actions</th>
-                                        </tr>
-                                    </thead>
-                                    <tbody id="productsBody">
-                                        <tr>
-                                            <td colspan="7" class="text-center">
-                                                <div class="loading"></div>
-                                                Loading products...
-                                            </td>
-                                        </tr>
-                                    </tbody>
-                                </table>
+                    </div>
+                </div>
+                
+                <!-- Categories Section -->
+                <div class="card" style="margin-top: 2rem;">
+                    <div class="card-header">
+                        <h2 class="card-title">Categories</h2>
+                        <a href="categories.html" class="btn btn-primary btn-sm">
+                            <i class="fas fa-arrow-right"></i>
+                            Manage Categories
+                        </a>
+                    </div>
+                    <div class="card-content">
+                        <div id="dashboardCategoriesGrid" style="display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 1rem; padding: 1rem;">
+                            <div style="text-align: center; padding: 2rem; grid-column: 1 / -1;">
+                                <div class="loading"></div>
+                                <p>Loading categories...</p>
                             </div>
                         </div>
                     </div>
                 </div>
                 
                 <!-- Users Section -->
-                <div id="users-content" class="content-section">
-                    <div class="card">
-                        <div class="card-header">
-                            <h2 class="card-title">User Management</h2>
-                            <div class="table-actions">
-                                <button class="btn btn-secondary btn-sm" id="refreshUsers">
-                                    <i class="fas fa-sync-alt"></i>
-                                    Refresh
-                                </button>
-                            </div>
-                        </div>
-                        <div class="card-content">
-                            <div class="table-container">
-                                <table class="table" id="usersTable">
-                                    <thead>
-                                        <tr>
-                                            <th>User ID</th>
-                                            <th>Phone</th>
-                                            <th>Name</th>
-                                            <th>Orders</th>
-                                            <th>Total Spent</th>
-                                            <th>Joined</th>
-                                            <th>Actions</th>
-                                        </tr>
-                                    </thead>
-                                    <tbody id="usersBody">
-                                        <tr>
-                                            <td colspan="7" class="text-center">
-                                                <div class="loading"></div>
-                                                Loading users...
-                                            </td>
-                                        </tr>
-                                    </tbody>
-                                </table>
-                            </div>
-                        </div>
+                <div class="card" style="margin-top: 2rem;">
+                    <div class="card-header">
+                        <h2 class="card-title">Users</h2>
+                        <a href="users.html" class="btn btn-primary btn-sm">
+                            <i class="fas fa-arrow-right"></i>
+                            View All Users
+                        </a>
                     </div>
-                </div>
-                
-                <!-- Other sections will be added here -->
-                <div id="categories-content" class="content-section">
-                    <div class="card">
-                        <div class="card-header">
-                            <h2 class="card-title">Category Management</h2>
-                            <button class="btn btn-primary btn-sm" id="addCategoryBtn">
-                                <i class="fas fa-plus"></i>
-                                Add Category
-                            </button>
-                        </div>
-                        <div class="card-content">
-                            <p>Category management will be implemented here.</p>
-                        </div>
-                    </div>
-                </div>
-                
-                <div id="analytics-content" class="content-section">
-                    <div class="card">
-                        <div class="card-header">
-                            <h2 class="card-title">Analytics & Reports</h2>
-                        </div>
-                        <div class="card-content">
-                            <p>Analytics and reports will be implemented here.</p>
-                        </div>
-                    </div>
-                </div>
-                
-                <div id="settings-content" class="content-section">
-                    <div class="card">
-                        <div class="card-header">
-                            <h2 class="card-title">System Settings</h2>
-                        </div>
-                        <div class="card-content">
-                            <p>System settings will be implemented here.</p>
-                        </div>
-                    </div>
-                </div>
-                
-                <div id="logs-content" class="content-section">
-                    <div class="card">
-                        <div class="card-header">
-                            <h2 class="card-title">Activity Logs</h2>
-                        </div>
-                        <div class="card-content">
-                            <p>Activity logs will be implemented here.</p>
+                    <div class="card-content">
+                        <div class="table-container">
+                            <table class="table" id="dashboardUsersTable">
+                                <thead>
+                                    <tr>
+                                        <th>Name</th>
+                                        <th>Phone</th>
+                                        <th>Orders</th>
+                                        <th>Total Spent</th>
+                                        <th>Status</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="dashboardUsersTableBody">
+                                    <tr>
+                                        <td colspan="5" class="text-center">
+                                            <div class="loading"></div>
+                                            Loading users...
+                                        </td>
+                                    </tr>
+                                </tbody>
+                            </table>
                         </div>
                     </div>
                 </div>
@@ -530,10 +469,8 @@
     <!-- Load Admin Scripts -->
     <script src="assets/js/admin-auth.js"></script>
     <script src="assets/js/admin-dashboard.js"></script>
-    <script src="assets/js/admin-orders.js"></script>
-    <script src="assets/js/admin-products.js"></script>
-    <script src="assets/js/admin-users.js"></script>
     <script src="assets/js/admin-password.js"></script>
+    <script src="assets/js/admin-modal-fix.js"></script>
     
     <script>
         // Initialize admin dashboard
@@ -563,33 +500,10 @@
             
             console.log('✅ Admin authenticated:', username);
             
-            // Initialize dashboard
+            // Initialize dashboard only
             if (window.AdminDashboard) {
                 window.adminDashboard = new AdminDashboard();
             }
-            
-            // Initialize orders manager
-            if (window.AdminOrdersManager) {
-                window.adminOrdersManager = new AdminOrdersManager();
-            }
-            
-            // Add simple test function
-            window.testOrders = async () => {
-                try {
-                    console.log('🧪 Testing orders access...');
-                    const { data, error } = await window.supabaseClient
-                        .from('orders')
-                        .select('*')
-                        .limit(5);
-                    
-                    console.log('🧪 Test result:', { data, error });
-                    return { data, error };
-                } catch (err) {
-                    console.error('🧪 Test error:', err);
-                    return { error: err };
-                }
-            };
-            
         });
     </script>
 </body>

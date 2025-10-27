@@ -175,13 +175,23 @@ async function initializeWebsite() {
         // Show user-friendly error
         const errorDiv = document.createElement('div');
         errorDiv.className = 'fixed top-0 left-0 right-0 bg-red-500 text-white p-4 text-center z-50';
-        errorDiv.innerHTML = `
-            <strong>⚠️ Website Initialization Error</strong>
-            <p class="text-sm mt-1">${error.message}</p>
-            <button onclick="location.reload()" class="mt-2 bg-white text-red-500 px-4 py-2 rounded">
-                🔄 Reload Page
-            </button>
-        `;
+        
+        const title = document.createElement('strong');
+        title.textContent = '⚠️ Website Initialization Error';
+        
+        const message = document.createElement('p');
+        message.className = 'text-sm mt-1';
+        message.textContent = error.message;
+        
+        const button = document.createElement('button');
+        button.className = 'mt-2 bg-white text-red-500 px-4 py-2 rounded';
+        button.textContent = '🔄 Reload Page';
+        button.onclick = () => location.reload();
+        
+        errorDiv.appendChild(title);
+        errorDiv.appendChild(message);
+        errorDiv.appendChild(button);
+        
         document.body.insertBefore(errorDiv, document.body.firstChild);
     }
 }

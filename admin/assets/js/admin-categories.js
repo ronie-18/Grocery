@@ -1,7 +1,10 @@
 /**
  * Admin Categories Management
  * Handles category CRUD operations with enhanced features
+ * Version: 2.4 - Removed icon and color fields from form
  */
+
+console.log('🏷️ Admin Categories Manager v2.4 loaded - Form simplified!');
 
 class AdminCategoriesManager {
     constructor() {
@@ -26,6 +29,11 @@ class AdminCategoriesManager {
             console.log('🏷️ Initializing Admin Categories Manager...');
             this.setupEventListeners();
             this.populateIconPicker();
+            // Don't auto-load categories in dashboard context - let the dashboard call loadCategories when needed
+            const isStandalonePage = window.location.pathname.includes('categories.html');
+            if (isStandalonePage) {
+                await this.loadCategories();
+            }
             console.log('✅ Admin Categories Manager initialized successfully');
         } catch (error) {
             console.error('❌ Error initializing Admin Categories Manager:', error);
@@ -56,10 +64,15 @@ class AdminCategoriesManager {
 
         // Add category button
         const addCategoryBtn = document.getElementById('addCategoryBtn');
+        console.log('🔍 Add Category Button found:', !!addCategoryBtn);
         if (addCategoryBtn) {
             addCategoryBtn.addEventListener('click', () => {
+                console.log('🔘 Add Category button clicked!');
                 this.showAddCategoryModal();
             });
+            console.log('✅ Add Category button event listener attached');
+        } else {
+            console.error('❌ Add Category button not found in DOM');
         }
 
         // Modal controls
@@ -128,67 +141,52 @@ class AdminCategoriesManager {
             
             this.showLoadingState();
 
-            // Build query parameters - try enhanced table first, then fallback to original
-            let query = window.supabaseClient
-                .from('categories_enhanced')
-                .select('*');
-
-            // Apply filters
-            if (this.currentFilter !== 'all') {
-                switch (this.currentFilter) {
-                    case 'active':
-                        query = query.eq('is_active', true);
-                        break;
-                    case 'inactive':
-                        query = query.eq('is_active', false);
-                        break;
-                    case 'featured':
-                        query = query.eq('is_featured', true);
-                        break;
-                }
-            }
-
-            // Apply search
-            if (this.searchQuery) {
-                query = query.or(`name.ilike.%${this.searchQuery}%,description.ilike.%${this.searchQuery}%`);
-            }
-
-            // Apply pagination
-            query = query.order('created_at', { ascending: false });
-            const from = (this.currentPage - 1) * this.itemsPerPage;
-            const to = from + this.itemsPerPage - 1;
-            query = query.range(from, to);
-
-            const { data: categories, error } = await query;
+            // Load categories from Supabase
+            console.log('🏷️ Loading from categories table...');
+            const { data: categories, error } = await window.supabaseClient
+                .from('categories')
+                .select('*')
+                .order('created_at', { ascending: false });
 
             if (error) {
                 console.error('❌ Error loading categories:', error);
-                this.showError('Failed to load categories. Please try again.');
+                this.showError('Failed to load categories from Supabase.');
                 return;
             }
 
-            console.log(`✅ Loaded ${categories?.length || 0} categories from enhanced table`);
-
-            // If no categories in enhanced table, try original categories table
-            if (!categories || categories.length === 0) {
-                console.log('🏷️ No categories in enhanced table, trying original categories table...');
-                try {
-                    const { data: originalCategories, error: originalError } = await window.supabaseClient
-                        .from('categories')
-                        .select('*')
-                        .order('created_at', { ascending: false });
-
-                    if (!originalError && originalCategories && originalCategories.length > 0) {
-                        console.log(`✅ Loaded ${originalCategories.length} categories from original table`);
-                        this.renderCategories(originalCategories);
-                        return;
-                    }
-                } catch (fallbackError) {
-                    console.warn('⚠️ Fallback to original categories table failed:', fallbackError);
-                }
+            console.log(`✅ Loaded ${categories?.length || 0} categories`);
+            if (categories && categories.length > 0) {
+                console.log('📊 Sample category:', categories[0]);
             }
 
-            this.renderCategories(categories || []);
+            // Load ALL products to count per category
+            console.log('📦 Loading products to count per category...');
+            const { data: products, error: productsError } = await window.supabaseClient
+                .from('products')
+                .select('category');
+
+            if (productsError) {
+                console.error('❌ Error loading products for counting:', productsError);
+            }
+
+            // Count products per category
+            const productCounts = {};
+            if (products && products.length > 0) {
+                products.forEach(product => {
+                    const categoryName = product.category || 'Uncategorized';
+                    productCounts[categoryName] = (productCounts[categoryName] || 0) + 1;
+                });
+                console.log('📊 Product counts by category:', productCounts);
+            }
+
+            // Add product count to each category
+            const categoriesWithCounts = (categories || []).map(cat => ({
+                ...cat,
+                product_count: productCounts[cat.name] || 0
+            }));
+
+            console.log(`✅ Added product counts to categories`);
+            this.renderCategories(categoriesWithCounts);
 
         } catch (error) {
             console.error('❌ Error in loadCategories:', error);
@@ -238,13 +236,23 @@ class AdminCategoriesManager {
         const status = category.is_active !== undefined ? (category.is_active ? 'Active' : 'Inactive') : 'Active';
         const statusClass = category.is_active !== undefined ? (category.is_active ? 'status-active' : 'status-inactive') : 'status-active';
         const productCount = category.product_count || 0;
+        
+        // Check for image - try multiple possible field names
+        const categoryImage = category.image || category.image_url || category.icon_url || null;
 
         return `
             <div class="category-card bg-white rounded-lg shadow-md p-6">
                 <div class="flex items-center justify-between mb-4">
-                    <div class="category-icon" style="background-color: ${color}">
-                        <i class="${icon}"></i>
-                    </div>
+                    ${categoryImage ? `
+                        <div class="category-icon" style="background-color: ${color}; overflow: hidden;">
+                            <img src="${categoryImage}" alt="${category.name}" style="width: 100%; height: 100%; object-fit: cover;" onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';">
+                            <i class="${icon}" style="display: none;"></i>
+                        </div>
+                    ` : `
+                        <div class="category-icon" style="background-color: ${color}">
+                            <i class="${icon}"></i>
+                        </div>
+                    `}
                     <span class="status-badge ${statusClass}">${status}</span>
                 </div>
                 
@@ -253,7 +261,7 @@ class AdminCategoriesManager {
                     <p class="text-sm text-gray-600 mb-3">${category.description || 'No description'}</p>
                     <div class="flex justify-between items-center">
                         <span class="text-sm text-gray-500">Products:</span>
-                        <span class="text-sm font-semibold">${productCount}</span>
+                        <span class="text-sm font-semibold text-blue-600">${productCount}</span>
                     </div>
                 </div>
                 
@@ -276,6 +284,9 @@ class AdminCategoriesManager {
         const statusClass = category.is_active !== undefined ? (category.is_active ? 'status-active' : 'status-inactive') : 'status-active';
         const productCount = category.product_count || 0;
         const createdDate = this.formatDate(category.created_at);
+        
+        // Check for image - try multiple possible field names
+        const categoryImage = category.image || category.image_url || category.icon_url || null;
 
         return `
             <tr class="hover:bg-gray-50">
@@ -284,9 +295,16 @@ class AdminCategoriesManager {
                 </td>
                 <td class="px-6 py-4">
                     <div class="flex items-center">
-                        <div class="category-icon w-10 h-10 mr-3" style="background-color: ${color}">
-                            <i class="${icon} text-sm"></i>
-                        </div>
+                        ${categoryImage ? `
+                            <div class="category-icon w-10 h-10 mr-3" style="background-color: ${color}; overflow: hidden;">
+                                <img src="${categoryImage}" alt="${category.name}" style="width: 100%; height: 100%; object-fit: cover;" onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';">
+                                <i class="${icon} text-sm" style="display: none;"></i>
+                            </div>
+                        ` : `
+                            <div class="category-icon w-10 h-10 mr-3" style="background-color: ${color}">
+                                <i class="${icon} text-sm"></i>
+                            </div>
+                        `}
                         <div>
                             <div class="font-medium text-gray-900">${category.name}</div>
                             <div class="text-sm text-gray-500">${category.slug || ''}</div>
@@ -297,7 +315,7 @@ class AdminCategoriesManager {
                     <div class="text-sm text-gray-900">${category.description || 'No description'}</div>
                 </td>
                 <td class="px-6 py-4">
-                    <span class="text-sm font-medium">${productCount}</span>
+                    <span class="text-sm font-bold text-blue-600">${productCount}</span>
                 </td>
                 <td class="px-6 py-4">
                     <span class="status-badge ${statusClass}">${status}</span>
@@ -391,11 +409,47 @@ class AdminCategoriesManager {
     }
 
     showAddCategoryModal() {
+        console.log('🔓 showAddCategoryModal called');
         const modal = document.getElementById('categoryModal');
         const modalTitle = document.getElementById('modalTitle');
+        
+        console.log('🔍 Modal element:', !!modal);
+        console.log('🔍 Modal title element:', !!modalTitle);
+        
         if (modal) {
-            modalTitle.textContent = 'Add Category';
+            if (modalTitle) {
+                modalTitle.textContent = 'Add Category';
+            }
             modal.classList.remove('hidden');
+            console.log('✅ Modal should now be visible');
+            
+            // Setup auto-slug generation
+            const nameInput = document.getElementById('categoryName');
+            const slugInput = document.getElementById('categorySlug');
+            
+            console.log('🔍 Name input:', !!nameInput);
+            console.log('🔍 Slug input:', !!slugInput);
+            
+            if (nameInput && slugInput) {
+                // Remove previous listeners to avoid duplicates
+                const newNameInput = nameInput.cloneNode(true);
+                nameInput.parentNode.replaceChild(newNameInput, nameInput);
+                
+                newNameInput.addEventListener('input', function() {
+                    // Auto-generate slug from name
+                    const slug = this.value
+                        .toLowerCase()
+                        .trim()
+                        .replace(/[^\w\s-]/g, '') // Remove special characters
+                        .replace(/\s+/g, '-') // Replace spaces with hyphens
+                        .replace(/-+/g, '-'); // Replace multiple hyphens with single hyphen
+                    slugInput.value = slug;
+                    console.log('📝 Auto-generated slug:', slug);
+                });
+                console.log('✅ Auto-slug generation setup');
+            }
+        } else {
+            console.error('❌ Modal element not found in DOM!');
         }
     }
 
@@ -407,11 +461,75 @@ class AdminCategoriesManager {
         }
     }
 
-    handleCategorySubmit(e) {
+    async handleCategorySubmit(e) {
         e.preventDefault();
-        // Handle form submission
-        console.log('Category form submitted');
-        this.hideCategoryModal();
+        
+        try {
+            console.log('💾 Submitting category form...');
+            
+            // Get form values
+            const name = document.getElementById('categoryName').value.trim();
+            const slug = document.getElementById('categorySlug').value.trim();
+            const status = document.getElementById('categoryStatus').value;
+            const description = document.getElementById('categoryDescription').value.trim();
+            const imageUrl = document.getElementById('categoryImage')?.value.trim() || '';
+            
+            // Set default icon and color
+            const icon = 'fas fa-tag';
+            const color = '#3b82f6';
+            
+            // Validate required fields
+            if (!name || !slug) {
+                this.showError('Please fill in all required fields');
+                return;
+            }
+            
+            console.log('📝 Category data:', { name, slug, icon, color, status, description });
+            
+            // Check if Supabase client is available
+            if (!window.supabaseClient) {
+                this.showError('Database connection not available');
+                return;
+            }
+            
+            // Create category object matching Supabase schema
+            const categoryData = {
+                name: name,
+                slug: slug,
+                icon: icon,
+                color: color,
+                image: imageUrl || null,
+                description: description || null,
+                is_active: status === 'active',
+                created_at: new Date().toISOString(),
+                updated_at: new Date().toISOString()
+            };
+            
+            console.log('💾 Inserting category into Supabase...', categoryData);
+            
+            // Insert into Supabase
+            const { data, error } = await window.supabaseClient
+                .from('categories')
+                .insert([categoryData])
+                .select();
+            
+            if (error) {
+                console.error('❌ Supabase error:', error);
+                this.showError(`Failed to save category: ${error.message}`);
+                return;
+            }
+            
+            console.log('✅ Category saved successfully:', data);
+            this.showSuccess(`Category "${name}" added successfully!`);
+            
+            // Close modal and reload categories
+            this.hideCategoryModal();
+            await this.loadCategories();
+            
+        } catch (error) {
+            console.error('❌ Error saving category:', error);
+            this.showError(`An error occurred: ${error.message}`);
+        }
     }
 
     formatDate(dateString) {
@@ -426,18 +544,25 @@ class AdminCategoriesManager {
 
     showError(message) {
         console.error('❌ Categories Error:', message);
-        // You could show a toast notification here instead of alert
-        console.log('❌ Error:', message);
+        alert('❌ Error: ' + message);
     }
 
     showSuccess(message) {
         console.log('✅ Categories Success:', message);
-        // You could show a toast notification here instead of alert
-        console.log('✅ Success:', message);
+        alert('✅ ' + message);
     }
 }
 
 // Global functions for modal handling
+function showAddCategoryModal() {
+    console.log('🔘 Global showAddCategoryModal called');
+    if (window.adminCategoriesManager) {
+        window.adminCategoriesManager.showAddCategoryModal();
+    } else {
+        console.error('❌ adminCategoriesManager not found');
+    }
+}
+
 function editCategory(categoryId) {
     console.log('Edit category:', categoryId);
     const modal = document.getElementById('categoryModal');
@@ -456,10 +581,12 @@ function deleteCategory(categoryId) {
     }
 }
 
-// Initialize when DOM is loaded (only on admin pages)
+// Initialize when DOM is loaded (only on standalone categories page)
 document.addEventListener('DOMContentLoaded', function() {
-    // Only initialize on admin pages
-    if (window.location.pathname.includes('/admin/') && window.AdminCategoriesManager) {
+    // Only initialize on standalone categories page, not dashboard
+    const isCategoriesPage = window.location.pathname.includes('/admin/') && 
+                             window.location.pathname.includes('categories.html');
+    if (isCategoriesPage && window.AdminCategoriesManager) {
         window.adminCategoriesManager = new AdminCategoriesManager();
     }
 });

@@ -24,6 +24,11 @@ class AdminUsersManager {
         try {
             console.log('👥 Initializing Admin Users Manager...');
             this.setupEventListeners();
+            // Don't auto-load users in dashboard context - let the dashboard call loadUsers when needed
+            const isStandalonePage = window.location.pathname.includes('users.html');
+            if (isStandalonePage) {
+                await this.loadUsers();
+            }
             console.log('✅ Admin Users Manager initialized successfully');
         } catch (error) {
             console.error('❌ Error initializing Admin Users Manager:', error);
@@ -410,7 +415,10 @@ function editUser(userId) {
 }
 
 document.addEventListener('DOMContentLoaded', function() {
-    if (window.location.pathname.includes('/admin/') && window.AdminUsersManager) {
+    // Only initialize on standalone users page, not dashboard
+    const isUsersPage = window.location.pathname.includes('/admin/') && 
+                        window.location.pathname.includes('users.html');
+    if (isUsersPage && window.AdminUsersManager) {
         window.adminUsersManager = new AdminUsersManager();
     }
 });

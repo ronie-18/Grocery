@@ -643,8 +643,9 @@
 
     <!-- Scripts -->
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-    <script src="supabase-client.js"></script>
+    <script src="../supabase-client.js"></script>
     <script src="assets/js/admin-products.js"></script>
+    <script src="assets/js/admin-modal-fix.js"></script>
     
     <script>
         // Initialize the beautiful products page
@@ -662,10 +663,19 @@
             document.getElementById('adminUsername').textContent = username;
             document.getElementById('adminAvatar').textContent = username.charAt(0).toUpperCase();
             
-            // Initialize products manager
-            if (window.AdminProductsManager) {
-                window.adminProductsManager = new AdminProductsManager();
+            // Wait for Supabase to initialize before loading products
+            function initializeProductsManager() {
+                console.log('🔄 Checking Supabase initialization...');
+                if (window.supabaseClient && window.AdminProductsManager) {
+                    console.log('✅ Supabase ready, initializing products manager');
+                    window.adminProductsManager = new AdminProductsManager();
+                } else {
+                    console.log('⏳ Waiting for Supabase...');
+                    setTimeout(initializeProductsManager, 100);
+                }
             }
+            
+            initializeProductsManager();
         });
         
         function logout() {

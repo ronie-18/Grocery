@@ -44,7 +44,7 @@ const formatCurrency = (amount) => `${CONFIG.CURRENCY_SYMBOL}${parseFloat(amount
 
 const parsePrice = (price) => {
     if (price === undefined || price === null) return 0;
-    if (typeof price === 'number') return price;
+    if (typeof price === 'number') return isNaN(price) ? 0 : price;
     if (typeof price === 'string') {
         const cleanPrice = price.replace(/[₹$,\s]/g, '');
         return parseFloat(cleanPrice) || 0;
@@ -359,6 +359,9 @@ const renderOrderSummary = () => {
             const itemImage = item.image || item.img || `https://images.unsplash.com/photo-1560806887-1e4cd0b6cbd6?w=48&h=48&fit=crop&crop=center`;
             const itemName = item.name || item.title || 'Unknown Item';
 
+            const itemSize = item.size || '';
+            const isLoose = item.isLoose || false;
+
             summaryHTML += `
                 <div class="cart-item flex items-center justify-between py-3 px-3 mb-2 bg-white rounded-lg border border-gray-200 hover:border-primary/50 transition-all duration-200 group">
                     <div class="flex items-center flex-1 min-w-0">
@@ -372,6 +375,8 @@ const renderOrderSummary = () => {
                         </div>
                         <div class="ml-3 flex-1 min-w-0">
                             <h4 class="font-semibold text-sm text-gray-800 truncate group-hover:text-primary transition-colors duration-200" title="${itemName}">${itemName}</h4>
+                            ${isLoose && itemSize ? `<p class="text-xs text-green-600 font-semibold"><i class="fas fa-weight"></i> ${itemSize}</p>` : ''}
+                            ${itemSize && !isLoose ? `<p class="text-xs text-gray-500">${itemSize}</p>` : ''}
                             <p class="text-xs text-gray-500">${formatCurrency(price)} × ${quantity}</p>
                         </div>
                     </div>

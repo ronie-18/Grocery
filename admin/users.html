@@ -560,8 +560,9 @@
 
     <!-- Scripts -->
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-    <script src="supabase-client.js"></script>
+    <script src="../supabase-client.js"></script>
     <script src="assets/js/admin-users.js"></script>
+    <script src="assets/js/admin-modal-fix.js"></script>
     
     <script>
         // Initialize the beautiful users page
@@ -579,12 +580,21 @@
             document.getElementById('adminUsername').textContent = username;
             document.getElementById('adminAvatar').textContent = username.charAt(0).toUpperCase();
             
-            // Initialize users manager
-            if (window.AdminUsersManager) {
-                window.adminUsersManager = new AdminUsersManager();
-                // Load users immediately since this is a dedicated page
-                window.adminUsersManager.loadUsers();
+            // Wait for Supabase to initialize before loading users
+            function initializeUsersManager() {
+                console.log('🔄 Checking Supabase initialization...');
+                if (window.supabaseClient && window.AdminUsersManager) {
+                    console.log('✅ Supabase ready, initializing users manager');
+                    window.adminUsersManager = new AdminUsersManager();
+                    // Load users immediately since this is a dedicated page
+                    window.adminUsersManager.loadUsers();
+                } else {
+                    console.log('⏳ Waiting for Supabase...');
+                    setTimeout(initializeUsersManager, 100);
+                }
             }
+            
+            initializeUsersManager();
         });
         
         function logout() {
